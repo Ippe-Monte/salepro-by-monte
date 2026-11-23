@@ -54,6 +54,17 @@
   .tile{border:1px solid var(--line);background:#f6f9fe;border-radius:16px;padding:14px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#16345c}
   .tile svg.i{width:26px;height:26px;color:var(--primary)} .tile:hover{background:#e9f1fd}
   .mdl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:16px;width:min(560px,94vw);max-height:90vh;overflow:auto}
+  /* desktop sidebar */
+  #side{display:none}
+  @media(min-width:1024px){
+    #side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:240px;z-index:60;background:linear-gradient(180deg,#0a2a7a 0%,#030b2e 75%);color:#dce8ff;overflow:auto}
+    body{padding-left:240px;padding-bottom:24px} .bar{display:none} .toast{bottom:24px;left:calc(50% + 120px)}
+    #side .sb{display:flex;align-items:center;gap:10px;padding:16px 16px 12px} #side .sb img{width:44px;height:44px;border-radius:12px} #side .sb b{font:italic 800 20px/1 system-ui;color:#fff} #side .sb b span{color:var(--cyan)} #side .sb small{display:block;color:#a9c3ff;font-size:11px;margin-top:2px}
+    #side .sg{padding:10px 18px 4px;font-size:11px;letter-spacing:.6px;color:#7f9be0}
+    #side .sn{display:flex;gap:11px;align-items:center;width:100%;border:0;background:none;color:#dce8ff;padding:10px 18px;border-left:4px solid transparent;cursor:pointer;text-align:left;font:inherit}
+    #side .sn:hover{background:rgba(255,255,255,.07)} #side .sn.on{background:rgba(31,200,232,.14);border-left-color:var(--cyan);color:#fff;font-weight:700}
+    #side .sf{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:10px;align-items:center;font-size:13px} #side .sf img{width:30px;height:30px;border-radius:7px;background:#fff;object-fit:contain}
+  }
   /* hero */
   .hero{margin:0 -14px 0;padding:calc(14px + env(safe-area-inset-top)) 16px 64px;background:radial-gradient(120% 90% at 85% 0%,#1d6df0 0%,rgba(29,109,240,0) 55%),linear-gradient(160deg,#0a2a7a 0%,#030b2e 70%);color:#fff;border-radius:0 0 26px 26px}
   .hrow{display:flex;align-items:center;gap:10px}
@@ -79,8 +90,8 @@
   .gal .g .x{position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(20,35,58,.75);color:#fff;cursor:pointer;line-height:1}
   .add{width:84px;height:84px;border:2px dashed #b9c8dc;border-radius:12px;background:#f8fbff;color:#4b6585;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;gap:2px;cursor:pointer}
   /* segmented */
-  .seg{display:flex;background:#e3ebf6;border-radius:12px;padding:3px;margin-bottom:12px;gap:2px}
-  .seg button{flex:1;border:0;background:none;padding:8px 2px;border-radius:10px;font-size:14px;color:#3c5272;cursor:pointer}
+  .seg{display:flex;background:#e3ebf6;border-radius:12px;padding:3px;margin-bottom:12px;gap:2px;overflow-x:auto}
+  .seg button{flex:1 0 auto;white-space:nowrap;border:0;background:none;padding:8px 12px;border-radius:10px;font-size:14px;color:#3c5272;cursor:pointer}
   .seg button.on{background:#fff;color:var(--primary);font-weight:700;box-shadow:0 1px 4px rgba(20,50,90,.15)}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px} .chips button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;cursor:pointer;color:#2d4467} .chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
   .sw{display:flex;gap:8px} .sw button{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer} .sw button.on{box-shadow:0 0 0 2px var(--primary)}
@@ -127,6 +138,7 @@
 </head>
 <body class="home">
 <div class="banner">ตัวอย่างหน้าจอ (ข้อมูลสมมติ ไม่เชื่อมฐานข้อมูล) — รีเฟรชแล้วข้อมูลกลับเป็นค่าเริ่มต้น · ดูในบทบาทอื่นได้ที่ รูปโปรไฟล์ มุมขวาบน</div>
+<aside id="side"></aside>
 <header class="top" id="top"><button class="ib" id="back" onclick="back()"></button><h1 id="ptitle"></h1><button class="ib" id="sbtn" onclick="toggleSearch()"></button><span id="topact"></span><button class="av" id="avt" onclick="go('profile')"></button></header>
 <div id="srow" hidden><input id="q" placeholder="ค้นหาในหน้านี้..." oninput="applySearch()"></div>
 <main id="view"></main>
@@ -158,6 +170,8 @@ const IC={
  clip:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>',
  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>',
  print:'<path d="M7 9V3h10v6M6 18H4v-7h16v7h-2M7 14h10v7H7z"/>',
+ receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+ dncheck:'<path d="M5 4h14v16H5z"/><path d="M9 10l2 2 4-4M9 16h6"/>',
  out:'<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>'
 };
 const ic=(n,s)=>`<svg class="i" viewBox="0 0 24 24"${s?` style="width:${s}px;height:${s}px"`:''}>${IC[n]}</svg>`;
@@ -170,7 +184,7 @@ const SAMPLE_LOGO='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="htt
 const ROLE_LABEL={owner:'เจ้าของ',admin:'แอดมิน',sales:'เซลส์',warehouse:'คลังสินค้า',dispatcher:'ผู้จัดส่ง',viewer:'ผู้ดูอย่างเดียว'};
 const ROLE_EDIT={customers:['owner','admin','sales'],visits:['owner','admin','sales'],jobs:['owner','admin','sales'],quotes:['owner','admin','sales'],
   products:['owner','admin','warehouse'],stock:['owner','admin','warehouse'],delivery:['owner','admin','dispatcher','warehouse'],zones:['owner','admin','dispatcher'],
-  members:['owner','admin'],company:['owner','admin'],docset:['owner','admin']};
+  dns:['owner','admin','dispatcher','warehouse'],invoices:['owner','admin'],members:['owner','admin'],company:['owner','admin'],docset:['owner','admin']};
 const BAR=[['home','หน้าแรก','home'],['customers','ลูกค้า','users'],['tools','เครื่องมือ','grid'],['visits','นัดหมาย','calendar'],['docs','เอกสาร','file']];
 const TOOLPAGES=['products','stock','zones','members','company','docset','profile'];
 const TITLES={customers:'ลูกค้า',visits:'นัดหมาย',docs:'เอกสาร',products:'สินค้า',stock:'สต็อก',zones:'โซนส่งของ',members:'สมาชิก',company:'ตั้งค่าบริษัท',docset:'ตั้งค่าเอกสาร',profile:'บัญชีและเมนู'};
@@ -195,7 +209,7 @@ function bahtText(v){v=Math.round(v*100)/100;if(!isFinite(v)||v<0)return '';cons
   return (i==='0'?'ศูนย์':big(i))+'บาท'+(f==='00'?'ถ้วน':rd(f,false)+'สตางค์')}
 
 const S={
-  page:'home',stack:[],dtab:'quotes',role:'owner',ds:'quote',vmine:'all',vSeq:6,doSeq:0,jSeq:2,qSeq:1,moves:[],
+  page:'home',stack:[],dtab:'quotes',role:'owner',ds:'quote',vmine:'all',vSeq:6,doSeq:0,jSeq:2,qSeq:2,dnSeq:0,ivSeq:0,moves:[],
   company:{name:'บริษัท ตัวอย่างวิศวกรรม จำกัด',nameEn:'Example Engineering Co., Ltd.',tax:'0105560000001',branch:'สำนักงานใหญ่',addr:'88/8 ถ.ศรีนครินทร์ ต.สำโรงเหนือ อ.เมือง จ.สมุทรปราการ 10270',phone:'02-123-4567',email:'sales@example.co.th',web:'www.example.co.th',bank:'ธนาคารกสิกรไทย สาขาสำโรง · เลขที่บัญชี 123-4-56789-0 · ชื่อบัญชี บริษัท ตัวอย่างวิศวกรรม จำกัด',logo:SAMPLE_LOGO},
   docs:{
     quote:{title:'ใบเสนอราคา',titleEn:'Quotation',prefix:'QT',yearFmt:'CE',sep:'-',digits:4,logo:true,logoPos:'left',color:'#1d6df0',cImg:true,cCode:true,cUnit:true,showPrices:true,vat:7,days:30,bank:false,
@@ -231,7 +245,8 @@ const S={
     {id:1,no:'JT-2026-0001',cust:3,title:'เซนเซอร์ค่าเพี้ยน ขอเปลี่ยนชุดใหม่',pri:'สูง',status:'in_progress',due:'2026-11-20',log:['เปิดงาน','เปิดงาน → กำลังดำเนินการ']},
     {id:2,no:'JT-2026-0002',cust:1,title:'ขอใบเสนอราคาปั๊ม 3 ตัว',pri:'ปกติ',status:'open',due:'2026-12-05',log:['เปิดงาน']}
   ],
-  quotes:[{id:1,seq:1,cust:1,status:'draft',discount:0,vat:7,items:[{pid:1,q:3,u:12500}]}],
+  quotes:[{id:2,seq:2,cust:2,status:'accepted',discount:0,vat:7,items:[{pid:2,q:5,u:3200}]},{id:1,seq:1,cust:1,status:'draft',discount:0,vat:7,items:[{pid:1,q:3,u:12500}]}],
+  dns:[],invoices:[],
   dos:[]
 };
 const role=()=>S.role, can=m=>ROLE_EDIT[m].includes(S.role);
@@ -260,7 +275,7 @@ function go(p){if(p==='tools'){toggleSheet(true);return}
 function back(){S.page=S.stack.pop()||'home';if(S.page==='company')S.cd=JSON.parse(JSON.stringify(S.company));if(S.page==='docset')S.dd=JSON.parse(JSON.stringify(S.docs));render();window.scrollTo(0,0)}
 function toggleSheet(on){const o=document.getElementById('sheetov');if(on===undefined)on=o.style.display!=='block';o.style.display=on?'block':'none';
   if(on)document.getElementById('sheet').innerHTML=`<h3>เครื่องมือ</h3><div class="tiles">${[['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders']].map(([k,l,i])=>`<button class="tile" onclick="go('${k}')">${ic(i)}${l}</button>`).join('')}
-   <button class="tile" onclick="S.dtab='quotes';go('docs')">${ic('file')}ใบเสนอราคา</button><button class="tile" onclick="S.dtab='jobs';go('docs')">${ic('clip')}Job Ticket</button><button class="tile" onclick="S.dtab='delivery';go('docs')">${ic('truck')}ส่งของ (DO)</button></div>`}
+   <button class="tile" onclick="S.dtab='quotes';go('docs')">${ic('file')}ใบเสนอราคา</button><button class="tile" onclick="S.dtab='jobs';go('docs')">${ic('clip')}Job Ticket</button><button class="tile" onclick="S.dtab='delivery';go('docs')">${ic('truck')}ส่งของ (DO)</button><button class="tile" onclick="S.dtab='dns';go('docs')">${ic('dncheck')}ใบส่งของ</button><button class="tile" onclick="S.dtab='invoices';go('docs')">${ic('receipt')}อินวอยซ์</button></div>`}
 function toggleSearch(){const r=document.getElementById('srow');r.hidden=!r.hidden;if(!r.hidden)document.getElementById('q').focus()}
 function openModal(h){document.getElementById('mdl').innerHTML=h;document.getElementById('modal').style.display='block'}
 function closeModal(){document.getElementById('modal').style.display='none'}
@@ -276,7 +291,7 @@ function paperHtml(type,x,d){d=d||S.docs[type];const c=S.company;const priced=ty
   const showVat=type==='quote'||type==='invoice'||(priced&&x.vat>0);
   const metaR=[['เลขที่',x.no],['วันที่',thDate(x.date)]];
   if(type==='quote'&&d.days)metaR.push(['ยืนราคาถึง',thDate(addD(x.date,d.days))]);
-  if(type==='invoice'&&d.days)metaR.push(['ครบกำหนดชำระ',thDate(addD(x.date,d.days))+` (เครดิต ${d.days} วัน)`]);
+  if(type==='invoice'&&(x.due||d.days))metaR.push(['ครบกำหนดชำระ',thDate(x.due||addD(x.date,d.days))]);
   if(x.ref)metaR.push(['อ้างอิง',x.ref]);
   const cols=[['#','',1],['img','รูป',d.cImg],['code','รหัส',d.cCode],['desc','รายการ',1],['q','จำนวน',1],['unit','หน่วย',d.cUnit]];if(priced){cols.push(['u','ราคา/หน่วย',1],['a','จำนวนเงิน',1])}
   const act=cols.filter(k=>k[2]);
@@ -289,20 +304,26 @@ function paperHtml(type,x,d){d=d||S.docs[type];const c=S.company;const priced=ty
    ${d.bank&&c.bank?`<div class="bx" style="margin-bottom:10px"><b>ช่องทางชำระเงิน</b><div>${esc(c.bank)}</div></div>`:''}
    ${d.notes?`<div class="nt"><b>หมายเหตุ / เงื่อนไข</b>\n${esc(d.notes)}</div>`:''}
    <div class="sg">${d.sign.filter(Boolean).map(s=>`<div><i></i>${esc(s)}<br><span style="color:#666">วันที่ ____/____/____</span></div>`).join('')}</div>
+   ${x.recv?`<div class="nt" style="margin-top:8px"><b>ตรวจรับสินค้าแล้ว</b>\nรับสินค้าครบถ้วนเรียบร้อย โดย ${esc(x.recv)}</div>`:''}
    ${d.footer?`<div class="ft">${esc(d.footer)}</div>`:''}</div>`}
 const wrapPaper=h=>`<div class="pwrap">${h}</div>`;
 function fitPapers(){document.querySelectorAll('.pwrap').forEach(w=>{const p=w.firstElementChild;if(!p)return;const s=Math.min(1,(w.clientWidth||794)/794);p.style.transform=`scale(${s})`;w.style.height=(p.offsetHeight*s)+'px'})}
 function showPaper(type,x){document.getElementById('pbody').innerHTML=wrapPaper(paperHtml(type,x));document.getElementById('paperov').style.display='block';fitPapers()}
 function closePaper(){document.getElementById('paperov').style.display='none'}
 function ctxQuote(q){const c=S.customers.find(x=>x.id===q.cust),a=c.addr.find(x=>x.def)||c.addr[0];return{no:fmtNo('quote',q.seq),date:BASE,cust:c,addr:a.line+' '+a.prov,items:q.items,discount:q.discount,vat:q.vat,ref:''}}
-function ctxDO(d,type){const c=S.customers.find(x=>x.id===d.cust);return{no:fmtNo(type,d.seq0),date:BASE,cust:c,addr:d.ship,items:[{pid:d.pid,q:d.qty,u:prod(d.pid).price}],discount:0,vat:S.docs[type].vat,ref:type==='dn'?'อ้างอิง '+fmtNo('do',d.seq0):''}}
-function printDO(id,type){showPaper(type,ctxDO(S.dos.find(x=>x.id===id),type))}
+function ctxDO(d){const c=S.customers.find(x=>x.id===d.cust);return{no:fmtNo('do',d.seq0),date:BASE,cust:c,addr:d.ship,items:[{pid:d.pid,q:d.qty,u:prod(d.pid).price}],discount:0,vat:S.docs.do.vat,ref:''}}
+function ctxDN(n){const d=S.dos.find(x=>x.id===n.doId),c=S.customers.find(x=>x.id===d.cust);return{no:fmtNo('dn',n.seq),date:BASE,cust:c,addr:d.ship,items:[{pid:d.pid,q:d.qty,u:prod(d.pid).price}],discount:0,vat:S.docs.dn.vat,ref:'อ้างอิง '+fmtNo('do',d.seq0),recv:n.status==='received'?`${n.recv} เมื่อ ${n.recvDate}`:''}}
+function ctxInvoice(v){const c=S.customers.find(x=>x.id===v.cust),a=c.addr.find(x=>x.def)||c.addr[0],q=S.quotes.find(x=>x.id===v.qid);return{no:fmtNo('invoice',v.seq),date:new Date(v.date+'T00:00:00'),due:new Date(v.due+'T00:00:00'),cust:c,addr:a.line+' '+a.prov,items:v.items,discount:v.discount,vat:v.vat,ref:'อ้างอิง '+fmtNo('quote',q.seq)}}
+function printDO(id){showPaper('do',ctxDO(S.dos.find(x=>x.id===id)))}
+function printDN(id){showPaper('dn',ctxDN(S.dns.find(x=>x.id===id)))}
+function printInvoice(id){showPaper('invoice',ctxInvoice(S.invoices.find(x=>x.id===id)))}
 function printQuote(id){showPaper('quote',ctxQuote(S.quotes.find(x=>x.id===id)))}
 
 /* ---------- pages ---------- */
 const V={
 home(){
   const low=S.products.filter(isLow),open=S.jobs.filter(j=>!['done','cancelled'].includes(j.status)),over=open.filter(j=>j.due<dkey(BASE));
+  const unpaid=S.invoices.filter(v=>v.status==='issued'),unpaidAmt=unpaid.reduce((a,v)=>a+qTotals(v).total,0),overIv=unpaid.filter(v=>v.due<dkey(BASE));
   const sent=S.quotes.filter(q=>q.status==='sent').reduce((s,q)=>s+qTotals(q).total,0),won=S.quotes.filter(q=>q.status==='accepted').reduce((s,q)=>s+qTotals(q).total,0);
   const today=S.visits.filter(v=>v.off===0&&v.status==='planned').sort((a,b)=>a.s.localeCompare(b.s));
   const k=(l,v,bad,sub)=>`<div class="card ${bad?'bad2':''}"><small>${l}</small><b>${v}</b>${sub?`<small>${sub}</small>`:''}</div>`;
@@ -311,7 +332,7 @@ home(){
    <div class="hco">${S.company.logo?`<img src="${S.company.logo}" alt="">`:''}<div><small>บริษัท</small><b>${esc(S.company.name)}</b></div></div>
    <div style="margin-top:12px;color:#d6e4ff">สวัสดี คุณเอ · ${ROLE_LABEL[S.role]}</div></section>
   <div class="kp">${k('นัดเข้าพบวันนี้',today.length)}${k('Job ที่ยังเปิด',open.length,over.length>0,over.length?`เกินกำหนด ${over.length}`:'')}${k('ใบเสนอราคารอตอบ',baht(sent),0,'บาท')}${k('ปิดได้ 30 วัน',baht(won),0,'บาท')}
-   ${k('DO รอ / ระหว่างส่ง',S.dos.filter(d=>['draft','ready'].includes(d.status)).length+' / '+S.dos.filter(d=>d.status==='dispatched').length)}${k('ต่ำกว่า Safety Stock',low.length,low.length>0)}</div>
+   ${k('DO รอ / ระหว่างส่ง',S.dos.filter(d=>['draft','ready'].includes(d.status)).length+' / '+S.dos.filter(d=>d.status==='dispatched').length)}${k('อินวอยซ์ค้างชำระ',baht(unpaidAmt),0,'บาท')}${k('เกินกำหนดชำระ',overIv.length,overIv.length>0)}${k('ต่ำกว่า Safety Stock',low.length,low.length>0)}</div>
   ${qa.length?`<div class="qa">${qa.map(a=>`<button onclick="${a[3]}"><span class="ci">${ic(a[2])}</span>${a[1]}</button>`).join('')}</div>`:''}
   <div class="sec"><b>นัดวันนี้</b><a href="#" onclick="go('visits');return false">ดูปฏิทิน</a></div>
   ${today.map(v=>{const c=S.customers.find(x=>x.id===v.cust),a=c.addr.find(x=>x.def)||c.addr[0];return `<div class="card"><b>${v.s}–${v.e} · ${v.title}</b><div class="muted">${c.name}</div><div class="row" style="margin-top:6px"><a href="${dirLink(a.lat,a.lng)}" target="_blank" rel="noopener">นำทาง</a></div></div>`}).join('')||'<div class="card muted">วันนี้ไม่มีนัด</div>'}
@@ -346,7 +367,7 @@ visits(){
    <p class="muted">กฎ: ผู้รับผิดชอบคนเดียวกันมีนัดซ้อนเวลากันไม่ได้ · เซลส์สร้างนัดให้ตัวเองเท่านั้น แอดมินมอบหมายให้คนอื่นได้ · สีน้ำเงิน = ของฉัน, เทา = ของคนอื่น, เขียว = เสร็จแล้ว</p>`;
 },
 docs(){
-  const T=[['quotes','ใบเสนอราคา'],['jobs','Job Ticket'],['delivery','ส่งของ (DO)']];
+  const T=[['quotes','ใบเสนอราคา'],['jobs','Job Ticket'],['delivery','ส่งของ (DO)'],['dns','ใบส่งของ'],['invoices','อินวอยซ์']];
   return `<div class="seg">${T.map(t=>`<button class="${S.dtab===t[0]?'on':''}" onclick="S.dtab='${t[0]}';document.getElementById('q').value='';render()">${t[1]}</button>`).join('')}</div>${V[S.dtab]()}
    ${can('docset')?`<p><a href="#" onclick="go('docset');return false">ตั้งค่ารูปแบบเอกสาร (หัวกระดาษ เลขที่ เงื่อนไข) ›</a></p>`:''}`;
 },
@@ -366,7 +387,7 @@ quotes(){
    <tr><td></td><td class="muted">ยอดรวม</td><td class="r">${baht(t.sub)}</td></tr><tr><td></td><td class="muted">ส่วนลด</td><td class="r">${baht(q.discount)}</td></tr><tr><td></td><td class="muted">VAT ${q.vat}%</td><td class="r">${baht(t.vat)}</td></tr>
    <tr><td></td><td><b>รวมสุทธิ</b></td><td class="r"><b>${baht(t.total)} บาท</b></td></tr></table>
    ${can('quotes')&&q.status==='draft'?`<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="addItem(${q.id})">+ เพิ่มรายการ</button><button class="btn ghost sm" onclick="disc(${q.id})">ตั้งส่วนลด</button></div>`:''}
-   <div class="row" style="margin-top:8px">${can('quotes')?NEXT[q.status].map(s=>`<button class="btn sm ${s==='cancelled'?'red':''}" onclick="moveQuote(${q.id},'${s}')">${s==='sent'?'ส่งให้ลูกค้า':'→ '+L[s]}</button>`).join(''):''}<button class="btn ghost sm" onclick="printQuote(${q.id})">${ic('print',16)} ดูเอกสาร / พิมพ์</button></div>
+   <div class="row" style="margin-top:8px">${can('quotes')?NEXT[q.status].map(s=>`<button class="btn sm ${s==='cancelled'?'red':''}" onclick="moveQuote(${q.id},'${s}')">${s==='sent'?'ส่งให้ลูกค้า':'→ '+L[s]}</button>`).join(''):''}${q.status==='accepted'?(()=>{const iv=S.invoices.find(v=>v.qid===q.id&&v.status!=='cancelled');return iv?`<span class="pill ok">อินวอยซ์ ${fmtNo('invoice',iv.seq)}</span>`:can('invoices')?`<button class="btn sm" onclick="issueInvoice(${q.id})">ออกอินวอยซ์</button>`:''})():''}<button class="btn ghost sm" onclick="printQuote(${q.id})">${ic('print',16)} ดูเอกสาร / พิมพ์</button></div>
    ${q.status!=='draft'?'<div class="muted" style="margin-top:6px">เอกสารถูกล็อก: แก้รายการ/ส่วนลดไม่ได้หลังส่ง</div>':''}</div>`}).join('')}`;
 },
 delivery(){
@@ -379,8 +400,22 @@ delivery(){
    ${list.sort((a,b)=>(a.seq||99)-(b.seq||99)).map((d,i)=>`<div class="card f"><div class="pr">${thumb(prod(d.pid),'s')}<div style="flex:1"><b>${d.seq||i+1}. ${fmtNo('do',d.seq0)} · ${custName(d.cust)}</b><div class="muted">${d.ship}</div><div class="muted">• ${prod(d.pid).name} × ${d.qty}</div></div></div>
    <div class="row" style="margin:6px 0"><span class="pill ${d.status==='delivered'?'ok':d.status==='dispatched'?'warn':''}">${L[d.status]}</span><a href="${mapLink(d.lat,d.lng)}" target="_blank" rel="noopener">แผนที่</a><a href="${dirLink(d.lat,d.lng)}" target="_blank" rel="noopener">นำทาง</a></div>
    <div class="row">${can('delivery')?`${d.status==='draft'?`<button class="btn sm" onclick="doAct(${d.id},'ready')">พร้อมส่ง (จองสต็อก)</button>`:''}${d.status==='ready'?`<button class="btn sm" onclick="doAct(${d.id},'dispatched')">ออกจัดส่ง (ตัดสต็อก)</button>`:''}${d.status==='dispatched'?`<button class="btn sm" onclick="doAct(${d.id},'delivered')">ส่งสำเร็จ</button>`:''}${['draft','ready'].includes(d.status)?`<button class="btn red sm" onclick="doAct(${d.id},'cancelled')">ยกเลิก DO</button>`:''}`:''}
-   <button class="btn ghost sm" onclick="printDO(${d.id},'do')">${ic('print',16)} DO</button><button class="btn ghost sm" onclick="printDO(${d.id},'dn')">${ic('print',16)} ใบส่งของ</button></div></div>`).join('')}`).join('')}
+   <button class="btn ghost sm" onclick="printDO(${d.id})">${ic('print',16)} พิมพ์ DO</button>${(()=>{const n=S.dns.find(x=>x.doId===d.id);return n?`<button class="btn ghost sm" onclick="printDN(${n.id})">${ic('print',16)} ใบส่งของ ${fmtNo('dn',n.seq)}</button>`:(can('dns')&&['dispatched','delivered'].includes(d.status)?`<button class="btn sm" onclick="issueDN(${d.id})">ออกใบส่งของ</button>`:'')})()}</div></div>`).join('')}`).join('')}
   <p class="muted">ที่อยู่/พิกัดปลายทางถูกคัดลอกลง DO ตอนสร้าง · "พร้อมส่ง" จองสต็อก (ไม่พอจะปฏิเสธ) · "ออกจัดส่ง" จึงตัดสต็อกจริง</p>`;
+},
+dns(){
+  return `${roNote('dns')}${S.dns.map(n=>{const d=S.dos.find(x=>x.id===n.doId);return `<div class="card f"><b>${fmtNo('dn',n.seq)} · ${custName(d.cust)}</b> <span class="pill ${n.status==='received'?'ok':'warn'}">${n.status==='received'?'ลูกค้าตรวจรับแล้ว':'ออกแล้ว รอตรวจรับ'}</span>
+   <div class="muted">อ้างอิง ${fmtNo('do',d.seq0)} · ${d.ship}</div><div class="muted">• ${prod(d.pid).name} × ${d.qty}</div>${n.status==='received'?`<div class="muted">รับโดย ${esc(n.recv)} · ${n.recvDate}</div>`:''}
+   <div class="row" style="margin-top:8px">${can('dns')&&n.status==='issued'?`<button class="btn sm" onclick="receiveDN(${n.id})">บันทึกตรวจรับ</button>`:''}<button class="btn ghost sm" onclick="printDN(${n.id})">${ic('print',16)} ดูเอกสาร / พิมพ์</button></div></div>`}).join('')||'<div class="card muted">ยังไม่มีใบส่งของ — ออกจากหน้า DO หลังกด "ออกจัดส่ง" ใบส่งของจะติดไปกับสินค้าเพื่อให้ลูกค้าตรวจรับและลงนาม</div>'}
+  <p class="muted">DO = ใบสั่งปล่อยสินค้าภายในบริษัท (จอง/ตัดสต็อก) · ใบส่งของ = เอกสารที่ไปกับสินค้า ให้ลูกค้าตรวจรับและเซ็น · เมื่อบันทึกตรวจรับ DO จะเป็น "ส่งสำเร็จ"</p>`;
+},
+invoices(){
+  const L={issued:'รอชำระ',paid:'ชำระแล้ว',cancelled:'ยกเลิก'};
+  return `${roNote('invoices')}${S.invoices.map(v=>{const t=qTotals(v),over=v.status==='issued'&&v.due<dkey(BASE);return `<div class="card f"><b>${fmtNo('invoice',v.seq)} · ${custName(v.cust)}</b> <span class="pill ${v.status==='paid'?'ok':v.status==='cancelled'?'':over?'bad':'warn'}">${over?'เกินกำหนดชำระ':L[v.status]}</span>
+   <div class="muted">อ้างอิง ${fmtNo('quote',S.quotes.find(q=>q.id===v.qid).seq)} · ออก ${v.date} · ครบกำหนด ${v.due}${v.paidDate?' · รับชำระ '+v.paidDate:''}</div>
+   <div style="margin-top:4px"><b>${baht(t.total)} บาท</b> <span class="muted">(รวม VAT ${v.vat}%)</span></div>
+   <div class="row" style="margin-top:8px">${can('invoices')&&v.status==='issued'?`<button class="btn sm" onclick="payInvoice(${v.id})">บันทึกรับชำระ</button><button class="btn red sm" onclick="cancelInvoice(${v.id})">ยกเลิก</button>`:''}<button class="btn ghost sm" onclick="printInvoice(${v.id})">${ic('print',16)} ดูเอกสาร / พิมพ์</button></div></div>`}).join('')||'<div class="card muted">ยังไม่มีอินวอยซ์ — ออกจากใบเสนอราคาที่ลูกค้าตกลงแล้ว (แท็บ ใบเสนอราคา)</div>'}
+  <p class="muted">ออกจากใบเสนอราคาที่ "ลูกค้าตกลง" เท่านั้น ใบละ 1 อินวอยซ์ · ยอดเงินคัดลอกจากใบเสนอราคาและแก้ไม่ได้ (ยกเลิกแล้วออกใหม่ได้) · วันครบกำหนดคิดจากเครดิตในตั้งค่าเอกสาร</p>`;
 },
 products(){
   return `${roNote('products')}${S.products.map(p=>`<div class="card f"><div class="pr">${thumb(p)}<div style="flex:1"><b>${p.name}</b><div class="muted">${p.sku} · ${baht(p.price)} บาท/${p.unit}</div><div class="muted">Safety Stock ${p.min} · รูป ${p.imgs.length}/3</div></div>
@@ -443,7 +478,7 @@ docset(){
    <label class="f">ช่องลงนาม (คั่นด้วยเครื่องหมายจุลภาค สูงสุด 4 ช่อง)<input value="${esc(d.sign.join(', '))}" ${dis} oninput="setDS('sign',this.value.split(',').map(s=>s.trim()).filter(Boolean).slice(0,4))"></label></div>
   <div class="sec"><b>ตัวอย่างเอกสาร (A4)</b><span class="muted" style="font-size:13px">แสดงตามค่าที่กำลังแก้</span></div><div id="pv"></div>
   ${ed?`<div class="row" style="margin-top:12px"><button class="btn" onclick="saveDocs()">บันทึกการตั้งค่า</button><button class="btn ghost" onclick="S.dd=JSON.parse(JSON.stringify(S.docs));render()">ยกเลิกการแก้ไข</button><button class="btn ghost" onclick="fullPreview()">${ic('print',16)} เปิดเต็มจอ / พิมพ์</button></div>`:''}
-  <p class="muted">หมายเหตุ: ตัวอย่างนี้ตั้งค่าได้ 4 ชนิด — ตอนนี้แอปมีเอกสารจริงเฉพาะ ใบเสนอราคา และ DO (ใบส่งของพิมพ์จาก DO) ส่วนอินวอยซ์ต้องเพิ่มโมดูลออกเอกสารภายหลัง</p>`;
+  <p class="muted">ตั้งค่าแยกกัน 4 ชนิด: ใบเสนอราคา · อินวอยซ์ · ใบส่งของ (ไปกับสินค้า ให้ลูกค้าตรวจรับ) · DO (ใบสั่งปล่อยสินค้าภายใน) แต่ละชนิดมีตัวอักษรนำหน้าและลำดับเลขของตัวเอง</p>`;
 }};
 function setDS(k,v){const d=S.dd[S.ds];d[k]=v;updPV()}
 function updPV(){const d=S.dd[S.ds],pv=document.getElementById('pv');if(!pv)return;const ns=document.getElementById('nosample');
@@ -482,7 +517,10 @@ const TOPACT=()=>{const p=S.page,t=S.dtab;
   if(p==='zones')return['โซน',"toast('ฟอร์มเพิ่มโซน: รหัส / ชื่อ / จังหวัดในโซน')",'zones'];
   if(p==='docs'&&t==='quotes')return['ใบเสนอราคา','addQuote()','quotes'];
   if(p==='docs'&&t==='jobs')return['Job','addJob()','jobs'];return null};
-function render(){
+const NAVS=[['home','หน้าแรก','home'],['customers','ลูกค้า','users'],['visits','นัดหมาย','calendar'],['g','เอกสาร'],['docs:quotes','ใบเสนอราคา','file'],['docs:jobs','Job Ticket','clip'],['docs:delivery','ส่งของ (DO)','truck'],['docs:dns','ใบส่งของ','dncheck'],['docs:invoices','อินวอยซ์','receipt'],['g','สินค้าและคลัง'],['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['g','ตั้งค่า'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders']];
+function navTo(k){if(k.startsWith('docs:')){S.dtab=k.slice(5);go('docs')}else go(k)}
+function renderSide(){const c=S.company;document.getElementById('side').innerHTML=`<div class="sb"><img src="${LOGO_APP}" alt=""><div><b>Sale<span>Pro</span></b><small>by Monte</small></div></div>`+NAVS.map(([k,l,i])=>k==='g'?`<div class="sg">${l}</div>`:`<button class="sn ${(k.startsWith('docs:')?S.page==='docs'&&S.dtab===k.slice(5):S.page===k)?'on':''}" onclick="navTo('${k}')">${ic(i)}${l}</button>`).join('')+`<div class="sf">${c.logo?`<img src="${c.logo}" alt="">`:''}<span>${esc(c.name)}</span></div>`}
+function render(){renderSide();
   const home=S.page==='home';document.body.classList.toggle('home',home);
   document.getElementById('bar').innerHTML=BAR.map(([k,l,i])=>{const on=k==='tools'?TOOLPAGES.includes(S.page):S.page===k;return `<button class="bi ${on?'on':''} ${k==='tools'?'mid':''}" onclick="go('${k}')">${k==='tools'?`<span class="disc">${ic(i,26)}</span>`:ic(i)}<span>${l}</span></button>`}).join('');
   document.getElementById('back').innerHTML=ic('back');document.getElementById('back').className='ib'+(BAR.some(b=>b[0]===S.page)?' hid':'');document.getElementById('sbtn').innerHTML=ic('search');document.getElementById('avt').textContent='เอ';
@@ -505,9 +543,23 @@ function vAct(id,a){const v=S.visits.find(x=>x.id===id);if(a==='checkin'){v.chec
 document.getElementById('view').addEventListener('click',e=>{const th=e.target.closest('th');if(!th||th.closest('.paper'))return;const t=th.closest('table'),i=[...th.parentNode.children].indexOf(th),rows=[...t.querySelectorAll('tr')].filter(r=>!r.querySelector('th'));
   const dir=th.dataset.d==='a'?-1:1;th.dataset.d=dir===1?'a':'d';const num=x=>parseFloat(x.replace(/[^0-9.-]/g,''));
   rows.sort((x,y)=>{const a=x.children[i].textContent,b=y.children[i].textContent;return(isNaN(num(a))||isNaN(num(b))?a.localeCompare(b,'th'):num(a)-num(b))*dir}).forEach(r=>r.parentNode.appendChild(r))});
-function addJob(){const c=S.customers[Math.floor(Math.random()*S.customers.length)];S.jSeq++;S.jobs.unshift({id:S.jSeq,no:'JT-2026-'+String(S.jSeq).padStart(4,'0'),cust:c.id,title:'งานใหม่จากลูกค้า (ตัวอย่าง)',pri:'ปกติ',status:'open',due:'2026-12-15',log:['เปิดงาน']});toast('ออกเลข JT ให้อัตโนมัติ');render()}
+const custOpts=()=>S.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+function addJob(){openModal(`<h3 style="margin:0 0 10px">เปิด Job Ticket</h3><label class="f">ลูกค้า *<select id="jf_c">${custOpts()}</select></label><label class="f">หัวข้อ *<input id="jf_t" placeholder="เช่น ขอใบเสนอราคา / แจ้งปัญหาสินค้า"></label>
+  <div class="two"><label class="f">ความสำคัญ<select id="jf_p"><option>ปกติ</option><option>สูง</option></select></label><label class="f">กำหนดเสร็จ<input id="jf_d" type="date" value="${dkey(addD(BASE,14))}"></label></div>
+  <div class="row"><button class="btn" onclick="createJob()">เปิดงาน</button><button class="btn ghost" onclick="closeModal()">ยกเลิก</button></div>`)}
+function createJob(){const g=i=>document.getElementById(i).value.trim();const t=g('jf_t');if(!t)return toast('กรอกหัวข้อ');S.jSeq++;
+  S.jobs.unshift({id:S.jSeq,no:'JT-2026-'+String(S.jSeq).padStart(4,'0'),cust:+g('jf_c'),title:t,pri:g('jf_p'),status:'open',due:g('jf_d')||dkey(addD(BASE,14)),log:['เปิดงาน']});closeModal();toast('ออกเลข JT ให้อัตโนมัติ');render()}
 function moveJob(id,s){const j=S.jobs.find(x=>x.id===id);j.log.push(j.status+' → '+s);j.status=s;render()}
-function addQuote(){S.qSeq++;S.quotes.unshift({id:S.qSeq,seq:S.qSeq,cust:3,status:'draft',discount:0,vat:S.docs.quote.vat,items:[]});toast('ออกเลข '+fmtNo('quote',S.qSeq)+' (ตามรูปแบบที่ตั้งไว้)');render()}
+function addQuote(){openModal(`<h3 style="margin:0 0 10px">สร้างใบเสนอราคา</h3><label class="f">ออกให้ลูกค้า *<select id="qf_c">${custOpts()}</select></label><div class="row"><button class="btn" onclick="createQuote()">สร้าง</button><button class="btn ghost" onclick="closeModal()">ยกเลิก</button></div>`)}
+function createQuote(){const c=+document.getElementById('qf_c').value;S.qSeq++;S.quotes.unshift({id:S.qSeq,seq:S.qSeq,cust:c,status:'draft',discount:0,vat:S.docs.quote.vat,items:[]});closeModal();toast('ออกเลข '+fmtNo('quote',S.qSeq)+' ให้ '+custName(c));render()}
+function issueInvoice(qid){const q=S.quotes.find(x=>x.id===qid);if(q.status!=='accepted')return toast('ออกอินวอยซ์ได้เฉพาะใบเสนอราคาที่ลูกค้าตกลงแล้ว');
+  if(S.invoices.some(v=>v.qid===qid&&v.status!=='cancelled'))return toast('ใบเสนอราคานี้มีอินวอยซ์อยู่แล้ว');
+  S.ivSeq++;S.invoices.unshift({id:S.ivSeq,seq:S.ivSeq,qid,cust:q.cust,items:q.items.map(i=>({...i})),discount:q.discount,vat:q.vat,date:dkey(BASE),due:dkey(addD(BASE,S.docs.invoice.days)),status:'issued'});S.dtab='invoices';toast('ออกอินวอยซ์ '+fmtNo('invoice',S.ivSeq));render()}
+function payInvoice(id){const v=S.invoices.find(x=>x.id===id);v.status='paid';v.paidDate=dkey(BASE);toast('บันทึกรับชำระแล้ว');render()}
+function cancelInvoice(id){S.invoices.find(x=>x.id===id).status='cancelled';toast('ยกเลิกอินวอยซ์ — ออกใหม่จากใบเสนอราคาได้');render()}
+function issueDN(doId){const d=S.dos.find(x=>x.id===doId);if(!['dispatched','delivered'].includes(d.status))return toast('ออกใบส่งของได้หลังออกจัดส่ง');if(S.dns.some(n=>n.doId===doId))return toast('DO นี้มีใบส่งของแล้ว');
+  S.dnSeq++;S.dns.unshift({id:S.dnSeq,seq:S.dnSeq,doId,status:'issued'});toast('ออกใบส่งของ '+fmtNo('dn',S.dnSeq));render()}
+function receiveDN(id){const n=S.dns.find(x=>x.id===id);const name=prompt('ชื่อผู้ตรวจรับสินค้า','');if(!name||!name.trim())return toast('ต้องระบุชื่อผู้ตรวจรับ');n.status='received';n.recv=name.trim();n.recvDate=thDate(BASE);const d=S.dos.find(x=>x.id===n.doId);if(d.status==='dispatched')d.status='delivered';toast('บันทึกตรวจรับแล้ว — DO เป็น ส่งสำเร็จ');render()}
 function addItem(id){const p=S.products[Math.floor(Math.random()*S.products.length)];S.quotes.find(q=>q.id===id).items.push({pid:p.id,q:2,u:p.price});render()}
 function disc(id){const v=parseFloat(prompt('ส่วนลด (บาท)','500'));if(!isNaN(v)&&v>=0){S.quotes.find(q=>q.id===id).discount=v;render()}}
 function moveQuote(id,s){const q=S.quotes.find(x=>x.id===id);if(s==='sent'&&(q.items.length===0||q.discount>qTotals(q).sub)){toast('ต้องมีรายการ และส่วนลดต้องไม่เกินยอดรวม ก่อนส่ง');return}q.status=s;render()}
