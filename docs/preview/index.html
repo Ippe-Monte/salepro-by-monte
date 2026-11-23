@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALEPRO by MONTE — ตัวอย่างหน้าจอ (ข้อมูลสมมติ)</title>
+<style>
+  :root{--bg:#030b2e;--card:#0a1a52;--line:#1b3a8f;--text:#fff;--muted:#9db4ff;--primary:#1e6bff;--accent:#22d3ee;--danger:#ff6b6b;--ok:#34d399;--warn:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,"Noto Sans Thai",sans-serif}
+  .banner{background:#78350f;color:#fff;padding:8px 14px;font-size:13px;text-align:center}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+  header h1{font-size:18px;margin:0}
+  header small{color:var(--muted)}
+  select,input,button,textarea{font:inherit}
+  select,input,textarea{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:40px}
+  nav{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;border-bottom:1px solid var(--line)}
+  nav button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;white-space:nowrap;cursor:pointer}
+  nav button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  h2{font-size:20px;margin:6px 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .kpi b{display:block;font-size:24px;margin-top:2px}
+  .kpi.bad{border-color:var(--danger)} .kpi.bad b{color:var(--danger)}
+  .muted{color:var(--muted)} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;background:#1e293b}
+  .ok{background:#064e3b}.warn{background:#78350f}.bad{background:#7f1d1d}
+  .btn{background:var(--primary);border:0;color:#fff;border-radius:10px;padding:9px 14px;cursor:pointer;min-height:40px}
+  .btn.ghost{background:transparent;border:1px solid var(--line)} .btn.red{background:var(--danger);color:#000}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  a{color:var(--accent)} table{width:100%;border-collapse:collapse} td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .r{text-align:right} .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000;border:1px solid var(--accent);padding:10px 16px;border-radius:10px;display:none;max-width:90vw}
+  .zone{color:var(--accent);font-weight:700;margin:14px 0 6px}
+  .ro{border:1px dashed var(--warn);color:var(--warn);border-radius:10px;padding:6px 10px;font-size:13px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="banner">นี่คือ <b>ตัวอย่างหน้าจอด้วยข้อมูลสมมติ</b> เพื่อให้ตรวจ flow และหน้าตา — ไม่ได้เชื่อมฐานข้อมูลจริง รีเฟรชหน้าแล้วข้อมูลจะกลับเป็นค่าเริ่มต้น</div>
+<header>
+  <div><h1>SALEPRO by MONTE</h1><small>บริษัท: <b>ตัวอย่างวิศวกรรม จำกัด</b></small></div>
+  <label class="row muted">ดูในบทบาท
+    <select id="role">
+      <option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="sales" selected>เซลส์</option>
+      <option value="warehouse">คลังสินค้า</option><option value="dispatcher">ผู้จัดส่ง</option><option value="viewer">ผู้ดูอย่างเดียว</option>
+    </select></label>
+</header>
+<nav id="tabs"></nav>
+<main id="view"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+const ROLE_EDIT = {
+  customers:['owner','admin','sales'], visits:['owner','admin','sales'], jobs:['owner','admin','sales'], quotes:['owner','admin','sales'],
+  products:['owner','admin','warehouse'], stock:['owner','admin','warehouse'], delivery:['owner','admin','dispatcher','warehouse'], zones:['owner','admin','dispatcher'], members:['owner','admin']
+};
+const TABS = [['dash','แดชบอร์ด'],['customers','ลูกค้า'],['visits','แผนเข้าพบ'],['jobs','Job Ticket'],['quotes','ใบเสนอราคา'],['products','สินค้า'],['stock','สต็อก'],['delivery','ส่งของ (DO)'],['zones','โซนส่งของ'],['members','สมาชิก']];
+const baht = n => n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mapLink = (la,ln)=>`https://www.google.com/maps/search/?api=1&query=${la},${ln}`;
+const dirLink = (la,ln)=>`https://www.google.com/maps/dir/?api=1&destination=${la},${ln}`;
+const km = (a,b)=>{const R=6371,r=d=>d*Math.PI/180,dl=r(b[0]-a[0]),dg=r(b[1]-a[1]);const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+
+const S = {
+  tab:'dash',
+  zones:[{id:'N1',name:'กรุงเทพฯ เหนือ',prov:'กรุงเทพฯ, ปทุมธานี'},{id:'E1',name:'ตะวันออก',prov:'ชลบุรี, ระยอง'},{id:'S1',name:'กรุงเทพฯ ใต้ / สมุทรปราการ',prov:'สมุทรปราการ'}],
+  customers:[
+    {id:1,code:'C001',name:'บริษัท สยามพัมพ์ จำกัด',phone:'02-111-2222',addr:[{label:'โรงงานบางนา',line:'99 ถ.บางนา-ตราด',prov:'สมุทรปราการ',lat:13.6604,lng:100.6052,zone:'S1',def:true,contact:'คุณสมชาย 081-111-1111'}]},
+    {id:2,code:'C002',name:'บริษัท อีสเทิร์นแมชชีน จำกัด',phone:'038-333-444',addr:[{label:'โรงงานอมตะ',line:'700 นิคมอมตะซิตี้',prov:'ชลบุรี',lat:13.4968,lng:101.0042,zone:'E1',def:true,contact:'คุณนภา 089-222-3333'}]},
+    {id:3,code:'C003',name:'ห้างหุ้นส่วน นอร์ทเทิร์นเทค',phone:'02-555-6666',addr:[{label:'สำนักงานใหญ่',line:'12 ถ.พหลโยธิน',prov:'ปทุมธานี',lat:13.9892,lng:100.6171,zone:'N1',def:true,contact:'คุณวิชัย 086-444-5555'},{label:'คลังสินค้า',line:'55 ถ.รังสิต-นครนายก',prov:'ปทุมธานี',lat:14.0208,lng:100.7342,zone:'N1',def:false,contact:'คุณพร 082-777-8888'}]}
+  ],
+  products:[
+    {id:1,sku:'PMP-100',name:'ปั๊มน้ำอุตสาหกรรม 100L',unit:'ตัว',price:12500,min:5,on:12,res:0},
+    {id:2,sku:'VLV-050',name:'วาล์วควบคุม 2 นิ้ว',unit:'ตัว',price:3200,min:10,on:14,res:0},
+    {id:3,sku:'SNS-PRS',name:'เซนเซอร์แรงดัน',unit:'ชิ้น',price:2100,min:8,on:6,res:0}
+  ],
+  moves:[],
+  visits:[
+    {id:1,cust:1,title:'ติดตามผลทดลองปั๊ม',date:'วันนี้',time:'09:00–10:30',who:'คุณเอ (เซลส์)',status:'planned',checked:false},
+    {id:2,cust:2,title:'สำรวจหน้างานวาล์วใหม่',date:'วันนี้',time:'13:30–15:00',who:'คุณเอ (เซลส์)',status:'planned',checked:false},
+    {id:3,cust:3,title:'นำเสนอใบเสนอราคา',date:'พรุ่งนี้',time:'10:00–11:00',who:'คุณบี (เซลส์)',status:'planned',checked:false}
+  ],
+  jobs:[
+    {id:1,no:'JT-2026-0001',cust:3,title:'เซนเซอร์ค่าเพี้ยน ขอเปลี่ยนชุดใหม่',pri:'สูง',status:'in_progress',due:'2026-11-20',log:['เปิดงาน','เปิดงาน → กำลังดำเนินการ']},
+    {id:2,no:'JT-2026-0002',cust:1,title:'ขอใบเสนอราคาปั๊ม 3 ตัว',pri:'ปกติ',status:'open',due:'2026-12-05',log:['เปิดงาน']}
+  ],
+  quotes:[
+    {id:1,no:'QT-2026-0001',cust:1,status:'draft',discount:0,vat:7,items:[{d:'ปั๊มน้ำอุตสาหกรรม 100L',q:3,u:12500}]}
+  ],
+  dos:[],
+  doSeq:0, qSeq:1, jSeq:2,
+  open:{}
+};
+const role = () => document.getElementById('role').value;
+const can = m => ROLE_EDIT[m].includes(role());
+const roNote = m => can(m) ? '' : `<div class="ro">บทบาทนี้ดูได้อย่างเดียว — ปุ่มแก้ไขถูกซ่อน (ฐานข้อมูลบังคับสิทธิ์เดียวกัน)</div>`;
+const custName = id => (S.customers.find(c=>c.id===id)||{}).name||'-';
+const avail = p => p.on - p.res;
+const isLow = p => p.min>0 && avail(p) <= p.min;
+const qTotals = q => {const sub=q.items.reduce((s,i)=>s+Math.round(i.q*i.u*100)/100,0);const base=Math.max(sub-q.discount,0);const vat=Math.round(base*q.vat)/100;return {sub,vat,total:base+vat}};
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2600)}
+function log(p,kind,delta,resDelta,note){S.moves.unshift({p:p.id,kind,delta,resDelta,after:p.on,note,t:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})})}
+
+const V = {
+dash(){
+  const low=S.products.filter(isLow);const open=S.jobs.filter(j=>!['done','cancelled'].includes(j.status));
+  const over=open.filter(j=>j.due<'2026-11-23');const sent=S.quotes.filter(q=>q.status==='sent').reduce((s,q)=>s+qTotals(q).total,0);
+  const won=S.quotes.filter(q=>q.status==='accepted').reduce((s,q)=>s+qTotals(q).total,0);
+  const k=(l,v,bad)=>`<div class="card kpi ${bad?'bad':''}"><span class="muted">${l}</span><b>${v}</b></div>`;
+  return `<h2>แดชบอร์ด</h2><div class="grid">
+   ${k('นัดเข้าพบวันนี้',S.visits.filter(v=>v.date==='วันนี้'&&v.status==='planned').length)}${k('นัดเข้าพบ 7 วัน',S.visits.filter(v=>v.status==='planned').length)}
+   ${k('Job ที่ยังเปิด',open.length)}${k('Job เกินกำหนด',over.length,over.length>0)}
+   ${k('ใบเสนอราคารอตอบ (บาท)',baht(sent))}${k('ปิดได้ 30 วัน (บาท)',baht(won))}
+   ${k('DO รอจัดส่ง',S.dos.filter(d=>['draft','ready'].includes(d.status)).length)}${k('DO ระหว่างจัดส่ง',S.dos.filter(d=>d.status==='dispatched').length)}
+   ${k('สินค้าต่ำกว่า Safety Stock',low.length,low.length>0)}</div>
+   ${low.length?`<div class="card"><b>สินค้าที่ต้องสั่งเพิ่ม</b>${low.map(p=>`<div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted">${p.sku} ${p.name}</span><span class="pill bad">ใช้ได้ ${avail(p)} / Safety ${p.min}</span></div>`).join('')}</div>`:''}
+   <p class="muted">ลองทำ: ไปแท็บ "ส่งของ (DO)" สร้าง DO → พร้อมส่ง → ออกจัดส่ง แล้วกลับมาดูตัวเลขและสต็อกเปลี่ยน</p>`;
+},
+customers(){
+  return `<h2>ลูกค้า</h2>${roNote('customers')}${S.customers.map(c=>`<div class="card"><b>${c.name}</b> <span class="muted">${c.code} · ${c.phone} · ${c.addr.length} ที่อยู่</span>
+   ${c.addr.map(a=>`<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px"><b>${a.label}</b> ${a.def?'<span class="pill ok">ค่าเริ่มต้น</span>':''} <span class="pill">${(S.zones.find(z=>z.id===a.zone)||{}).name||'ไม่ระบุโซน'}</span>
+   <div class="muted">${a.line} ${a.prov} · ติดต่อ ${a.contact}</div><div class="muted">พิกัด ${a.lat}, ${a.lng}</div>
+   <div class="row"><a href="${mapLink(a.lat,a.lng)}" target="_blank" rel="noopener">เปิดแผนที่</a><a href="${dirLink(a.lat,a.lng)}" target="_blank" rel="noopener">นำทาง</a></div></div>`).join('')}
+   ${can('customers')?`<div class="row" style="margin-top:8px"><button class="btn ghost" onclick="toast('ฟอร์มเพิ่มที่อยู่: ชื่อสถานที่ / ที่อยู่ / จังหวัด / ละติจูด-ลองจิจูด / ปุ่ม ใช้ตำแหน่งปัจจุบัน / โซน')">+ เพิ่มที่อยู่</button></div>`:''}</div>`).join('')}
+   <p class="muted">หมายเหตุ: หน้าปักหมุดบนแผนที่ในแอปจะเพิ่มเมื่อมี Google Maps API key — ตอนนี้ใช้ช่องพิกัด, ปุ่มตำแหน่งปัจจุบัน และลิงก์เปิด Google Maps</p>`;
+},
+visits(){
+  const days=['วันนี้','พรุ่งนี้'];
+  return `<h2>แผนเข้าพบลูกค้า</h2>${roNote('visits')}${days.map(d=>`<div class="zone">${d}</div>${S.visits.filter(v=>v.date===d).map(v=>`<div class="card"><b>${v.time} · ${v.title}</b>
+   <div class="muted">${custName(v.cust)} · ${v.who}</div><div class="row" style="margin:6px 0"><span class="pill ${v.status==='done'?'ok':''}">${v.status==='done'?'เสร็จแล้ว':'วางแผน'}</span>${v.checked?'<span class="pill ok">เช็คอินแล้ว</span>':''}</div>
+   ${can('visits')&&v.status==='planned'?`<div class="row"><button class="btn ghost" onclick="S.visits.find(x=>x.id==${v.id}).checked=true;toast('บันทึกตำแหน่งเช็คอิน (ตัวอย่าง)');render()">เช็คอินตำแหน่ง</button><button class="btn" onclick="S.visits.find(x=>x.id==${v.id}).status='done';toast('จบการเข้าพบ');render()">จบการเข้าพบ</button></div>`:''}</div>`).join('')}`).join('')}
+   <p class="muted">กฎ: ผู้รับผิดชอบคนเดียวกันมีนัดซ้อนเวลากันไม่ได้ (ระบบปฏิเสธ) ส่วนเซลส์สร้างนัดให้ตัวเองเท่านั้น แอดมินมอบหมายให้คนอื่นได้</p>`;
+},
+jobs(){
+  const L={open:'เปิดงาน',in_progress:'กำลังดำเนินการ',waiting_customer:'รอลูกค้า',done:'เสร็จสิ้น',cancelled:'ยกเลิก'};
+  const NEXT={open:['in_progress','cancelled'],in_progress:['waiting_customer','done','cancelled'],waiting_customer:['in_progress','cancelled'],done:[],cancelled:[]};
+  return `<h2>Job Ticket</h2>${roNote('jobs')}${can('jobs')?`<button class="btn" onclick="addJob()">+ รับงานใหม่จากลูกค้า</button><br><br>`:''}
+  ${S.jobs.map(j=>`<div class="card"><b>${j.no} · ${j.title}</b><div class="muted">${custName(j.cust)} · กำหนด ${j.due}</div>
+   <div class="row" style="margin:6px 0"><span class="pill ${j.status==='done'?'ok':j.status==='waiting_customer'?'warn':''}">${L[j.status]}</span><span class="pill ${j.pri==='สูง'?'warn':''}">ความสำคัญ: ${j.pri}</span>${j.due<'2026-11-23'&&!['done','cancelled'].includes(j.status)?'<span class="pill bad">เกินกำหนด</span>':''}</div>
+   <div class="muted">${j.log.map(x=>'• '+x).join('<br>')}</div>
+   ${can('jobs')?`<div class="row" style="margin-top:8px">${NEXT[j.status].map(s=>`<button class="btn ghost" onclick="moveJob(${j.id},'${s}')">→ ${L[s]}</button>`).join('')}</div>`:''}</div>`).join('')}
+   <p class="muted">เลขที่เอกสารออกโดยฐานข้อมูล (JT-ปี-ลำดับ แยกตามบริษัท) ประวัติการเปลี่ยนสถานะแก้ย้อนหลังไม่ได้</p>`;
+},
+quotes(){
+  const L={draft:'ร่าง',sent:'ส่งแล้ว',accepted:'ลูกค้าตกลง',rejected:'ลูกค้าปฏิเสธ',cancelled:'ยกเลิก'};
+  const NEXT={draft:['sent','cancelled'],sent:['accepted','rejected','cancelled'],accepted:[],rejected:[],cancelled:[]};
+  return `<h2>ใบเสนอราคา</h2>${roNote('quotes')}${can('quotes')?`<button class="btn" onclick="addQuote()">+ สร้างใบเสนอราคา</button><br><br>`:''}
+  ${S.quotes.map(q=>{const t=qTotals(q);return `<div class="card"><b>${q.no} · ${custName(q.cust)}</b> <span class="pill ${q.status==='accepted'?'ok':q.status==='sent'?'warn':''}">${L[q.status]}</span>
+   <table style="margin-top:8px">${q.items.map(i=>`<tr><td>${i.d} × ${i.q}</td><td class="r">${baht(i.q*i.u)}</td></tr>`).join('')}
+   <tr><td class="muted">ยอดรวม</td><td class="r">${baht(t.sub)}</td></tr><tr><td class="muted">ส่วนลด</td><td class="r">${baht(q.discount)}</td></tr><tr><td class="muted">VAT ${q.vat}%</td><td class="r">${baht(t.vat)}</td></tr>
+   <tr><td><b>รวมสุทธิ</b></td><td class="r"><b>${baht(t.total)} บาท</b></td></tr></table>
+   ${can('quotes')&&q.status==='draft'?`<div class="row" style="margin-top:8px"><button class="btn ghost" onclick="addItem(${q.id})">+ เพิ่มรายการ</button><button class="btn ghost" onclick="disc(${q.id})">ตั้งส่วนลด</button></div>`:''}
+   <div class="row" style="margin-top:8px">${can('quotes')?NEXT[q.status].map(s=>`<button class="btn ${s==='cancelled'?'red':''}" onclick="moveQuote(${q.id},'${s}')">${s==='sent'?'ส่งให้ลูกค้า':'→ '+L[s]}</button>`).join(''):''}<button class="btn ghost" onclick="window.print()">พิมพ์ / PDF</button></div>
+   ${q.status!=='draft'?'<div class="muted" style="margin-top:6px">เอกสารถูกล็อก: แก้รายการ/ส่วนลดไม่ได้หลังส่ง</div>':''}</div>`}).join('')}`;
+},
+products(){
+  return `<h2>สินค้า</h2>${roNote('products')}<div class="card"><table><tr><th>รหัส</th><th>ชื่อ</th><th class="r">ราคา</th><th class="r">Safety Stock</th></tr>
+  ${S.products.map(p=>`<tr><td>${p.sku}</td><td>${p.name}</td><td class="r">${baht(p.price)}</td><td class="r">${p.min} ${can('products')?`<button class="btn ghost" style="min-height:28px;padding:2px 8px" onclick="setMin(${p.id})">แก้</button>`:''}</td></tr>`).join('')}</table></div>
+  ${can('products')?`<button class="btn" onclick="toast('ฟอร์มลงทะเบียนสินค้า: SKU / ชื่อ / หน่วย / ราคาขาย / ต้นทุน / Safety Stock')">+ ลงทะเบียนสินค้า</button>`:''}`;
+},
+stock(){
+  return `<h2>สต็อก</h2>${roNote('stock')}${S.products.map(p=>`<div class="card"><div class="row" style="justify-content:space-between"><b>${p.name}</b>${isLow(p)?'<span class="pill bad">ต่ำกว่า Safety</span>':'<span class="pill ok">ปกติ</span>'}</div>
+  <div class="muted">${p.sku} · คงเหลือ ${p.on} · จอง ${p.res} · ใช้ได้ ${avail(p)} ${p.unit} · Safety ${p.min}</div>
+  ${can('stock')?`<div class="row" style="margin-top:8px"><button class="btn ghost" onclick="recv(${p.id})">รับเข้า</button><button class="btn ghost" onclick="adj(${p.id})">ปรับยอดนับจริง</button></div>`:''}</div>`).join('')}
+  <div class="card"><b>ประวัติความเคลื่อนไหว (แก้ย้อนหลังไม่ได้)</b>${S.moves.length?S.moves.map(m=>`<div class="muted">${m.t} · ${(S.products.find(p=>p.id===m.p)||{}).sku} · ${m.kind} ${m.delta||m.resDelta?(m.delta?(m.delta>0?'+':'')+m.delta:'จอง '+(m.resDelta>0?'+':'')+m.resDelta):''} → คงเหลือ ${m.after} · ${m.note}</div>`).join(''):'<div class="muted">ยังไม่มีความเคลื่อนไหว</div>'}</div>`;
+},
+delivery(){
+  const L={draft:'ร่าง',ready:'พร้อมส่ง (จองสต็อกแล้ว)',dispatched:'ออกจัดส่ง',delivered:'ส่งสำเร็จ',cancelled:'ยกเลิก'};
+  const live=S.dos.filter(d=>d.status!=='cancelled');const byZone={};live.forEach(d=>{(byZone[d.zone]=byZone[d.zone]||[]).push(d)});
+  return `<h2>ใบส่งของ (DO) และแผนจัดส่งวันนี้</h2>${roNote('delivery')}
+  ${can('delivery')?`<div class="card"><b>สร้าง DO</b><div class="row" style="margin-top:8px"><select id="doc">${S.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
+   <select id="dop">${S.products.map(p=>`<option value="${p.id}">${p.sku} (ใช้ได้ ${avail(p)})</option>`).join('')}</select><input id="doq" type="number" min="1" value="2" style="width:80px"><button class="btn" onclick="makeDO()">สร้าง DO</button></div></div>`:''}
+  ${Object.keys(byZone).length===0?'<div class="card muted">ยังไม่มี DO — สร้างด้านบน</div>':''}
+  ${Object.entries(byZone).map(([zid,list])=>`<div class="row" style="justify-content:space-between"><div class="zone">โซน ${zid} · ${(S.zones.find(z=>z.id===zid)||{}).name} (${list.length} จุด)</div>${can('delivery')?`<button class="btn ghost" onclick="autoOrder('${zid}')">เรียงตามระยะใกล้</button>`:''}</div>
+   ${list.sort((a,b)=>(a.seq||99)-(b.seq||99)).map((d,i)=>`<div class="card"><b>${d.seq||i+1}. ${d.no} · ${custName(d.cust)}</b><div class="muted">${d.ship}</div>
+   <div class="muted">• ${d.item} × ${d.qty}</div><div class="row" style="margin:6px 0"><span class="pill ${d.status==='delivered'?'ok':d.status==='dispatched'?'warn':''}">${L[d.status]}</span><a href="${mapLink(d.lat,d.lng)}" target="_blank" rel="noopener">แผนที่</a><a href="${dirLink(d.lat,d.lng)}" target="_blank" rel="noopener">นำทาง</a></div>
+   ${can('delivery')?`<div class="row">${d.status==='draft'?`<button class="btn" onclick="doAct(${d.id},'ready')">พร้อมส่ง (จองสต็อก)</button>`:''}${d.status==='ready'?`<button class="btn" onclick="doAct(${d.id},'dispatched')">ออกจัดส่ง (ตัดสต็อก)</button>`:''}${d.status==='dispatched'?`<button class="btn" onclick="doAct(${d.id},'delivered')">ส่งสำเร็จ</button>`:''}${['draft','ready'].includes(d.status)?`<button class="btn red" onclick="doAct(${d.id},'cancelled')">ยกเลิก DO</button>`:''}</div>`:''}</div>`).join('')}`).join('')}
+  <p class="muted">ที่อยู่/พิกัดปลายทางถูกคัดลอกลง DO ตอนสร้าง — แก้ที่อยู่ลูกค้าภายหลังไม่กระทบ DO ที่ออกไปแล้ว · เมื่อ "พร้อมส่ง" ระบบจองสต็อก ถ้าไม่พอจะปฏิเสธ · เมื่อ "ออกจัดส่ง" จึงตัดสต็อกจริง</p>`;
+},
+zones(){
+  return `<h2>โซนส่งของ</h2>${roNote('zones')}${S.zones.map(z=>`<div class="card"><b>${z.id} · ${z.name}</b><div class="muted">${z.prov}</div></div>`).join('')}${can('zones')?`<button class="btn" onclick="toast('ฟอร์มเพิ่มโซน: รหัส / ชื่อ / จังหวัดในโซน')">+ เพิ่มโซน</button>`:''}`;
+},
+members(){
+  const rows=[['คุณเอ','เจ้าของ','ใช้งาน'],['คุณบี','แอดมิน','ใช้งาน'],['คุณซี','เซลส์','ใช้งาน'],['คุณดี','คลังสินค้า','ใช้งาน'],['คุณอี','ผู้จัดส่ง','ปิดใช้งาน']];
+  return `<h2>สมาชิก</h2>${can('members')?'':'<div class="ro">เฉพาะเจ้าของ/แอดมินที่เห็นหน้านี้ในแอปจริง</div>'}<div class="card"><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="pill ${r[2]==='ใช้งาน'?'ok':'bad'}">${r[2]}</span></td></tr>`).join('')}</table></div>
+  <div class="card muted">เชิญสมาชิกด้วยโค้ด 12 หลัก + อีเมลต้องตรงกัน อายุ 7 วัน · แอดมินแก้สิทธิ์ "เจ้าของ" ไม่ได้ · ต้องมีเจ้าของที่ใช้งานอยู่อย่างน้อย 1 คนเสมอ · ผู้ใช้ 1 คนอยู่ได้หลายบริษัทและสลับได้</div>`;
+}};
+
+function render(){
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()">${l}</button>`).join('');
+  document.getElementById('view').innerHTML=V[S.tab]();
+}
+function addJob(){const c=S.customers[Math.floor(Math.random()*S.customers.length)];S.jSeq++;S.jobs.unshift({id:S.jSeq,no:'JT-2026-000'+S.jSeq,cust:c.id,title:'งานใหม่จากลูกค้า (ตัวอย่าง)',pri:'ปกติ',status:'open',due:'2026-12-15',log:['เปิดงาน']});toast('ออกเลข JT ให้อัตโนมัติ');render()}
+function moveJob(id,s){const j=S.jobs.find(x=>x.id===id);j.log.push(j.status+' → '+s);j.status=s;render()}
+function addQuote(){S.qSeq++;S.quotes.unshift({id:S.qSeq,no:'QT-2026-000'+S.qSeq,cust:3,status:'draft',discount:0,vat:7,items:[]});render()}
+function addItem(id){const p=S.products[Math.floor(Math.random()*S.products.length)];S.quotes.find(q=>q.id===id).items.push({d:p.name,q:2,u:p.price});render()}
+function disc(id){const v=parseFloat(prompt('ส่วนลด (บาท)','500'));if(!isNaN(v)&&v>=0){S.quotes.find(q=>q.id===id).discount=v;render()}}
+function moveQuote(id,s){const q=S.quotes.find(x=>x.id===id);if(s==='sent'&&(q.items.length===0||q.discount>qTotals(q).sub)){toast('ต้องมีรายการ และส่วนลดต้องไม่เกินยอดรวม ก่อนส่ง');return}q.status=s;render()}
+function setMin(id){const p=S.products.find(x=>x.id===id);const v=parseFloat(prompt('Safety Stock ใหม่',p.min));if(!isNaN(v)&&v>=0){p.min=v;render()}}
+function recv(id){const p=S.products.find(x=>x.id===id);const v=parseFloat(prompt('จำนวนที่รับเข้า','10'));if(!(v>0))return;p.on+=v;log(p,'รับเข้า',v,0,'รับสินค้า');render()}
+function adj(id){const p=S.products.find(x=>x.id===id);const v=parseFloat(prompt('ยอดนับจริงใหม่',p.on));if(isNaN(v)||v<p.res){toast('ยอดต้องไม่ต่ำกว่าที่จองไว้');return}const n=prompt('เหตุผล (จำเป็น)','นับสต็อกประจำเดือน');if(!n)return toast('การปรับยอดต้องใส่เหตุผล');log(p,'ปรับยอด',v-p.on,0,n);p.on=v;render()}
+function makeDO(){const c=S.customers.find(x=>x.id==document.getElementById('doc').value);const p=S.products.find(x=>x.id==document.getElementById('dop').value);const q=parseFloat(document.getElementById('doq').value);if(!(q>0))return;
+  const a=c.addr.find(x=>x.def)||c.addr[0];S.doSeq++;S.dos.push({id:S.doSeq,no:'DO-2026-'+String(S.doSeq).padStart(4,'0'),cust:c.id,zone:a.zone,ship:a.line+' '+a.prov,lat:a.lat,lng:a.lng,pid:p.id,item:p.name,qty:q,status:'draft',seq:0});toast('ออกเลข DO และคัดลอกที่อยู่/พิกัด/โซนลงเอกสาร');render()}
+function doAct(id,to){const d=S.dos.find(x=>x.id===id);const p=S.products.find(x=>x.id===d.pid);
+  if(to==='ready'){if(avail(p)<d.qty){toast('สต็อกไม่พอ (ใช้ได้ '+avail(p)+') — ระบบปฏิเสธ และสถานะยังเป็นร่าง');return}p.res+=d.qty;log(p,'จอง',0,d.qty,d.no)}
+  if(to==='dispatched'){p.on-=d.qty;p.res-=d.qty;log(p,'ตัดจ่าย',-d.qty,-d.qty,d.no)}
+  if(to==='cancelled'&&d.status==='ready'){p.res-=d.qty;log(p,'ปล่อยจอง',0,-d.qty,d.no)}
+  d.status=to;render()}
+function autoOrder(zid){const list=S.dos.filter(d=>d.zone===zid&&d.status!=='cancelled');let cur=null,left=[...list],n=0;while(left.length){let bi=0;if(cur){let bd=1e9;left.forEach((d,i)=>{const x=km(cur,[d.lat,d.lng]);if(x<bd){bd=x;bi=i}})}const [d]=left.splice(bi,1);d.seq=++n;cur=[d.lat,d.lng]}toast('จัดลำดับจุดส่งตามระยะใกล้ที่สุด');render()}
+document.getElementById('role').addEventListener('change',render);
+render();
+</script>
+</body>
+</html>
