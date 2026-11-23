@@ -5,48 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SALEPRO by MONTE — ตัวอย่างหน้าจอ (ข้อมูลสมมติ)</title>
 <style>
-  :root{--bg:#030b2e;--card:#0a1a52;--line:#1b3a8f;--text:#fff;--muted:#9db4ff;--primary:#1e6bff;--accent:#22d3ee;--danger:#ff6b6b;--ok:#34d399;--warn:#fbbf24}
+  :root{--bg:#eef3f9;--card:#fff;--line:#d5deea;--text:#1b2a3a;--muted:#5b6b7e;--primary:#1a74bf;--accent:#1a74bf;--danger:#d64545;--ok:#0f9d6b;--warn:#b7791f}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,"Noto Sans Thai",sans-serif}
-  .banner{background:#78350f;color:#fff;padding:8px 14px;font-size:13px;text-align:center}
-  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
-  header h1{font-size:18px;margin:0}
-  header small{color:var(--muted)}
+  .banner{background:#fff4d6;color:#7a4b00;padding:7px 14px;font-size:13px;text-align:center;border-bottom:1px solid #f1d78b}
+  .app{display:flex;min-height:calc(100vh - 34px)}
+  aside{width:236px;flex:none;background:#fff;border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;z-index:30}
+  .brand{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2f9fe6,#1a74bf);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .brand b{display:block;line-height:1.15} .brand small{color:var(--muted)}
+  #tabs{padding:8px 0;flex:1}
+  .nv{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-left:4px solid transparent;color:#2d3f52;padding:10px 16px;cursor:pointer;font:inherit}
+  .nv:hover{background:#f3f7fb} .nv.on{background:#e3f0fb;border-left-color:var(--primary);color:#0f4c81;font-weight:600}
+  .nv i{font-style:normal;width:22px;text-align:center}
+  .side-foot{padding:12px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .side-foot select{width:100%;margin-top:4px}
+  .mainwrap{flex:1;min-width:0}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;gap:10px;align-items:center;padding:10px 18px;background:linear-gradient(#fff,#f3f7fb);border-bottom:1px solid var(--line)}
+  .topbar h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar input{width:220px;max-width:36vw}
+  #burger{display:none}
+  main{max-width:1040px;margin:0 auto;padding:18px}
   select,input,button,textarea{font:inherit}
-  select,input,textarea{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:40px}
-  nav{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;border-bottom:1px solid var(--line)}
-  nav button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;white-space:nowrap;cursor:pointer}
-  nav button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
-  main{max-width:960px;margin:0 auto;padding:16px}
-  h2{font-size:20px;margin:6px 0 12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-  .kpi b{display:block;font-size:24px;margin-top:2px}
-  .kpi.bad{border-color:var(--danger)} .kpi.bad b{color:var(--danger)}
+  select,input,textarea{background:#fff;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 11px;min-height:40px}
+  h2{font-size:19px;margin:4px 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(20,50,90,.05)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .grid .card{margin:0}
+  .kpi b{display:block;font-size:26px;margin-top:2px}
+  .kpi.bad{border-color:#f0a5a5;background:#fff6f6} .kpi.bad b{color:#c0392b}
   .muted{color:var(--muted)} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;background:#1e293b}
-  .ok{background:#064e3b}.warn{background:#78350f}.bad{background:#7f1d1d}
-  .btn{background:var(--primary);border:0;color:#fff;border-radius:10px;padding:9px 14px;cursor:pointer;min-height:40px}
-  .btn.ghost{background:transparent;border:1px solid var(--line)} .btn.red{background:var(--danger);color:#000}
-  .btn[disabled]{opacity:.45;cursor:not-allowed}
-  a{color:var(--accent)} table{width:100%;border-collapse:collapse} td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-  .r{text-align:right} .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000;border:1px solid var(--accent);padding:10px 16px;border-radius:10px;display:none;max-width:90vw}
-  .zone{color:var(--accent);font-weight:700;margin:14px 0 6px}
-  .ro{border:1px dashed var(--warn);color:var(--warn);border-radius:10px;padding:6px 10px;font-size:13px;margin-bottom:10px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;background:#e8eef5;color:#334155}
+  .ok{background:#d6f5e8;color:#065f46}.warn{background:#fdecc8;color:#8a5a00}.bad{background:#fde0e0;color:#991b1b}
+  .btn{background:var(--primary);border:0;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:40px}
+  .btn:hover{background:#155f9c} .btn.ghost{background:#fff;color:#1a4f80;border:1px solid var(--line)} .btn.ghost:hover{background:#f3f7fb}
+  .btn.red{background:var(--danger);color:#fff} .btn[disabled]{opacity:.45;cursor:not-allowed}
+  a{color:var(--primary)} table{width:100%;border-collapse:collapse}
+  th{background:linear-gradient(#f7f9fc,#e9eff6);cursor:pointer;user-select:none} th:hover{background:#e1e9f2}
+  td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .r{text-align:right}
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1b2a3a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:99}
+  .zone{color:#0f4c81;font-weight:700;margin:14px 0 6px}
+  .ro{border:1px dashed #d9a441;background:#fffaf0;color:#7a4b00;border-radius:10px;padding:6px 10px;font-size:13px;margin-bottom:10px}
+  .calbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .calbar h2{margin:0;flex:1;min-width:150px}
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .cal .h{background:#f1f5fa;padding:6px;text-align:center;font-size:12px;color:var(--muted)}
+  .day{background:#fff;min-height:96px;padding:4px 5px;cursor:pointer;overflow:hidden}
+  .day:hover{background:#f6faff} .day.o{background:#f7f9fc;color:#9aa8b8}
+  .day .n{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;font-size:13px}
+  .day.t .n{background:var(--primary);color:#fff} .day.sel{outline:2px solid var(--primary);outline-offset:-2px;background:#f0f7ff}
+  .c{font-size:11px;border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#dbeafe;color:#1e40af;border-left:3px solid #1a74bf}
+  .c.done{background:#d6f5e8;color:#065f46;border-left-color:#0f9d6b} .c.other{background:#eef0f4;color:#445;border-left-color:#8a96a8}
+  .more{font-size:11px;color:var(--muted);margin-top:2px}
+  @media(max-width:800px){
+    aside{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .2s;box-shadow:2px 0 14px rgba(0,0,0,.2)}
+    aside.open{transform:none} #burger{display:inline-block}
+    .topbar input{width:96px} .topbar h1{font-size:15px;min-width:70px} main{padding:12px}
+    .day{min-height:58px} .day .c:nth-of-type(n+2){display:none} .c{font-size:10px}
+  }
 </style>
 </head>
 <body>
-<div class="banner">นี่คือ <b>ตัวอย่างหน้าจอด้วยข้อมูลสมมติ</b> เพื่อให้ตรวจ flow และหน้าตา — ไม่ได้เชื่อมฐานข้อมูลจริง รีเฟรชหน้าแล้วข้อมูลจะกลับเป็นค่าเริ่มต้น</div>
-<header>
-  <div><h1>SALEPRO by MONTE</h1><small>บริษัท: <b>ตัวอย่างวิศวกรรม จำกัด</b></small></div>
-  <label class="row muted">ดูในบทบาท
-    <select id="role">
-      <option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="sales" selected>เซลส์</option>
-      <option value="warehouse">คลังสินค้า</option><option value="dispatcher">ผู้จัดส่ง</option><option value="viewer">ผู้ดูอย่างเดียว</option>
-    </select></label>
-</header>
-<nav id="tabs"></nav>
-<main id="view"></main>
+<div class="banner">นี่คือ <b>ตัวอย่างหน้าจอด้วยข้อมูลสมมติ</b> เพื่อให้ตรวจ flow และหน้าตา — ไม่ได้เชื่อมฐานข้อมูลจริง รีเฟรชแล้วข้อมูลจะกลับเป็นค่าเริ่มต้น</div>
+<div class="app">
+  <aside id="side">
+    <div class="brand"><div class="logo">S</div><div><b>SALEPRO</b><small>by MONTE</small></div></div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--line)"><small class="muted">บริษัท</small><br><b>ตัวอย่างวิศวกรรม จำกัด</b></div>
+    <nav id="tabs"></nav>
+    <div class="side-foot"><label>ดูในบทบาท
+      <select id="role">
+        <option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="sales" selected>เซลส์</option>
+        <option value="warehouse">คลังสินค้า</option><option value="dispatcher">ผู้จัดส่ง</option><option value="viewer">ผู้ดูอย่างเดียว</option>
+      </select></label></div>
+  </aside>
+  <div class="mainwrap">
+    <div class="topbar"><button class="btn ghost" id="burger" onclick="document.getElementById('side').classList.toggle('open')">☰</button>
+      <h1 id="ptitle"></h1><input id="q" placeholder="ค้นหา..." oninput="applySearch()"><span id="topact"></span></div>
+    <main id="view"></main>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -54,7 +92,13 @@ const ROLE_EDIT = {
   customers:['owner','admin','sales'], visits:['owner','admin','sales'], jobs:['owner','admin','sales'], quotes:['owner','admin','sales'],
   products:['owner','admin','warehouse'], stock:['owner','admin','warehouse'], delivery:['owner','admin','dispatcher','warehouse'], zones:['owner','admin','dispatcher'], members:['owner','admin']
 };
-const TABS = [['dash','แดชบอร์ด'],['customers','ลูกค้า'],['visits','แผนเข้าพบ'],['jobs','Job Ticket'],['quotes','ใบเสนอราคา'],['products','สินค้า'],['stock','สต็อก'],['delivery','ส่งของ (DO)'],['zones','โซนส่งของ'],['members','สมาชิก']];
+const TABS = [['dash','แดชบอร์ด','🏠'],['customers','ลูกค้า','👥'],['visits','แผนเข้าพบ','📅'],['jobs','Job Ticket','🎫'],['quotes','ใบเสนอราคา','🧾'],['products','สินค้า','📦'],['stock','สต็อก','📊'],['delivery','ส่งของ (DO)','🚚'],['zones','โซนส่งของ','🗺️'],['members','สมาชิก','🔑']];
+const BASE=(()=>{const d=new Date();d.setHours(0,0,0,0);return d})();
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const dkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const mins=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
+const THM=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const WD=['อา','จ','อ','พ','พฤ','ศ','ส'];
 const baht = n => n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const mapLink = (la,ln)=>`https://www.google.com/maps/search/?api=1&query=${la},${ln}`;
@@ -76,10 +120,14 @@ const S = {
   ],
   moves:[],
   visits:[
-    {id:1,cust:1,title:'ติดตามผลทดลองปั๊ม',date:'วันนี้',time:'09:00–10:30',who:'คุณเอ (เซลส์)',status:'planned',checked:false},
-    {id:2,cust:2,title:'สำรวจหน้างานวาล์วใหม่',date:'วันนี้',time:'13:30–15:00',who:'คุณเอ (เซลส์)',status:'planned',checked:false},
-    {id:3,cust:3,title:'นำเสนอใบเสนอราคา',date:'พรุ่งนี้',time:'10:00–11:00',who:'คุณบี (เซลส์)',status:'planned',checked:false}
+    {id:1,cust:1,title:'ติดตามผลทดลองปั๊ม',off:0,s:'09:00',e:'10:30',who:'me',status:'planned',checked:false},
+    {id:2,cust:2,title:'สำรวจหน้างานวาล์วใหม่',off:0,s:'13:30',e:'15:00',who:'me',status:'planned',checked:false},
+    {id:3,cust:3,title:'นำเสนอใบเสนอราคา',off:1,s:'10:00',e:'11:00',who:'other',status:'planned',checked:false},
+    {id:4,cust:1,title:'ส่งมอบและอบรมการใช้งาน',off:3,s:'14:00',e:'16:00',who:'me',status:'planned',checked:false},
+    {id:5,cust:2,title:'ประชุมสรุปโครงการ',off:-2,s:'09:30',e:'11:00',who:'me',status:'done',checked:true},
+    {id:6,cust:3,title:'สำรวจพื้นที่ติดตั้ง',off:8,s:'10:00',e:'12:00',who:'other',status:'planned',checked:false}
   ],
+  cal:{y:BASE.getFullYear(),m:BASE.getMonth(),sel:dkey(BASE)},vmine:'all',vSeq:6,
   jobs:[
     {id:1,no:'JT-2026-0001',cust:3,title:'เซนเซอร์ค่าเพี้ยน ขอเปลี่ยนชุดใหม่',pri:'สูง',status:'in_progress',due:'2026-11-20',log:['เปิดงาน','เปิดงาน → กำลังดำเนินการ']},
     {id:2,no:'JT-2026-0002',cust:1,title:'ขอใบเสนอราคาปั๊ม 3 ตัว',pri:'ปกติ',status:'open',due:'2026-12-05',log:['เปิดงาน']}
@@ -104,11 +152,11 @@ function log(p,kind,delta,resDelta,note){S.moves.unshift({p:p.id,kind,delta,resD
 const V = {
 dash(){
   const low=S.products.filter(isLow);const open=S.jobs.filter(j=>!['done','cancelled'].includes(j.status));
-  const over=open.filter(j=>j.due<'2026-11-23');const sent=S.quotes.filter(q=>q.status==='sent').reduce((s,q)=>s+qTotals(q).total,0);
+  const over=open.filter(j=>j.due<dkey(BASE));const sent=S.quotes.filter(q=>q.status==='sent').reduce((s,q)=>s+qTotals(q).total,0);
   const won=S.quotes.filter(q=>q.status==='accepted').reduce((s,q)=>s+qTotals(q).total,0);
   const k=(l,v,bad)=>`<div class="card kpi ${bad?'bad':''}"><span class="muted">${l}</span><b>${v}</b></div>`;
-  return `<h2>แดชบอร์ด</h2><div class="grid">
-   ${k('นัดเข้าพบวันนี้',S.visits.filter(v=>v.date==='วันนี้'&&v.status==='planned').length)}${k('นัดเข้าพบ 7 วัน',S.visits.filter(v=>v.status==='planned').length)}
+  return `<div class="grid">
+   ${k('นัดเข้าพบวันนี้',S.visits.filter(v=>v.off===0&&v.status==='planned').length)}${k('นัดเข้าพบ 7 วัน',S.visits.filter(v=>v.off>=0&&v.off<7&&v.status==='planned').length)}
    ${k('Job ที่ยังเปิด',open.length)}${k('Job เกินกำหนด',over.length,over.length>0)}
    ${k('ใบเสนอราคารอตอบ (บาท)',baht(sent))}${k('ปิดได้ 30 วัน (บาท)',baht(won))}
    ${k('DO รอจัดส่ง',S.dos.filter(d=>['draft','ready'].includes(d.status)).length)}${k('DO ระหว่างจัดส่ง',S.dos.filter(d=>d.status==='dispatched').length)}
@@ -117,7 +165,7 @@ dash(){
    <p class="muted">ลองทำ: ไปแท็บ "ส่งของ (DO)" สร้าง DO → พร้อมส่ง → ออกจัดส่ง แล้วกลับมาดูตัวเลขและสต็อกเปลี่ยน</p>`;
 },
 customers(){
-  return `<h2>ลูกค้า</h2>${roNote('customers')}${S.customers.map(c=>`<div class="card"><b>${c.name}</b> <span class="muted">${c.code} · ${c.phone} · ${c.addr.length} ที่อยู่</span>
+  return `${roNote('customers')}${S.customers.map(c=>`<div class="card f"><b>${c.name}</b> <span class="muted">${c.code} · ${c.phone} · ${c.addr.length} ที่อยู่</span>
    ${c.addr.map(a=>`<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px"><b>${a.label}</b> ${a.def?'<span class="pill ok">ค่าเริ่มต้น</span>':''} <span class="pill">${(S.zones.find(z=>z.id===a.zone)||{}).name||'ไม่ระบุโซน'}</span>
    <div class="muted">${a.line} ${a.prov} · ติดต่อ ${a.contact}</div><div class="muted">พิกัด ${a.lat}, ${a.lng}</div>
    <div class="row"><a href="${mapLink(a.lat,a.lng)}" target="_blank" rel="noopener">เปิดแผนที่</a><a href="${dirLink(a.lat,a.lng)}" target="_blank" rel="noopener">นำทาง</a></div></div>`).join('')}
@@ -125,18 +173,36 @@ customers(){
    <p class="muted">หมายเหตุ: หน้าปักหมุดบนแผนที่ในแอปจะเพิ่มเมื่อมี Google Maps API key — ตอนนี้ใช้ช่องพิกัด, ปุ่มตำแหน่งปัจจุบัน และลิงก์เปิด Google Maps</p>`;
 },
 visits(){
-  const days=['วันนี้','พรุ่งนี้'];
-  return `<h2>แผนเข้าพบลูกค้า</h2>${roNote('visits')}${days.map(d=>`<div class="zone">${d}</div>${S.visits.filter(v=>v.date===d).map(v=>`<div class="card"><b>${v.time} · ${v.title}</b>
-   <div class="muted">${custName(v.cust)} · ${v.who}</div><div class="row" style="margin:6px 0"><span class="pill ${v.status==='done'?'ok':''}">${v.status==='done'?'เสร็จแล้ว':'วางแผน'}</span>${v.checked?'<span class="pill ok">เช็คอินแล้ว</span>':''}</div>
-   ${can('visits')&&v.status==='planned'?`<div class="row"><button class="btn ghost" onclick="S.visits.find(x=>x.id==${v.id}).checked=true;toast('บันทึกตำแหน่งเช็คอิน (ตัวอย่าง)');render()">เช็คอินตำแหน่ง</button><button class="btn" onclick="S.visits.find(x=>x.id==${v.id}).status='done';toast('จบการเข้าพบ');render()">จบการเข้าพบ</button></div>`:''}</div>`).join('')}`).join('')}
-   <p class="muted">กฎ: ผู้รับผิดชอบคนเดียวกันมีนัดซ้อนเวลากันไม่ได้ (ระบบปฏิเสธ) ส่วนเซลส์สร้างนัดให้ตัวเองเท่านั้น แอดมินมอบหมายให้คนอื่นได้</p>`;
+  const c=S.cal,first=new Date(c.y,c.m,1),start=addD(first,-first.getDay());
+  const rows=Math.ceil((first.getDay()+new Date(c.y,c.m+1,0).getDate())/7);
+  const vs=S.visits.filter(v=>v.status!=='cancelled'&&(S.vmine==='all'||v.who==='me'));
+  const byDay={};vs.forEach(v=>{(byDay[dkey(addD(BASE,v.off))]=byDay[dkey(addD(BASE,v.off))]||[]).push(v)});
+  let cells=WD.map(w=>`<div class="h">${w}</div>`).join('');
+  for(let i=0;i<rows*7;i++){const d=addD(start,i),k=dkey(d),list=(byDay[k]||[]).sort((a,b)=>a.s.localeCompare(b.s));
+    cells+=`<div class="day ${d.getMonth()!==c.m?'o':''} ${k===dkey(BASE)?'t':''} ${k===c.sel?'sel':''}" onclick="selDay('${k}')"><span class="n">${d.getDate()}</span>
+     ${list.slice(0,3).map(v=>`<div class="c ${v.status==='done'?'done':v.who==='me'?'':'other'}">${v.s} ${custName(v.cust).replace('บริษัท ','').replace('ห้างหุ้นส่วน ','')}</div>`).join('')}${list.length>3?`<div class="more">+${list.length-3} นัด</div>`:''}</div>`}
+  const sel=(byDay[c.sel]||[]).sort((a,b)=>a.s.localeCompare(b.s));
+  const sd=new Date(c.sel+'T00:00:00');
+  return `${roNote('visits')}<div class="calbar"><h2>${THM[c.m]} ${c.y+543}</h2>
+   <button class="btn ghost" onclick="calGo(-1)">‹</button><button class="btn ghost" onclick="calToday()">วันนี้</button><button class="btn ghost" onclick="calGo(1)">›</button>
+   <select onchange="S.vmine=this.value;render()"><option value="all" ${S.vmine==='all'?'selected':''}>ทั้งทีม</option><option value="me" ${S.vmine==='me'?'selected':''}>ของฉัน</option></select></div>
+   <div class="cal">${cells}</div>
+   <div class="zone">${sd.getDate()} ${THM[sd.getMonth()]} ${sd.getFullYear()+543} — ${sel.length} นัด</div>
+   ${sel.map(v=>`<div class="card f"><b>${v.s}–${v.e} · ${v.title}</b><div class="muted">${custName(v.cust)} · ${v.who==='me'?'คุณเอ (เซลส์)':'คุณบี (เซลส์)'}</div>
+    <div class="row" style="margin:6px 0"><span class="pill ${v.status==='done'?'ok':''}">${v.status==='done'?'เสร็จแล้ว':'วางแผน'}</span>${v.checked?'<span class="pill ok">เช็คอินแล้ว</span>':''}</div>
+    ${can('visits')&&v.status==='planned'&&v.who==='me'?`<div class="row"><button class="btn ghost" onclick="vAct(${v.id},'checkin')">เช็คอินตำแหน่ง</button><button class="btn" onclick="vAct(${v.id},'done')">จบการเข้าพบ</button><button class="btn red" onclick="vAct(${v.id},'cancelled')">ยกเลิกนัด</button></div>`:''}</div>`).join('')||'<div class="card muted">ไม่มีนัดในวันนี้</div>'}
+   ${can('visits')?`<div class="card" id="vform"><b>เพิ่มนัดเข้าพบ — ${sd.getDate()} ${THM[sd.getMonth()]}</b><div class="row" style="margin-top:8px">
+    <select id="vc">${S.customers.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select><input id="vt" placeholder="หัวข้อ" style="flex:1;min-width:140px">
+    <input id="vs" type="time" value="09:00"><select id="vd"><option value="30">30 นาที</option><option value="60" selected>1 ชม.</option><option value="120">2 ชม.</option><option value="240">4 ชม.</option></select>
+    <button class="btn" onclick="addVisit()">เพิ่มนัด</button></div></div>`:''}
+   <p class="muted">กฎ: ผู้รับผิดชอบคนเดียวกันมีนัดซ้อนเวลากันไม่ได้ (ระบบปฏิเสธ) · เซลส์สร้างนัดให้ตัวเองเท่านั้น แอดมินมอบหมายให้คนอื่นได้ · นัดที่ยกเลิกจะคืนช่วงเวลา · สีน้ำเงิน = ของฉัน, เทา = ของคนอื่น, เขียว = เสร็จแล้ว</p>`;
 },
 jobs(){
   const L={open:'เปิดงาน',in_progress:'กำลังดำเนินการ',waiting_customer:'รอลูกค้า',done:'เสร็จสิ้น',cancelled:'ยกเลิก'};
   const NEXT={open:['in_progress','cancelled'],in_progress:['waiting_customer','done','cancelled'],waiting_customer:['in_progress','cancelled'],done:[],cancelled:[]};
-  return `<h2>Job Ticket</h2>${roNote('jobs')}${can('jobs')?`<button class="btn" onclick="addJob()">+ รับงานใหม่จากลูกค้า</button><br><br>`:''}
-  ${S.jobs.map(j=>`<div class="card"><b>${j.no} · ${j.title}</b><div class="muted">${custName(j.cust)} · กำหนด ${j.due}</div>
-   <div class="row" style="margin:6px 0"><span class="pill ${j.status==='done'?'ok':j.status==='waiting_customer'?'warn':''}">${L[j.status]}</span><span class="pill ${j.pri==='สูง'?'warn':''}">ความสำคัญ: ${j.pri}</span>${j.due<'2026-11-23'&&!['done','cancelled'].includes(j.status)?'<span class="pill bad">เกินกำหนด</span>':''}</div>
+  return `${roNote('jobs')}
+  ${S.jobs.map(j=>`<div class="card f"><b>${j.no} · ${j.title}</b><div class="muted">${custName(j.cust)} · กำหนด ${j.due}</div>
+   <div class="row" style="margin:6px 0"><span class="pill ${j.status==='done'?'ok':j.status==='waiting_customer'?'warn':''}">${L[j.status]}</span><span class="pill ${j.pri==='สูง'?'warn':''}">ความสำคัญ: ${j.pri}</span>${j.due<dkey(BASE)&&!['done','cancelled'].includes(j.status)?'<span class="pill bad">เกินกำหนด</span>':''}</div>
    <div class="muted">${j.log.map(x=>'• '+x).join('<br>')}</div>
    ${can('jobs')?`<div class="row" style="margin-top:8px">${NEXT[j.status].map(s=>`<button class="btn ghost" onclick="moveJob(${j.id},'${s}')">→ ${L[s]}</button>`).join('')}</div>`:''}</div>`).join('')}
    <p class="muted">เลขที่เอกสารออกโดยฐานข้อมูล (JT-ปี-ลำดับ แยกตามบริษัท) ประวัติการเปลี่ยนสถานะแก้ย้อนหลังไม่ได้</p>`;
@@ -144,8 +210,8 @@ jobs(){
 quotes(){
   const L={draft:'ร่าง',sent:'ส่งแล้ว',accepted:'ลูกค้าตกลง',rejected:'ลูกค้าปฏิเสธ',cancelled:'ยกเลิก'};
   const NEXT={draft:['sent','cancelled'],sent:['accepted','rejected','cancelled'],accepted:[],rejected:[],cancelled:[]};
-  return `<h2>ใบเสนอราคา</h2>${roNote('quotes')}${can('quotes')?`<button class="btn" onclick="addQuote()">+ สร้างใบเสนอราคา</button><br><br>`:''}
-  ${S.quotes.map(q=>{const t=qTotals(q);return `<div class="card"><b>${q.no} · ${custName(q.cust)}</b> <span class="pill ${q.status==='accepted'?'ok':q.status==='sent'?'warn':''}">${L[q.status]}</span>
+  return `${roNote('quotes')}
+  ${S.quotes.map(q=>{const t=qTotals(q);return `<div class="card f"><b>${q.no} · ${custName(q.cust)}</b> <span class="pill ${q.status==='accepted'?'ok':q.status==='sent'?'warn':''}">${L[q.status]}</span>
    <table style="margin-top:8px">${q.items.map(i=>`<tr><td>${i.d} × ${i.q}</td><td class="r">${baht(i.q*i.u)}</td></tr>`).join('')}
    <tr><td class="muted">ยอดรวม</td><td class="r">${baht(t.sub)}</td></tr><tr><td class="muted">ส่วนลด</td><td class="r">${baht(q.discount)}</td></tr><tr><td class="muted">VAT ${q.vat}%</td><td class="r">${baht(t.vat)}</td></tr>
    <tr><td><b>รวมสุทธิ</b></td><td class="r"><b>${baht(t.total)} บาท</b></td></tr></table>
@@ -154,12 +220,12 @@ quotes(){
    ${q.status!=='draft'?'<div class="muted" style="margin-top:6px">เอกสารถูกล็อก: แก้รายการ/ส่วนลดไม่ได้หลังส่ง</div>':''}</div>`}).join('')}`;
 },
 products(){
-  return `<h2>สินค้า</h2>${roNote('products')}<div class="card"><table><tr><th>รหัส</th><th>ชื่อ</th><th class="r">ราคา</th><th class="r">Safety Stock</th></tr>
+  return `${roNote('products')}<div class="card"><table><tr><th>รหัส</th><th>ชื่อ</th><th class="r">ราคา</th><th class="r">Safety Stock</th></tr>
   ${S.products.map(p=>`<tr><td>${p.sku}</td><td>${p.name}</td><td class="r">${baht(p.price)}</td><td class="r">${p.min} ${can('products')?`<button class="btn ghost" style="min-height:28px;padding:2px 8px" onclick="setMin(${p.id})">แก้</button>`:''}</td></tr>`).join('')}</table></div>
-  ${can('products')?`<button class="btn" onclick="toast('ฟอร์มลงทะเบียนสินค้า: SKU / ชื่อ / หน่วย / ราคาขาย / ต้นทุน / Safety Stock')">+ ลงทะเบียนสินค้า</button>`:''}`;
+`;
 },
 stock(){
-  return `<h2>สต็อก</h2>${roNote('stock')}${S.products.map(p=>`<div class="card"><div class="row" style="justify-content:space-between"><b>${p.name}</b>${isLow(p)?'<span class="pill bad">ต่ำกว่า Safety</span>':'<span class="pill ok">ปกติ</span>'}</div>
+  return `${roNote('stock')}${S.products.map(p=>`<div class="card f"><div class="row" style="justify-content:space-between"><b>${p.name}</b>${isLow(p)?'<span class="pill bad">ต่ำกว่า Safety</span>':'<span class="pill ok">ปกติ</span>'}</div>
   <div class="muted">${p.sku} · คงเหลือ ${p.on} · จอง ${p.res} · ใช้ได้ ${avail(p)} ${p.unit} · Safety ${p.min}</div>
   ${can('stock')?`<div class="row" style="margin-top:8px"><button class="btn ghost" onclick="recv(${p.id})">รับเข้า</button><button class="btn ghost" onclick="adj(${p.id})">ปรับยอดนับจริง</button></div>`:''}</div>`).join('')}
   <div class="card"><b>ประวัติความเคลื่อนไหว (แก้ย้อนหลังไม่ได้)</b>${S.moves.length?S.moves.map(m=>`<div class="muted">${m.t} · ${(S.products.find(p=>p.id===m.p)||{}).sku} · ${m.kind} ${m.delta||m.resDelta?(m.delta?(m.delta>0?'+':'')+m.delta:'จอง '+(m.resDelta>0?'+':'')+m.resDelta):''} → คงเหลือ ${m.after} · ${m.note}</div>`).join(''):'<div class="muted">ยังไม่มีความเคลื่อนไหว</div>'}</div>`;
@@ -167,29 +233,51 @@ stock(){
 delivery(){
   const L={draft:'ร่าง',ready:'พร้อมส่ง (จองสต็อกแล้ว)',dispatched:'ออกจัดส่ง',delivered:'ส่งสำเร็จ',cancelled:'ยกเลิก'};
   const live=S.dos.filter(d=>d.status!=='cancelled');const byZone={};live.forEach(d=>{(byZone[d.zone]=byZone[d.zone]||[]).push(d)});
-  return `<h2>ใบส่งของ (DO) และแผนจัดส่งวันนี้</h2>${roNote('delivery')}
+  return `${roNote('delivery')}
   ${can('delivery')?`<div class="card"><b>สร้าง DO</b><div class="row" style="margin-top:8px"><select id="doc">${S.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
    <select id="dop">${S.products.map(p=>`<option value="${p.id}">${p.sku} (ใช้ได้ ${avail(p)})</option>`).join('')}</select><input id="doq" type="number" min="1" value="2" style="width:80px"><button class="btn" onclick="makeDO()">สร้าง DO</button></div></div>`:''}
   ${Object.keys(byZone).length===0?'<div class="card muted">ยังไม่มี DO — สร้างด้านบน</div>':''}
   ${Object.entries(byZone).map(([zid,list])=>`<div class="row" style="justify-content:space-between"><div class="zone">โซน ${zid} · ${(S.zones.find(z=>z.id===zid)||{}).name} (${list.length} จุด)</div>${can('delivery')?`<button class="btn ghost" onclick="autoOrder('${zid}')">เรียงตามระยะใกล้</button>`:''}</div>
-   ${list.sort((a,b)=>(a.seq||99)-(b.seq||99)).map((d,i)=>`<div class="card"><b>${d.seq||i+1}. ${d.no} · ${custName(d.cust)}</b><div class="muted">${d.ship}</div>
+   ${list.sort((a,b)=>(a.seq||99)-(b.seq||99)).map((d,i)=>`<div class="card f"><b>${d.seq||i+1}. ${d.no} · ${custName(d.cust)}</b><div class="muted">${d.ship}</div>
    <div class="muted">• ${d.item} × ${d.qty}</div><div class="row" style="margin:6px 0"><span class="pill ${d.status==='delivered'?'ok':d.status==='dispatched'?'warn':''}">${L[d.status]}</span><a href="${mapLink(d.lat,d.lng)}" target="_blank" rel="noopener">แผนที่</a><a href="${dirLink(d.lat,d.lng)}" target="_blank" rel="noopener">นำทาง</a></div>
    ${can('delivery')?`<div class="row">${d.status==='draft'?`<button class="btn" onclick="doAct(${d.id},'ready')">พร้อมส่ง (จองสต็อก)</button>`:''}${d.status==='ready'?`<button class="btn" onclick="doAct(${d.id},'dispatched')">ออกจัดส่ง (ตัดสต็อก)</button>`:''}${d.status==='dispatched'?`<button class="btn" onclick="doAct(${d.id},'delivered')">ส่งสำเร็จ</button>`:''}${['draft','ready'].includes(d.status)?`<button class="btn red" onclick="doAct(${d.id},'cancelled')">ยกเลิก DO</button>`:''}</div>`:''}</div>`).join('')}`).join('')}
   <p class="muted">ที่อยู่/พิกัดปลายทางถูกคัดลอกลง DO ตอนสร้าง — แก้ที่อยู่ลูกค้าภายหลังไม่กระทบ DO ที่ออกไปแล้ว · เมื่อ "พร้อมส่ง" ระบบจองสต็อก ถ้าไม่พอจะปฏิเสธ · เมื่อ "ออกจัดส่ง" จึงตัดสต็อกจริง</p>`;
 },
 zones(){
-  return `<h2>โซนส่งของ</h2>${roNote('zones')}${S.zones.map(z=>`<div class="card"><b>${z.id} · ${z.name}</b><div class="muted">${z.prov}</div></div>`).join('')}${can('zones')?`<button class="btn" onclick="toast('ฟอร์มเพิ่มโซน: รหัส / ชื่อ / จังหวัดในโซน')">+ เพิ่มโซน</button>`:''}`;
+  return `${roNote('zones')}${S.zones.map(z=>`<div class="card"><b>${z.id} · ${z.name}</b><div class="muted">${z.prov}</div></div>`).join('')}`;
 },
 members(){
   const rows=[['คุณเอ','เจ้าของ','ใช้งาน'],['คุณบี','แอดมิน','ใช้งาน'],['คุณซี','เซลส์','ใช้งาน'],['คุณดี','คลังสินค้า','ใช้งาน'],['คุณอี','ผู้จัดส่ง','ปิดใช้งาน']];
-  return `<h2>สมาชิก</h2>${can('members')?'':'<div class="ro">เฉพาะเจ้าของ/แอดมินที่เห็นหน้านี้ในแอปจริง</div>'}<div class="card"><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="pill ${r[2]==='ใช้งาน'?'ok':'bad'}">${r[2]}</span></td></tr>`).join('')}</table></div>
+  return `${can('members')?'':'<div class="ro">เฉพาะเจ้าของ/แอดมินที่เห็นหน้านี้ในแอปจริง</div>'}<div class="card"><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="pill ${r[2]==='ใช้งาน'?'ok':'bad'}">${r[2]}</span></td></tr>`).join('')}</table></div>
   <div class="card muted">เชิญสมาชิกด้วยโค้ด 12 หลัก + อีเมลต้องตรงกัน อายุ 7 วัน · แอดมินแก้สิทธิ์ "เจ้าของ" ไม่ได้ · ต้องมีเจ้าของที่ใช้งานอยู่อย่างน้อย 1 คนเสมอ · ผู้ใช้ 1 คนอยู่ได้หลายบริษัทและสลับได้</div>`;
 }};
 
+const TOPACT={customers:['+ ลูกค้า',"toast('ฟอร์มเพิ่มลูกค้า: รหัส / ชื่อ / โทรศัพท์ / อีเมล แล้วเพิ่มที่อยู่และพิกัด')"],visits:['+ นัดหมาย',"goForm()"],jobs:['+ Job Ticket','addJob()'],quotes:['+ ใบเสนอราคา','addQuote()'],products:['+ สินค้า',"toast('ฟอร์มลงทะเบียนสินค้า: SKU / ชื่อ / หน่วย / ราคาขาย / ต้นทุน / Safety Stock')"],zones:['+ โซน',"toast('ฟอร์มเพิ่มโซน: รหัส / ชื่อ / จังหวัดในโซน')"]};
 function render(){
-  document.getElementById('tabs').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()">${l}</button>`).join('');
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l,i])=>`<button class="nv ${S.tab===k?'on':''}" onclick="S.tab='${k}';document.getElementById('side').classList.remove('open');document.getElementById('q').value='';render()"><i>${i}</i>${l}</button>`).join('');
+  document.getElementById('ptitle').textContent=(TABS.find(t=>t[0]===S.tab)||[])[1]||'';
+  const ta=TOPACT[S.tab];document.getElementById('topact').innerHTML=ta&&can(S.tab)?`<button class="btn" onclick="${ta[1]}">${ta[0]}</button>`:'';
   document.getElementById('view').innerHTML=V[S.tab]();
+  applySearch();
 }
+function applySearch(){const q=document.getElementById('q').value.trim().toLowerCase();document.querySelectorAll('#view .card.f').forEach(e=>{e.style.display=!q||e.textContent.toLowerCase().includes(q)?'':'none'});
+  document.querySelectorAll('#view table tr').forEach((r,i)=>{if(r.querySelector('th'))return;r.style.display=!q||r.textContent.toLowerCase().includes(q)?'':'none'})}
+function selDay(k){S.cal.sel=k;const d=new Date(k+'T00:00:00');S.cal.y=d.getFullYear();S.cal.m=d.getMonth();render()}
+function calGo(n){const d=new Date(S.cal.y,S.cal.m+n,1);S.cal.y=d.getFullYear();S.cal.m=d.getMonth();render()}
+function calToday(){S.cal={y:BASE.getFullYear(),m:BASE.getMonth(),sel:dkey(BASE)};render()}
+function goForm(){const e=document.getElementById('vform');if(e)e.scrollIntoView({behavior:'smooth'});const t=document.getElementById('vt');if(t)t.focus()}
+function addVisit(){const cust=+document.getElementById('vc').value,title=document.getElementById('vt').value.trim(),st=document.getElementById('vs').value,du=+document.getElementById('vd').value;
+  if(!title)return toast('กรอกหัวข้อการเข้าพบ');if(!st)return toast('เลือกเวลาเริ่ม');
+  const a=mins(st),b=a+du;if(b>1440)return toast('นัดต้องจบภายในวันเดียวกัน');
+  const off=Math.round((new Date(S.cal.sel+'T00:00:00')-BASE)/864e5);
+  const clash=S.visits.find(v=>v.who==='me'&&v.status==='planned'&&v.off===off&&mins(v.s)<b&&a<mins(v.e));
+  if(clash)return toast('ช่วงเวลานี้คุณมีนัดอื่นอยู่แล้ว ('+clash.s+'–'+clash.e+') — ระบบปฏิเสธ');
+  const hh=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+  S.vSeq++;S.visits.push({id:S.vSeq,cust,title,off,s:hh(a),e:hh(b),who:'me',status:'planned',checked:false});toast('เพิ่มนัดแล้ว');render()}
+function vAct(id,a){const v=S.visits.find(x=>x.id===id);if(a==='checkin'){v.checked=true;toast('บันทึกตำแหน่งเช็คอิน (ตัวอย่าง)')}else v.status=a;render()}
+document.getElementById('view').addEventListener('click',e=>{const th=e.target.closest('th');if(!th)return;const t=th.closest('table'),i=[...th.parentNode.children].indexOf(th),rows=[...t.querySelectorAll('tr')].filter(r=>!r.querySelector('th'));
+  const dir=th.dataset.d==='a'?-1:1;th.dataset.d=dir===1?'a':'d';const num=x=>parseFloat(x.replace(/[^0-9.-]/g,''));
+  rows.sort((x,y)=>{const a=x.children[i].textContent,b=y.children[i].textContent;return(isNaN(num(a))||isNaN(num(b))?a.localeCompare(b,'th'):num(a)-num(b))*dir}).forEach(r=>r.parentNode.appendChild(r))});
 function addJob(){const c=S.customers[Math.floor(Math.random()*S.customers.length)];S.jSeq++;S.jobs.unshift({id:S.jSeq,no:'JT-2026-000'+S.jSeq,cust:c.id,title:'งานใหม่จากลูกค้า (ตัวอย่าง)',pri:'ปกติ',status:'open',due:'2026-12-15',log:['เปิดงาน']});toast('ออกเลข JT ให้อัตโนมัติ');render()}
 function moveJob(id,s){const j=S.jobs.find(x=>x.id===id);j.log.push(j.status+' → '+s);j.status=s;render()}
 function addQuote(){S.qSeq++;S.quotes.unshift({id:S.qSeq,no:'QT-2026-000'+S.qSeq,cust:3,status:'draft',discount:0,vat:7,items:[]});render()}
