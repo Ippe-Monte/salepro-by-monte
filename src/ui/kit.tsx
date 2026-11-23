@@ -37,3 +37,23 @@ export function Button({ title, onPress, busy, variant }: { title: string; onPre
 export function Card({ children }: { children: React.ReactNode }) {
   return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 12 }}>{children}</View>;
 }
+
+export function Chips<T extends string>({ value, options, onPick }: { value: T; options: { v: T; label: string }[]; onPick: (v: T) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
+      {options.map((o) => (
+        <Pressable key={o.v} accessibilityRole="button" onPress={() => onPick(o.v)}
+          style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === o.v ? colors.primary : 'transparent' }}>
+          <Text style={{ color: '#fff' }}>{o.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+export function Empty({ children }: { children: React.ReactNode }) {
+  return <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: colors.muted }}>{children}</Text></View>;
+}
+export function Pill({ text, tone }: { text: string; tone?: 'ok' | 'warn' | 'danger' | 'muted' }) {
+  const bg = tone === 'ok' ? '#064e3b' : tone === 'warn' ? '#78350f' : tone === 'danger' ? '#7f1d1d' : '#1e293b';
+  return <Text style={{ color: '#fff', backgroundColor: bg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, alignSelf: 'flex-start' }}>{text}</Text>;
+}

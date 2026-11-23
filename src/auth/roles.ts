@@ -61,10 +61,29 @@ export function resolveAccess(
 /** Which role may open which module (menu visibility only; enforced again in the database). */
 export const MODULE_ROLES: Record<string, readonly Role[]> = {
   dashboard: ROLES,
+  customers: ROLES,
+  zones: ROLES,
+  products: ROLES,
+  stock: ROLES,
+  visits: ROLES,
+  jobs: ROLES,
+  quotes: ROLES,
+  delivery: ROLES,
   members: ['owner', 'admin'],
   settings: ROLES,
 };
-export const EDIT_ROLES: Record<string, readonly Role[]> = { settings: ['owner', 'admin'] };
+/** Who may change data in each module (the database enforces the same rule with RLS). */
+export const EDIT_ROLES: Record<string, readonly Role[]> = {
+  customers: ['owner', 'admin', 'sales'],
+  zones: ['owner', 'admin', 'dispatcher'],
+  products: ['owner', 'admin', 'warehouse'],
+  stock: ['owner', 'admin', 'warehouse'],
+  visits: ['owner', 'admin', 'sales'],
+  jobs: ['owner', 'admin', 'sales'],
+  quotes: ['owner', 'admin', 'sales'],
+  delivery: ['owner', 'admin', 'dispatcher', 'warehouse'],
+  settings: ['owner', 'admin'],
+};
 
 export function canOpen(module: string, role: Role | undefined): boolean {
   return !!role && (MODULE_ROLES[module] ?? []).includes(role);
