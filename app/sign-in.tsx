@@ -1,0 +1,45 @@
+import { Link } from 'expo-router';
+import { useState } from 'react';
+import { Image, ScrollView, View } from 'react-native';
+import { useAuth } from '@/auth/AuthProvider';
+import { validateEmail } from '@/auth/roles';
+import { isConfigured } from '@/lib/neon';
+import { Body, Button, Field, Screen } from '@/ui/kit';
+
+export default function SignIn() {
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    if (busy) return;
+    const v = validateEmail(email);
+    if (v) return setErr(v);
+    if (!password) return setErr('กรุณากรอกรหัสผ่าน');
+    setBusy(true);
+    setErr(null);
+    const e = await signIn(email, password);
+    setBusy(false);
+    if (e) setErr(e);
+  }
+
+  return (
+    <Screen>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
+        <Image source={require('../assets/logo.png')} style={{ width: 160, height: 160, marginVertical: 12 }} accessibilityLabel="SalePro by Monte" />
+        <View style={{ width: '100%', maxWidth: 420 }}>
+          {!isConfigured && <Body tone="danger">ยังไม่ได้ตั้งค่า EXPO_PUBLIC_NEON_AUTH_URL / EXPO_PUBLIC_NEON_DATA_API_URL</Body>}
+          <Field label="อีเมล" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+          <Field label="รหัสผ่าน" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" onSubmitEditing={submit} />
+          {err && <Body tone="danger">{err}</Body>}
+          <Button title="เข้าสู่ระบบ" onPress={submit} busy={busy} />
+          <View style={{ marginTop: 16, alignItems: 'center' }}>
+            <Link href="/sign-up"><Body tone="muted">ยังไม่มีบัญชี? ลงทะเบียน</Body></Link>
+          </View>
+        </View>
+      </ScrollView>
+    </Screen>
+  );
+}
