@@ -5,6 +5,7 @@ export function friendly(e: { message?: string; code?: string } | null | undefin
   if (m.includes('not an active member')) return 'ผู้รับผิดชอบต้องเป็นสมาชิกที่ใช้งานอยู่ของบริษัทนี้';
   if (m.includes('insufficient stock')) return 'สต็อกไม่พอ';
   if (m.includes('invalid status')) return 'สถานะเอกสารไม่อนุญาตให้ทำรายการนี้';
+  if (m.includes('quotation incomplete')) return 'ต้องมีรายการสินค้า และส่วนลดต้องไม่เกินยอดรวม ก่อนส่งใบเสนอราคา';
   if (m.includes('document is locked')) return 'เอกสารนี้ถูกล็อกแล้ว แก้ไขไม่ได้';
   if (m.includes('invalid invitation')) return 'โค้ดเชิญไม่ถูกต้อง หมดอายุ หรืออีเมลที่ล็อกอินไม่ตรงกับที่ถูกเชิญ';
   if (m.includes('organization limit')) return 'สร้างบริษัทได้สูงสุด 5 บริษัทต่อผู้ใช้';
