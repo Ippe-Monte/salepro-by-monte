@@ -2,7 +2,8 @@
 -- Requires Neon Auth (neon_auth."user") and the Data API roles (authenticated, anonymous).
 
 create table if not exists public.profiles (
-  id uuid primary key,  -- = Neon Auth user id (no FK: neon_auth is not ownable by us)
+  -- id = Neon Auth user id (no FK: neon_auth is not ownable by us)
+  id uuid primary key,
   email text not null,
   display_name text not null default '',
   role text not null default 'viewer'

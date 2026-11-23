@@ -1,5 +1,22 @@
-export const ROLES = ['admin', 'sales', 'warehouse', 'dispatcher', 'viewer'] as const;
+export const ROLES = ['owner', 'admin', 'sales', 'warehouse', 'dispatcher', 'viewer'] as const;
 export type Role = (typeof ROLES)[number];
+
+export const ROLE_LABEL: Record<Role, string> = {
+  owner: 'เจ้าของ', admin: 'ผู้ดูแล', sales: 'ฝ่ายขาย', warehouse: 'คลังสินค้า', dispatcher: 'ฝ่ายจัดส่ง', viewer: 'ดูอย่างเดียว',
+};
+
+/** Roles the caller may hand out. Only owners can grant or change ownership (enforced in the database too). */
+export function assignableRoles(callerRole: Role | undefined): readonly Role[] {
+  if (callerRole === 'owner') return ROLES;
+  if (callerRole === 'admin') return ROLES.filter((r) => r !== 'owner');
+  return [];
+}
+
+/** May the caller change this member? Admins cannot touch owners. */
+export function canManageMember(callerRole: Role | undefined, targetRole: Role): boolean {
+  if (callerRole === 'owner') return true;
+  return callerRole === 'admin' && targetRole !== 'owner';
+}
 
 export type Profile = { id: string; email: string; display_name: string };
 export type Org = {
@@ -44,10 +61,10 @@ export function resolveAccess(
 /** Which role may open which module (menu visibility only; enforced again in the database). */
 export const MODULE_ROLES: Record<string, readonly Role[]> = {
   dashboard: ROLES,
-  members: ['admin'],
+  members: ['owner', 'admin'],
   settings: ROLES,
 };
-export const EDIT_ROLES: Record<string, readonly Role[]> = { settings: ['admin'] };
+export const EDIT_ROLES: Record<string, readonly Role[]> = { settings: ['owner', 'admin'] };
 
 export function canOpen(module: string, role: Role | undefined): boolean {
   return !!role && (MODULE_ROLES[module] ?? []).includes(role);

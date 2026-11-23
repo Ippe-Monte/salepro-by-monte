@@ -1,4 +1,5 @@
 import { useAuth } from '@/auth/AuthProvider';
+import { ROLE_LABEL } from '@/auth/roles';
 import { Body, Card, Screen, Title } from '@/ui/kit';
 
 // SE-M1 placeholder: real KPIs arrive in SE-M7 once the modules exist.
@@ -11,7 +12,7 @@ export default function Dashboard() {
       <Title>{current?.org.name}</Title>
       <Card>
         <Body>สวัสดี {profile?.display_name || profile?.email}</Body>
-        <Body tone="muted">บทบาทในบริษัทนี้: {current?.role}</Body>
+        <Body tone="muted">บทบาทในบริษัทนี้: {current ? ROLE_LABEL[current.role] : ''}</Body>
       </Card>
       <Card>
         <Body>โมดูลที่กำลังจะมา</Body>

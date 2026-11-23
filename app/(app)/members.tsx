@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { ROLES, canOpen, validateEmail, type Role } from '@/auth/roles';
+import { ROLE_LABEL, assignableRoles, canManageMember, canOpen, validateEmail, type Role } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Field, Screen, Title } from '@/ui/kit';
@@ -10,13 +10,13 @@ import { colors } from '@/ui/theme';
 type Row = { user_id: string; role: Role; status: 'active' | 'disabled'; profiles: { email: string; display_name: string } | { email: string; display_name: string }[] | null };
 type Invite = { id: string; email: string; role: Role; code: string; expires_at: string };
 
-function RoleChips({ value, onPick }: { value: Role; onPick: (r: Role) => void }) {
+function RoleChips({ value, onPick, roles }: { value: Role; onPick: (r: Role) => void; roles: readonly Role[] }) {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
-      {ROLES.map((r) => (
+      {roles.map((r) => (
         <Pressable key={r} accessibilityRole="button" onPress={() => onPick(r)}
           style={{ paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === r ? colors.primary : 'transparent' }}>
-          <Text style={{ color: '#fff' }}>{r}</Text>
+          <Text style={{ color: '#fff' }}>{ROLE_LABEL[r]}</Text>
         </Pressable>
       ))}
     </View>
@@ -33,6 +33,7 @@ export default function Members() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('sales');
   const [newCode, setNewCode] = useState<string | null>(null);
+  const roles = assignableRoles(current?.role);
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -79,7 +80,7 @@ export default function Members() {
         <Card>
           <Body>เชิญสมาชิก</Body>
           <Field label="อีเมลของผู้ถูกเชิญ" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-          <RoleChips value={role} onPick={setRole} />
+          <RoleChips value={role} onPick={setRole} roles={roles} />
           <Button title="สร้างโค้ดเชิญ" onPress={invite} busy={busy === 'invite'} />
           {newCode && (
             <View style={{ marginTop: 12 }}>
@@ -91,7 +92,7 @@ export default function Members() {
         {invites.length > 0 && <Body tone="muted">คำเชิญที่ยังไม่ถูกใช้</Body>}
         {invites.map((i) => (
           <Card key={i.id}>
-            <Body>{i.email} · {i.role}</Body>
+            <Body>{i.email} · {ROLE_LABEL[i.role]}</Body>
             <Text selectable style={{ color: colors.accent, letterSpacing: 1 }}>{i.code}</Text>
             <Button title="ยกเลิกคำเชิญ" variant="ghost" busy={busy === i.id} onPress={() => void revoke(i.id)} />
           </Card>
@@ -101,13 +102,15 @@ export default function Members() {
         {(rows ?? []).map((r) => {
           const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
           const self = r.user_id === profile?.id;
+          const manageable = canManageMember(current?.role, r.role);
           return (
             <Card key={r.user_id}>
               <Body>{p?.display_name || p?.email}{self ? ' (คุณ)' : ''}</Body>
-              <Body tone="muted">{p?.email} · {r.status}</Body>
-              <RoleChips value={r.role} onPick={(nr) => void update(r.user_id, nr, r.status)} />
-              {r.status === 'active' && !self && <Button title="ปิดใช้งาน" variant="danger" busy={busy === r.user_id} onPress={() => void update(r.user_id, r.role, 'disabled')} />}
-              {r.status === 'disabled' && <Button title="เปิดใช้งาน" busy={busy === r.user_id} onPress={() => void update(r.user_id, r.role, 'active')} />}
+              <Body tone="muted">{p?.email} · {ROLE_LABEL[r.role]} · {r.status === 'active' ? 'ใช้งานอยู่' : 'ปิดใช้งาน'}</Body>
+              {manageable && <RoleChips value={r.role} onPick={(nr) => void update(r.user_id, nr, r.status)} roles={roles} />}
+              {manageable && r.status === 'active' && !self && <Button title="ปิดใช้งาน" variant="danger" busy={busy === r.user_id} onPress={() => void update(r.user_id, r.role, 'disabled')} />}
+              {manageable && r.status === 'disabled' && <Button title="เปิดใช้งาน" busy={busy === r.user_id} onPress={() => void update(r.user_id, r.role, 'active')} />}
+              {!manageable && <Body tone="muted">เฉพาะเจ้าของเท่านั้นที่จัดการสมาชิกคนนี้ได้</Body>}
             </Card>
           );
         })}

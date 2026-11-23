@@ -1,6 +1,10 @@
 """Split a migration file into statements (respects $$ bodies and -- comments); print JSON array."""
 import json, re, sys
 src = open(sys.argv[1]).read()
+for ln in src.splitlines():
+    code = re.sub(r"'[^']*'", "''", ln)
+    if not code.lstrip().startswith('--') and '--' in code:
+        sys.exit('inline "--" comment found: move it to its own line (statements are joined onto one line): ' + ln.strip())
 src = re.sub(r'(?m)^\s*--.*$', '', src)
 out, buf, in_dollar = [], [], False
 i = 0

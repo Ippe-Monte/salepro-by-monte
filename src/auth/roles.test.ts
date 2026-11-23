@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  resolveAccess, canOpen, canEdit, validateEmail, validatePassword, validateOrgName,
+  resolveAccess, canOpen, canEdit, assignableRoles, canManageMember, validateEmail, validatePassword, validateOrgName,
   type Membership, type Profile,
 } from './roles.ts';
 
@@ -44,6 +44,18 @@ test('module access', () => {
   assert.equal(canOpen('unknown', 'admin'), false);
   assert.equal(canEdit('settings', 'admin'), true);
   assert.equal(canEdit('settings', 'sales'), false);
+});
+test('owner and admin permissions', () => {
+  assert.equal(canOpen('members', 'owner'), true);
+  assert.equal(canEdit('settings', 'owner'), true);
+  assert.deepEqual([...assignableRoles('owner')].includes('owner'), true);
+  assert.equal(assignableRoles('admin').includes('owner'), false);
+  assert.equal(assignableRoles('admin').includes('admin'), true);
+  assert.equal(assignableRoles('sales').length, 0);
+  assert.equal(canManageMember('owner', 'owner'), true);
+  assert.equal(canManageMember('admin', 'owner'), false);
+  assert.equal(canManageMember('admin', 'sales'), true);
+  assert.equal(canManageMember('sales', 'viewer'), false);
 });
 test('validation', () => {
   assert.equal(validateEmail('x@y.com'), null);
