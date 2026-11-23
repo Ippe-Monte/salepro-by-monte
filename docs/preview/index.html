@@ -1,115 +1,121 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SALEPRO by MONTE — ตัวอย่างหน้าจอ v3 (ข้อมูลสมมติ)</title>
 <style>
-  :root{--bg:#eef3fa;--card:#fff;--line:#d8e1ee;--text:#14233a;--muted:#5a6b82;--primary:#1d6df0;--cyan:#1fc8e8;--navy:#030b2e;--navy2:#0a2a7a;--danger:#d64545;--ok:#0f9d6b;--warn:#b7791f}
+  :root{--bg:#f3f6fb;--card:#fff;--soft:#eaf1fd;--soft2:#f6f8fc;--line:#e1e8f2;--text:#0f1b33;--muted:#64748b;--primary:#2563eb;--accent:#22d3ee;--cyan:#22d3ee;--danger:#dc2626;--ok:#16a34a;--warn:#d97706;--side:#fff;--shadow:0 1px 3px rgba(15,27,51,.07);--link:#1d4ed8;--navy:#030b2e;--navy2:#0a2a7a}
+  [data-theme=dark]{--bg:#070f2b;--card:#0f1a3d;--soft:#16265a;--soft2:#0b1535;--line:#223470;--text:#e8eefc;--muted:#9fb1d9;--primary:#3b82f6;--side:#0b1433;--shadow:none;--link:#7db0ff}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,"Noto Sans Thai",sans-serif;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,"Noto Sans Thai",system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .banner{background:#fff4d6;color:#7a4b00;padding:6px 12px;font-size:12px;text-align:center;border-bottom:1px solid #f1d78b}
   svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
   select,input,button,textarea{font:inherit}
-  select,input,textarea{background:#fff;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 11px;min-height:40px;max-width:100%}
+  select,input,textarea{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 11px;min-height:40px;max-width:100%}
   textarea{width:100%;min-height:70px}
   input[type=checkbox]{min-height:0;width:18px;height:18px;accent-color:var(--primary)}
   label.f{display:block;margin:0 0 10px;font-size:13px;color:var(--muted)} label.f>input,label.f>select,label.f>textarea{display:block;width:100%;margin-top:3px;color:var(--text);font-size:15px}
-  .top{position:sticky;top:0;z-index:20;display:flex;gap:8px;align-items:center;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line)}
+  .top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:var(--side);border-bottom:1px solid var(--line)}
   .top h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  body.home .top{display:none}
-  .ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#1d4f8f;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-  .ib.hid{visibility:hidden}
-  .av{width:38px;height:38px;border-radius:50%;border:0;background:linear-gradient(135deg,#1d6df0,#1fc8e8);color:#fff;font-weight:700;cursor:pointer;flex:none}
-  #srow{padding:8px 12px;background:#fff;border-bottom:1px solid var(--line)} #srow input{width:100%}
-  main{max-width:980px;margin:0 auto;padding:14px}
-  body.home main{padding-top:0}
+  body.login .top,body.login .bar,body.login #side,body.login .banner{display:none}
+  .ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;position:relative}
+  .ib.hid{display:none} .ib .dot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:#ef4444;border:2px solid var(--card)}
+  .av{width:38px;height:38px;border-radius:50%;border:0;background:linear-gradient(135deg,#2563eb,#22d3ee);color:#fff;font-weight:700;cursor:pointer;flex:none}
+  #srow{display:none;order:10;width:100%} #srow.on{display:block} #srow input{width:100%}
+  main{max-width:1180px;margin:0 auto;padding:14px}
   h2{font-size:18px;margin:4px 0 10px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px;box-shadow:0 1px 2px rgba(20,50,90,.05)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
   .muted{color:var(--muted)} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center} .between{justify-content:space-between}
-  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;background:#e8eef5;color:#334155}
-  .ok{background:#d6f5e8;color:#065f46}.warn{background:#fdecc8;color:#8a5a00}.bad{background:#fde0e0;color:#991b1b}
-  .btn{background:var(--primary);border:0;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:40px;display:inline-flex;align-items:center;gap:6px}
-  .btn:hover{background:#1559c4} .btn.ghost{background:#fff;color:#1a4f80;border:1px solid var(--line)} .btn.ghost:hover{background:#f3f7fb}
-  .btn.red{background:var(--danger)} .btn.sm{min-height:32px;padding:3px 10px;font-size:13px}
-  a{color:var(--primary)} table{width:100%;border-collapse:collapse}
-  th{background:linear-gradient(#f7f9fc,#e9eff6);cursor:pointer;user-select:none}
-  td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} .r{text-align:right}
-  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#14233a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:300}
-  .zone{color:#0f4c81;font-weight:700;margin:14px 0 6px}
-  .ro{border:1px dashed #d9a441;background:#fffaf0;color:#7a4b00;border-radius:10px;padding:6px 10px;font-size:13px;margin-bottom:10px}
-  /* bottom bar */
-  .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(20,50,90,.08)}
-  .bar>div{display:flex;width:100%;max-width:640px;align-items:flex-end}
-  .bi{flex:1;border:0;background:none;color:#6b7c93;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;cursor:pointer;min-height:58px}
-  .bi.on{color:var(--primary);font-weight:700}
-  .bi.mid{margin-top:-20px}
-  .bi.mid .disc{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#1d6df0,#1fc8e8);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(29,109,240,.45);border:4px solid #fff}
-  .bi.mid.on .disc{background:linear-gradient(135deg,#0a2a7a,#1d6df0)}
-  /* sheet + modal + paper overlay */
+  .pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600;background:var(--soft2);color:var(--muted)}
+  .ok{background:rgba(22,163,74,.13);color:#15803d}.warn{background:rgba(217,119,6,.14);color:#b45309}.bad{background:rgba(220,38,38,.12);color:#b91c1c}.info{background:rgba(37,99,235,.12);color:#1d4ed8}
+  [data-theme=dark] .ok{color:#4ade80}[data-theme=dark] .warn{color:#fbbf24}[data-theme=dark] .bad{color:#f87171}[data-theme=dark] .info{color:#7db0ff}
+  .btn{background:var(--primary);border:0;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:40px;display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .btn:hover{filter:brightness(.92)} .btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--line);font-weight:500} .btn.ghost:hover{background:var(--soft2)}
+  .btn.red{background:var(--danger)} .btn.sm{min-height:32px;padding:3px 11px;font-size:13px}
+  a{color:var(--link)} table{width:100%;border-collapse:collapse}
+  th{background:var(--soft2);cursor:pointer;user-select:none;color:var(--muted);font-size:13px} th:hover{background:var(--soft)}
+  td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} .r{text-align:right}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#0f1b33;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:90vw;z-index:300}
+  .zone{color:var(--link);font-weight:700;margin:14px 0 6px}
+  .ro{border:1px dashed #d9a441;background:rgba(217,119,6,.1);color:#b45309;border-radius:10px;padding:6px 10px;font-size:13px;margin-bottom:10px}
+  /* bottom bar (phone/tablet) */
+  .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--side);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(15,27,51,.07)}
+  .bar>div{display:flex;width:100%;max-width:640px}
+  .bi{flex:1;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;cursor:pointer;min-height:58px;position:relative}
+  .bi.on{color:var(--primary);font-weight:700} .bi.on::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--primary)}
   .ov{position:fixed;inset:0;background:rgba(3,11,46,.55);z-index:90;display:none}
-  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto;max-height:86vh;overflow:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:22px 22px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto;max-height:86vh;overflow:auto}
   .sheet h3{margin:0 0 10px;font-size:16px;text-align:center}
   .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .tile{border:1px solid var(--line);background:#f6f9fe;border-radius:16px;padding:14px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#16345c}
-  .tile svg.i{width:26px;height:26px;color:var(--primary)} .tile:hover{background:#e9f1fd}
-  .mdl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:16px;width:min(560px,94vw);max-height:90vh;overflow:auto}
-  /* desktop sidebar */
-  #side{display:none}
-  @media(min-width:1024px){
-    #side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:240px;z-index:60;background:linear-gradient(180deg,#0a2a7a 0%,#030b2e 75%);color:#dce8ff;overflow:auto}
-    body{padding-left:240px;padding-bottom:24px} .bar{display:none} .toast{bottom:24px;left:calc(50% + 120px)}
-    #side .sb{display:flex;align-items:center;gap:10px;padding:16px 16px 12px} #side .sb img{width:44px;height:44px;border-radius:12px} #side .sb b{font:italic 800 20px/1 system-ui;color:#fff} #side .sb b span{color:var(--cyan)} #side .sb small{display:block;color:#a9c3ff;font-size:11px;margin-top:2px}
-    #side .sg{padding:10px 18px 4px;font-size:11px;letter-spacing:.6px;color:#7f9be0}
-    #side .sn{display:flex;gap:11px;align-items:center;width:100%;border:0;background:none;color:#dce8ff;padding:10px 18px;border-left:4px solid transparent;cursor:pointer;text-align:left;font:inherit}
-    #side .sn:hover{background:rgba(255,255,255,.07)} #side .sn.on{background:rgba(31,200,232,.14);border-left-color:var(--cyan);color:#fff;font-weight:700}
-    #side .sf{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:10px;align-items:center;font-size:13px} #side .sf img{width:30px;height:30px;border-radius:7px;background:#fff;object-fit:contain}
-  }
-  /* hero */
-  .hero{margin:0 -14px 0;padding:calc(14px + env(safe-area-inset-top)) 16px 64px;background:radial-gradient(120% 90% at 85% 0%,#1d6df0 0%,rgba(29,109,240,0) 55%),linear-gradient(160deg,#0a2a7a 0%,#030b2e 70%);color:#fff;border-radius:0 0 26px 26px}
-  .hrow{display:flex;align-items:center;gap:10px}
-  .hlogo{width:54px;height:54px;border-radius:14px;box-shadow:0 0 0 1px rgba(31,200,232,.35),0 6px 18px rgba(31,200,232,.25)}
-  .hbrand{flex:1;line-height:1.05} .hbrand .hw{font:italic 800 26px/1 system-ui,sans-serif} .hbrand .hp{font:italic 800 26px/1 system-ui,sans-serif;color:var(--cyan)} .hbrand small{display:block;font-size:12px;letter-spacing:.5px;color:#bcd2ff;margin-top:2px}
-  .hco{display:flex;align-items:center;gap:10px;margin-top:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:8px 12px}
-  .hco img{width:38px;height:38px;border-radius:9px;background:#fff;object-fit:contain;padding:2px} .hco small{display:block;color:#bcd2ff;font-size:12px} .hco b{font-size:15px}
-  .kp{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:-44px 0 12px}
-  @media(min-width:700px){.kp{grid-template-columns:repeat(3,1fr)}}
-  .kp .card{margin:0;padding:11px 13px} .kp b{display:block;font-size:24px;margin-top:1px;line-height:1.2} .kp small{color:var(--muted)}
-  .kp .bad2{border-color:#f0a5a5;background:#fff6f6} .kp .bad2 b{color:#c0392b}
+  .tile{border:1px solid var(--line);background:var(--soft2);border-radius:16px;padding:14px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)}
+  .tile svg.i{width:26px;height:26px;color:var(--primary)} .tile:hover{background:var(--soft)}
+  .mdl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--card);border-radius:16px;padding:16px;width:min(560px,94vw);max-height:90vh;overflow:auto}
+  /* dashboard */
+  .dh{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:2px 0 12px} .dh h2{margin:0;font-size:22px}
+  .kt4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+  .kt{border-radius:16px;padding:14px;color:#fff;display:flex;gap:12px;align-items:center;min-height:92px;box-shadow:0 6px 16px rgba(15,27,51,.12)}
+  .kt svg.i{width:34px;height:34px;opacity:.95} .kt small{display:block;opacity:.9;font-size:12px;line-height:1.25} .kt b{display:block;font-size:22px;line-height:1.2;margin:2px 0} .kt .s{font-size:12px;opacity:.9}
+  .kt.b1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}.kt.b2{background:linear-gradient(135deg,#14b8a6,#0d9488)}.kt.b3{background:linear-gradient(135deg,#8b5cf6,#6d5ae0)}.kt.b4{background:linear-gradient(135deg,#22c55e,#15803d)}
+  .r2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px} .r3{display:grid;grid-template-columns:1fr 1fr;gap:12px} .r2 .card,.r3 .card{margin-bottom:12px}
+  .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px} .mini .card{margin:0;padding:10px 12px} .mini b{display:block;font-size:20px;line-height:1.2} .mini small{color:var(--muted)}
+  .mini .card.alert{border-color:rgba(220,38,38,.4)} .mini .card.alert b{color:var(--danger)}
+  .chartbox{width:100%;height:auto;display:block} .lg{display:flex;flex-direction:column;gap:6px;font-size:13px} .lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+  .li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px} .li:first-of-type{border-top:0} .li .ic2{width:30px;height:30px;border-radius:9px;background:var(--soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none} .li .ic2 svg.i{width:16px;height:16px}
+  .sec{display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px} .sec b{font-size:16px}
   .qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-  .qa button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:#16345c;cursor:pointer}
-  .qa .ci{width:50px;height:50px;border-radius:16px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--primary);box-shadow:0 2px 6px rgba(20,50,90,.08)}
-  .sec{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px} .sec b{font-size:16px}
-  /* product */
-  .th{width:64px;height:64px;border-radius:12px;border:1px solid var(--line);background:#f1f5fa;object-fit:contain;flex:none;display:flex;align-items:center;justify-content:center;color:#9aa8b8;overflow:hidden}
-  .th.s{width:42px;height:42px;border-radius:9px}
-  .pr{display:flex;gap:12px;align-items:flex-start}
+  .qa button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:var(--text);cursor:pointer}
+  .qa .ci{width:48px;height:48px;border-radius:15px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--primary);box-shadow:var(--shadow)}
+  /* customers */
+  .cr{display:flex;gap:12px;align-items:center} .cav{width:42px;height:42px;border-radius:12px;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  /* login / splash */
+  .splash{min-height:100vh;margin:-14px;padding:calc(40px + env(safe-area-inset-top)) 24px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;background:radial-gradient(90% 55% at 50% 28%,rgba(34,211,238,.28) 0%,rgba(37,99,235,.25) 40%,rgba(3,11,46,0) 70%),linear-gradient(180deg,#0a2a7a 0%,#030b2e 60%,#020718 100%)}
+  .splash img{width:min(220px,56vw);border-radius:30px;box-shadow:0 0 60px rgba(34,211,238,.28)}
+  .splash p{max-width:280px;color:#c3d4ff;margin:18px 0 28px} .splash .btn{width:min(320px,100%);justify-content:center;min-height:48px;font-size:16px;margin-bottom:12px}
+  .splash .btn.out{background:transparent;border:1.5px solid rgba(255,255,255,.55);color:#fff} .splash small{color:#8fa8e6;margin-top:18px}
+  /* product, gallery */
+  .th{width:64px;height:64px;border-radius:12px;border:1px solid var(--line);background:var(--soft2);object-fit:contain;flex:none;display:flex;align-items:center;justify-content:center;color:#9aa8b8;overflow:hidden}
+  .th.s{width:42px;height:42px;border-radius:9px} .pr{display:flex;gap:12px;align-items:flex-start}
   .gal{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .gal .g{position:relative} .gal .g img{width:84px;height:84px;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:#f1f5fa;display:block}
   .gal .g .cv{position:absolute;left:4px;top:4px;font-size:10px;background:var(--primary);color:#fff;border-radius:5px;padding:0 5px}
-  .gal .g .x{position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(20,35,58,.75);color:#fff;cursor:pointer;line-height:1}
-  .add{width:84px;height:84px;border:2px dashed #b9c8dc;border-radius:12px;background:#f8fbff;color:#4b6585;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;gap:2px;cursor:pointer}
-  /* segmented */
-  .seg{display:flex;background:#e3ebf6;border-radius:12px;padding:3px;margin-bottom:12px;gap:2px;overflow-x:auto}
-  .seg button{flex:1 0 auto;white-space:nowrap;border:0;background:none;padding:8px 12px;border-radius:10px;font-size:14px;color:#3c5272;cursor:pointer}
-  .seg button.on{background:#fff;color:var(--primary);font-weight:700;box-shadow:0 1px 4px rgba(20,50,90,.15)}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px} .chips button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;cursor:pointer;color:#2d4467} .chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
-  .sw{display:flex;gap:8px} .sw button{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer} .sw button.on{box-shadow:0 0 0 2px var(--primary)}
+  .gal .g .x{position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;cursor:pointer;line-height:1}
+  .add{width:84px;height:84px;border:2px dashed var(--line);border-radius:12px;background:var(--soft2);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;gap:2px;cursor:pointer}
+  .seg{display:flex;background:var(--soft);border-radius:12px;padding:3px;margin-bottom:12px;gap:2px;overflow-x:auto}
+  .seg button{flex:1 0 auto;white-space:nowrap;border:0;background:none;padding:8px 12px;border-radius:10px;font-size:14px;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--card);color:var(--primary);font-weight:700;box-shadow:0 1px 4px rgba(15,27,51,.15)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px} .chips button{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:6px 14px;cursor:pointer;color:var(--text)} .chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+  .sw{display:flex;gap:8px} .sw button{width:30px;height:30px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer} .sw button.on{box-shadow:0 0 0 2px var(--primary)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
   .ck{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;color:var(--text)}
   .logobox{display:flex;gap:12px;align-items:center}
   .logobox img,.logobox .ph{width:96px;height:96px;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff;padding:6px;display:flex;align-items:center;justify-content:center;color:#9aa8b8}
+  .filt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px} .filt select{min-width:130px}
   /* calendar */
   .calbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px} .calbar h2{margin:0;flex:1;min-width:130px}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .cal .h{background:#f1f5fa;padding:6px;text-align:center;font-size:12px;color:var(--muted)}
-  .day{background:#fff;min-height:84px;padding:4px 5px;cursor:pointer;overflow:hidden} .day:hover{background:#f6faff} .day.o{background:#f7f9fc;color:#9aa8b8}
+  .cal .h{background:var(--soft2);padding:6px;text-align:center;font-size:12px;color:var(--muted)}
+  .day{background:var(--card);min-height:84px;padding:4px 5px;cursor:pointer;overflow:hidden} .day:hover{background:var(--soft2)} .day.o{background:var(--soft2);color:#9aa8b8}
   .day .n{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;font-size:13px}
-  .day.t .n{background:var(--primary);color:#fff} .day.sel{outline:2px solid var(--primary);outline-offset:-2px;background:#f0f7ff}
-  .c{font-size:11px;border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#dbeafe;color:#1e40af;border-left:3px solid #1d6df0}
-  .c.done{background:#d6f5e8;color:#065f46;border-left-color:#0f9d6b} .c.other{background:#eef0f4;color:#445;border-left-color:#8a96a8}
+  .day.t .n{background:var(--primary);color:#fff} .day.sel{outline:2px solid var(--primary);outline-offset:-2px}
+  .c{font-size:11px;border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(37,99,235,.14);color:var(--link);border-left:3px solid #2563eb}
+  .c.done{background:rgba(22,163,74,.14);color:#15803d;border-left-color:#16a34a} .c.other{background:var(--soft);color:var(--muted);border-left-color:#8a96a8}
   .more{font-size:11px;color:var(--muted);margin-top:2px}
-  @media(max-width:700px){.day{min-height:52px}.day .c:nth-of-type(n+2){display:none}.c{font-size:10px}.two{grid-template-columns:1fr}}
+  /* desktop sidebar */
+  #side{display:none}
+  @media(min-width:1024px){
+    #side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:236px;z-index:60;background:var(--side);border-right:1px solid var(--line);overflow:auto}
+    body{padding-left:236px;padding-bottom:24px} .bar{display:none} .toast{bottom:24px;left:calc(50% + 118px)}
+    #side .sb{display:flex;align-items:center;gap:10px;padding:16px 16px 14px} #side .sb img{width:44px;height:44px;border-radius:12px} #side .sb b{font:italic 800 21px/1 Inter,system-ui;color:var(--text)} #side .sb b span{color:var(--primary)} #side .sb small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+    #side .sg{padding:12px 18px 4px;font-size:11px;letter-spacing:.6px;color:var(--muted)}
+    #side .sn{display:flex;gap:11px;align-items:center;width:calc(100% - 20px);margin:1px 10px;border:0;border-radius:10px;background:none;color:var(--text);padding:9px 12px;cursor:pointer;text-align:left;font:inherit}
+    #side .sn svg.i{color:var(--muted)} #side .sn:hover{background:var(--soft2)} #side .sn.on{background:var(--soft);color:var(--primary);font-weight:700} #side .sn.on svg.i{color:var(--primary)}
+    #side .sf{margin-top:auto;padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;font-size:13px;cursor:pointer} #side .sf .av{width:34px;height:34px;font-size:13px}
+    #srow{display:block;order:0;width:auto;flex:0 1 360px;margin-left:8px} #sbtn{display:none!important}
+    .top h1{flex:none;margin-right:6px} .top #thm{margin-left:auto}
+  }
+  @media(max-width:1023px){.top #thm{margin-left:0}}
+  @media(max-width:700px){.kt4{grid-template-columns:1fr 1fr}.kt{flex-direction:column;align-items:flex-start;gap:6px}.r2,.r3{grid-template-columns:1fr}.mini{grid-template-columns:1fr 1fr 1fr}.day{min-height:52px}.day .c:nth-of-type(n+2){display:none}.c{font-size:10px}.two{grid-template-columns:1fr}}
   /* paper */
   .pwrap{width:100%;max-width:794px;margin:0 auto;overflow:hidden;position:relative;background:#fff;border-radius:6px;box-shadow:0 2px 10px rgba(20,50,90,.18)}
   .paper{width:794px;min-height:1123px;background:#fff;color:#111;padding:40px 44px;font-size:13px;line-height:1.45;transform-origin:top left;display:flex;flex-direction:column}
@@ -134,13 +140,15 @@
     #paperov .pwrap{height:auto!important;background:none;border-radius:0;overflow:visible} #paperov .paper{transform:none!important;margin:0}
     @page{size:A4;margin:0}
   }
+  .splash img,#side .sb img{border-radius:24%!important} .chartbox{max-height:230px}
+  body.login{padding:0!important} body.login main{max-width:none;padding:0} body.login .splash{margin:0}
+  #thm,#bell{display:none} @media(min-width:1024px){#thm,#bell{display:inline-flex}}
 </style>
 </head>
-<body class="home">
-<div class="banner">ตัวอย่างหน้าจอ (ข้อมูลสมมติ ไม่เชื่อมฐานข้อมูล) — รีเฟรชแล้วข้อมูลกลับเป็นค่าเริ่มต้น · ดูในบทบาทอื่นได้ที่ รูปโปรไฟล์ มุมขวาบน</div>
+<body class="login">
+<div class="banner">ตัวอย่างหน้าจอ (ข้อมูลสมมติ ไม่เชื่อมฐานข้อมูล) — รีเฟรชแล้วข้อมูลกลับเป็นค่าเริ่มต้น · ดูในบทบาทอื่นได้ที่เมนู เพิ่มเติม › บัญชี</div>
 <aside id="side"></aside>
-<header class="top" id="top"><button class="ib" id="back" onclick="back()"></button><h1 id="ptitle"></h1><button class="ib" id="sbtn" onclick="toggleSearch()"></button><span id="topact"></span><button class="av" id="avt" onclick="go('profile')"></button></header>
-<div id="srow" hidden><input id="q" placeholder="ค้นหาในหน้านี้..." oninput="applySearch()"></div>
+<header class="top" id="top"><button class="ib" id="back" onclick="back()"></button><h1 id="ptitle"></h1><div id="srow"><input id="q" placeholder="ค้นหาในหน้านี้..." oninput="applySearch()"></div><button class="ib" id="sbtn" onclick="toggleSearch()"></button><button class="ib" id="thm" onclick="toggleTheme()"></button><button class="ib" id="bell" onclick="showAlerts()"></button><span id="topact"></span><button class="av" id="avt" onclick="go('profile')"></button></header>
 <main id="view"></main>
 <nav class="bar"><div id="bar"></div></nav>
 <div class="ov" id="sheetov" onclick="if(event.target===this)toggleSheet(false)"><div class="sheet" id="sheet"></div></div>
@@ -172,6 +180,10 @@ const IC={
  print:'<path d="M7 9V3h10v6M6 18H4v-7h16v7h-2M7 14h10v7H7z"/>',
  receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
  dncheck:'<path d="M5 4h14v16H5z"/><path d="M9 10l2 2 4-4M9 16h6"/>',
+ bell:'<path d="M6 17V11a6 6 0 0112 0v6l2 2H4z"/><path d="M10 21h4"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+ moon:'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>',
+ dots:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
  out:'<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>'
 };
 const ic=(n,s)=>`<svg class="i" viewBox="0 0 24 24"${s?` style="width:${s}px;height:${s}px"`:''}>${IC[n]}</svg>`;
@@ -185,9 +197,10 @@ const ROLE_LABEL={owner:'เจ้าของ',admin:'แอดมิน',sales
 const ROLE_EDIT={customers:['owner','admin','sales'],visits:['owner','admin','sales'],jobs:['owner','admin','sales'],quotes:['owner','admin','sales'],
   products:['owner','admin','warehouse'],stock:['owner','admin','warehouse'],delivery:['owner','admin','dispatcher','warehouse'],zones:['owner','admin','dispatcher'],
   dns:['owner','admin','dispatcher','warehouse'],invoices:['owner','admin'],members:['owner','admin'],company:['owner','admin'],docset:['owner','admin']};
-const BAR=[['home','หน้าแรก','home'],['customers','ลูกค้า','users'],['tools','เครื่องมือ','grid'],['visits','นัดหมาย','calendar'],['docs','เอกสาร','file']];
+const BAR=[['home','หน้าแรก','home'],['customers','ลูกค้า','users'],['quotes','ใบเสนอราคา','file'],['visits','นัดหมาย','calendar'],['more','เพิ่มเติม','dots']];
 const TOOLPAGES=['products','stock','zones','members','company','docset','profile'];
-const TITLES={customers:'ลูกค้า',visits:'นัดหมาย',docs:'เอกสาร',products:'สินค้า',stock:'สต็อก',zones:'โซนส่งของ',members:'สมาชิก',company:'ตั้งค่าบริษัท',docset:'ตั้งค่าเอกสาร',profile:'บัญชีและเมนู'};
+const TITLES={home:'แดชบอร์ด',customers:'ลูกค้า',visits:'นัดหมาย',products:'สินค้า',stock:'สต็อก',zones:'โซนส่งของ',members:'สมาชิก',company:'ตั้งค่าบริษัท',docset:'ตั้งค่าเอกสาร',profile:'บัญชีและเมนู'};
+const DTITLE={quotes:'ใบเสนอราคา',jobs:'Job Ticket',delivery:'ส่งของ (DO)',dns:'ใบส่งของ',invoices:'อินวอยซ์'};
 const BASE=(()=>{const d=new Date();d.setHours(0,0,0,0);return d})();
 const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const dkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -209,7 +222,7 @@ function bahtText(v){v=Math.round(v*100)/100;if(!isFinite(v)||v<0)return '';cons
   return (i==='0'?'ศูนย์':big(i))+'บาท'+(f==='00'?'ถ้วน':rd(f,false)+'สตางค์')}
 
 const S={
-  page:'home',stack:[],dtab:'quotes',role:'owner',ds:'quote',vmine:'all',vSeq:6,doSeq:0,jSeq:2,qSeq:2,dnSeq:0,ivSeq:0,moves:[],
+  page:'login',theme:'light',qf:'all',stack:[],dtab:'quotes',role:'owner',ds:'quote',vmine:'all',vSeq:6,doSeq:0,jSeq:2,qSeq:2,dnSeq:0,ivSeq:0,moves:[],
   company:{name:'บริษัท ตัวอย่างวิศวกรรม จำกัด',nameEn:'Example Engineering Co., Ltd.',tax:'0105560000001',branch:'สำนักงานใหญ่',addr:'88/8 ถ.ศรีนครินทร์ ต.สำโรงเหนือ อ.เมือง จ.สมุทรปราการ 10270',phone:'02-123-4567',email:'sales@example.co.th',web:'www.example.co.th',bank:'ธนาคารกสิกรไทย สาขาสำโรง · เลขที่บัญชี 123-4-56789-0 · ชื่อบัญชี บริษัท ตัวอย่างวิศวกรรม จำกัด',logo:SAMPLE_LOGO},
   docs:{
     quote:{title:'ใบเสนอราคา',titleEn:'Quotation',prefix:'QT',yearFmt:'CE',sep:'-',digits:4,logo:true,logoPos:'left',color:'#1d6df0',cImg:true,cCode:true,cUnit:true,showPrices:true,vat:7,days:30,bank:false,
@@ -267,16 +280,34 @@ function pickImage(max,png,cb){const i=document.createElement('input');i.type='f
       const g=c.getContext('2d');if(!png){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}g.drawImage(im,0,0,c.width,c.height);const u=c.toDataURL(png?'image/png':'image/jpeg',.85);cb(u,Math.round(u.length*.75/1024))};im.src=r.result};r.readAsDataURL(f)};i.click()}
 
 /* ---------- navigation ---------- */
-function go(p){if(p==='tools'){toggleSheet(true);return}
-  const inBar=BAR.some(b=>b[0]===p);if(inBar)S.stack=[];else if(S.page!==p)S.stack.push(S.page);
-  S.page=p;toggleSheet(false);closeModal();document.getElementById('q').value='';document.getElementById('srow').hidden=true;
+const MAIN3=['home','customers','visits'];
+const inBarPage=()=>MAIN3.includes(S.page)||(S.page==='docs'&&S.dtab==='quotes');
+function go(p){if(p==='more'){toggleSheet(true);return}
+  if(p==='quotes'){S.dtab='quotes';p='docs'}
+  const prev=S.page;S.page=p;if(inBarPage()||p==='login')S.stack=[];else if(prev!==p&&prev!=='login')S.stack.push(prev);
+  toggleSheet(false);closeModal();document.getElementById('q').value='';document.getElementById('srow').classList.remove('on');
   if(p==='company')S.cd=JSON.parse(JSON.stringify(S.company));if(p==='docset')S.dd=JSON.parse(JSON.stringify(S.docs));
   render();window.scrollTo(0,0)}
 function back(){S.page=S.stack.pop()||'home';if(S.page==='company')S.cd=JSON.parse(JSON.stringify(S.company));if(S.page==='docset')S.dd=JSON.parse(JSON.stringify(S.docs));render();window.scrollTo(0,0)}
+function navTo(k){if(k.startsWith('docs:')){S.dtab=k.slice(5);go('docs')}else go(k)}
 function toggleSheet(on){const o=document.getElementById('sheetov');if(on===undefined)on=o.style.display!=='block';o.style.display=on?'block':'none';
-  if(on)document.getElementById('sheet').innerHTML=`<h3>เครื่องมือ</h3><div class="tiles">${[['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders']].map(([k,l,i])=>`<button class="tile" onclick="go('${k}')">${ic(i)}${l}</button>`).join('')}
-   <button class="tile" onclick="S.dtab='quotes';go('docs')">${ic('file')}ใบเสนอราคา</button><button class="tile" onclick="S.dtab='jobs';go('docs')">${ic('clip')}Job Ticket</button><button class="tile" onclick="S.dtab='delivery';go('docs')">${ic('truck')}ส่งของ (DO)</button><button class="tile" onclick="S.dtab='dns';go('docs')">${ic('dncheck')}ใบส่งของ</button><button class="tile" onclick="S.dtab='invoices';go('docs')">${ic('receipt')}อินวอยซ์</button></div>`}
-function toggleSearch(){const r=document.getElementById('srow');r.hidden=!r.hidden;if(!r.hidden)document.getElementById('q').focus()}
+  if(on)document.getElementById('sheet').innerHTML=`<h3>เพิ่มเติม</h3><div class="tiles">${[['docs:jobs','Job Ticket','clip'],['docs:delivery','ส่งของ (DO)','truck'],['docs:dns','ใบส่งของ','dncheck'],['docs:invoices','อินวอยซ์','receipt'],['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders'],['profile','บัญชี','user']].map(([k,l,i])=>`<button class="tile" onclick="navTo('${k}')">${ic(i)}${l}</button>`).join('')}
+   <button class="tile" onclick="toggleTheme();toggleSheet(false)">${ic(S.theme==='dark'?'sun':'moon')}${S.theme==='dark'?'โหมดสว่าง':'โหมดมืด'}</button></div>`}
+function toggleSearch(){const r=document.getElementById('srow');r.classList.toggle('on');if(r.classList.contains('on'))document.getElementById('q').focus()}
+function applyTheme(){document.documentElement.dataset.theme=S.theme}
+function toggleTheme(){S.theme=S.theme==='dark'?'light':'dark';render()}
+function alertsList(){const a=[];S.products.filter(isLow).forEach(p=>a.push(['box',`${p.name} ต่ำกว่า Safety Stock (ใช้ได้ ${avail(p)} / ${p.min})`]));
+  S.jobs.filter(j=>!['done','cancelled'].includes(j.status)&&j.due<dkey(BASE)).forEach(j=>a.push(['clip',`${j.no} เกินกำหนด (${j.due})`]));
+  S.invoices.filter(v=>v.status==='issued'&&v.due<dkey(BASE)).forEach(v=>a.push(['receipt',`${fmtNo('invoice',v.seq)} เกินกำหนดชำระ`]));
+  S.visits.filter(v=>v.off===0&&v.status==='planned').forEach(v=>a.push(['calendar',`วันนี้ ${v.s} · ${custName(v.cust)}`]));return a}
+function showAlerts(){const a=alertsList();openModal(`<h3 style="margin:0 0 8px">การแจ้งเตือน</h3>${a.map(x=>`<div class="li"><span class="ic2">${ic(x[0])}</span><span>${x[1]}</span></div>`).join('')||'<div class="muted">ไม่มีการแจ้งเตือน</div>'}<div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">ปิด</button></div>`)}
+const AVC=['#2563eb','#0d9488','#7c3aed','#16a34a','#d97706'],ini=n=>n.replace(/^(บริษัท|ห้างหุ้นส่วน)\s*/,'').trim().charAt(0)||'?';
+const THS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function barsSvg(cur){const vals=[120,150,180,160,210,cur],labs=[];for(let i=5;i>=0;i--)labs.push(THS[new Date(BASE.getFullYear(),BASE.getMonth()-i,1).getMonth()]);const mx=Math.max(...vals,1);
+  return `<svg class="chartbox" viewBox="0 0 360 180">${[0,1,2,3].map(i=>`<line x1="10" x2="350" y1="${20+i*38}" y2="${20+i*38}" stroke="var(--line)" stroke-width="1"/>`).join('')}${vals.map((v,i)=>{const h=Math.max(2,v/mx*130),x=24+i*56;return `<rect x="${x}" y="${154-h}" width="34" height="${h}" rx="7" fill="${i===5?'#22d3ee':'var(--primary)'}"/><text x="${x+17}" y="${148-h}" text-anchor="middle" font-size="11" style="fill:var(--text)">${Math.round(v)}</text><text x="${x+17}" y="172" text-anchor="middle" font-size="11" style="fill:var(--muted)">${labs[i]}</text>`}).join('')}</svg>`}
+function donutSvg(parts){const tot=parts.reduce((a,x)=>a+x[1],0),C=2*Math.PI*40;let off=0;
+  const arcs=tot?parts.filter(x=>x[1]).map(x=>{const len=x[1]/tot*C,e=`<circle cx="60" cy="60" r="40" fill="none" stroke="${x[2]}" stroke-width="16" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"/>`;off+=len;return e}).join(''):`<circle cx="60" cy="60" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>`;
+  return `<svg viewBox="0 0 120 120" width="130" height="130">${arcs}<text x="60" y="58" text-anchor="middle" font-size="22" font-weight="700" style="fill:var(--text)">${tot}</text><text x="60" y="74" text-anchor="middle" font-size="10" style="fill:var(--muted)">ใบเสนอราคา</text></svg>`}
 function openModal(h){document.getElementById('mdl').innerHTML=h;document.getElementById('modal').style.display='block'}
 function closeModal(){document.getElementById('modal').style.display='none'}
 
@@ -321,25 +352,34 @@ function printQuote(id){showPaper('quote',ctxQuote(S.quotes.find(x=>x.id===id)))
 
 /* ---------- pages ---------- */
 const V={
+login(){return `<div class="splash"><img src="${LOGO_APP}" alt="SalePro by Monte"><p>Smart Sales. Strong Engineering. Better Business.</p><button class="btn" onclick="go('home')">เข้าสู่ระบบ</button><button class="btn out" onclick="toast('ลงทะเบียน: สร้างบริษัทใหม่ หรือใส่โค้ดเชิญเข้าร่วมบริษัท (ตัวอย่าง)')">ลงทะเบียน</button><small>Powered by MONTE</small></div>`},
 home(){
   const low=S.products.filter(isLow),open=S.jobs.filter(j=>!['done','cancelled'].includes(j.status)),over=open.filter(j=>j.due<dkey(BASE));
+  const sentQ=S.quotes.filter(q=>q.status==='sent'),wonQ=S.quotes.filter(q=>q.status==='accepted');
+  const sent=sentQ.reduce((s,q)=>s+qTotals(q).total,0),won=wonQ.reduce((s,q)=>s+qTotals(q).total,0);
   const unpaid=S.invoices.filter(v=>v.status==='issued'),unpaidAmt=unpaid.reduce((a,v)=>a+qTotals(v).total,0),overIv=unpaid.filter(v=>v.due<dkey(BASE));
-  const sent=S.quotes.filter(q=>q.status==='sent').reduce((s,q)=>s+qTotals(q).total,0),won=S.quotes.filter(q=>q.status==='accepted').reduce((s,q)=>s+qTotals(q).total,0);
   const today=S.visits.filter(v=>v.off===0&&v.status==='planned').sort((a,b)=>a.s.localeCompare(b.s));
-  const k=(l,v,bad,sub)=>`<div class="card ${bad?'bad2':''}"><small>${l}</small><b>${v}</b>${sub?`<small>${sub}</small>`:''}</div>`;
-  const qa=[['visits','นัดใหม่','calendar',"go('visits');setTimeout(goForm,60)",can('visits')],['docs','ใบเสนอราคา','file',"S.dtab='quotes';go('docs');addQuote()",can('quotes')],['jobs','Job ใหม่','clip',"S.dtab='jobs';go('docs');addJob()",can('jobs')],['delivery','สร้าง DO','truck',"S.dtab='delivery';go('docs')",can('delivery')]].filter(a=>a[4]);
-  return `<section class="hero"><div class="hrow"><img class="hlogo" src="${LOGO_APP}" alt="SalePro by Monte"><div class="hbrand"><span class="hw">Sale</span><span class="hp">Pro</span><small>by Monte</small></div><button class="av" onclick="go('profile')">เอ</button></div>
-   <div class="hco">${S.company.logo?`<img src="${S.company.logo}" alt="">`:''}<div><small>บริษัท</small><b>${esc(S.company.name)}</b></div></div>
-   <div style="margin-top:12px;color:#d6e4ff">สวัสดี คุณเอ · ${ROLE_LABEL[S.role]}</div></section>
-  <div class="kp">${k('นัดเข้าพบวันนี้',today.length)}${k('Job ที่ยังเปิด',open.length,over.length>0,over.length?`เกินกำหนด ${over.length}`:'')}${k('ใบเสนอราคารอตอบ',baht(sent),0,'บาท')}${k('ปิดได้ 30 วัน',baht(won),0,'บาท')}
-   ${k('DO รอ / ระหว่างส่ง',S.dos.filter(d=>['draft','ready'].includes(d.status)).length+' / '+S.dos.filter(d=>d.status==='dispatched').length)}${k('อินวอยซ์ค้างชำระ',baht(unpaidAmt),0,'บาท')}${k('เกินกำหนดชำระ',overIv.length,overIv.length>0)}${k('ต่ำกว่า Safety Stock',low.length,low.length>0)}</div>
-  ${qa.length?`<div class="qa">${qa.map(a=>`<button onclick="${a[3]}"><span class="ci">${ic(a[2])}</span>${a[1]}</button>`).join('')}</div>`:''}
-  <div class="sec"><b>นัดวันนี้</b><a href="#" onclick="go('visits');return false">ดูปฏิทิน</a></div>
-  ${today.map(v=>{const c=S.customers.find(x=>x.id===v.cust),a=c.addr.find(x=>x.def)||c.addr[0];return `<div class="card"><b>${v.s}–${v.e} · ${v.title}</b><div class="muted">${c.name}</div><div class="row" style="margin-top:6px"><a href="${dirLink(a.lat,a.lng)}" target="_blank" rel="noopener">นำทาง</a></div></div>`}).join('')||'<div class="card muted">วันนี้ไม่มีนัด</div>'}
-  ${low.length?`<div class="sec"><b>สินค้าที่ต้องสั่งเพิ่ม</b><a href="#" onclick="go('stock');return false">ดูสต็อก</a></div>${low.map(p=>`<div class="card pr">${thumb(p,'s')}<div style="flex:1"><b>${p.name}</b><div class="muted">${p.sku}</div></div><span class="pill bad">ใช้ได้ ${avail(p)} / Safety ${p.min}</span></div>`).join('')}`:''}`;
+  const up=S.visits.filter(v=>v.off>=0&&v.status==='planned').sort((a,b)=>a.off-b.off||a.s.localeCompare(b.s)).slice(0,3);
+  const cnt=x=>S.quotes.filter(q=>x.includes(q.status)).length;
+  const tile=(c,i,l,v,sub)=>`<div class="kt ${c}">${ic(i)}<div><small>${l}</small><b>${v}</b><span class="s">${sub}</span></div></div>`;
+  const qa=[["calendar",'นัดใหม่',"go('visits');setTimeout(goForm,60)",can('visits')],["file",'ใบเสนอราคา',"S.dtab='quotes';go('docs');addQuote()",can('quotes')],["clip",'Job ใหม่',"S.dtab='jobs';go('docs');addJob()",can('jobs')],["truck",'สร้าง DO',"S.dtab='delivery';go('docs')",can('delivery')]].filter(a=>a[3]);
+  const act=[...S.invoices.slice(0,2).map(v=>['receipt','ออกอินวอยซ์ '+fmtNo('invoice',v.seq)+' · '+custName(v.cust)]),...S.dns.slice(0,2).map(n=>['dncheck','ใบส่งของ '+fmtNo('dn',n.seq)+(n.status==='received'?' · ลูกค้าตรวจรับแล้ว':'')]),...S.quotes.slice(0,3).map(q=>['file','ใบเสนอราคา '+fmtNo('quote',q.seq)+' · '+custName(q.cust)]),...S.moves.slice(0,2).map(m=>['chart',prod(m.p).sku+' · '+m.kind+' → คงเหลือ '+m.after]),...S.jobs.slice(0,2).map(j=>['clip','Job '+j.no+' · '+j.title])].slice(0,6);
+  const when=o=>o===0?'วันนี้':o===1?'พรุ่งนี้':thDate(addD(BASE,o)).slice(0,-5);
+  return `<div class="dh"><div><h2>สวัสดี คุณเอ 👋</h2><div class="muted">ยินดีต้อนรับกลับ · ${ROLE_LABEL[S.role]}</div></div><div class="row">${S.company.logo?`<img class="th s" src="${S.company.logo}" alt="">`:''}<b class="muted" style="font-size:13px">${esc(S.company.name)}</b></div></div>
+  ${qa.length?`<div class="qa">${qa.map(a=>`<button onclick="${a[2]}"><span class="ci">${ic(a[0])}</span>${a[1]}</button>`).join('')}</div>`:''}
+  <div class="kt4">${tile('b1','chart','ยอดที่ปิดได้ (บาท)',baht(won),wonQ.length+' ใบเสนอราคาที่ลูกค้าตกลง')}${tile('b2','file','ใบเสนอราคารอตอบ (บาท)',baht(sent),sentQ.length+' ใบ')}${tile('b3','clip','Job ที่ยังเปิด',open.length,'เกินกำหนด '+over.length)}${tile('b4','receipt','อินวอยซ์รอชำระ (บาท)',baht(unpaidAmt),'เกินกำหนด '+overIv.length)}</div>
+  <div class="mini"><div class="card"><small>นัดวันนี้</small><b>${today.length}</b></div><div class="card"><small>DO รอ / ระหว่างส่ง</small><b>${S.dos.filter(d=>['draft','ready'].includes(d.status)).length} / ${S.dos.filter(d=>d.status==='dispatched').length}</b></div><div class="card ${low.length?'alert':''}"><small>ต่ำกว่า Safety Stock</small><b>${low.length}</b></div></div>
+  <div class="r2"><div class="card"><div class="sec"><b>ยอดที่ปิดได้รายเดือน</b><span class="muted" style="font-size:12px">พันบาท · ข้อมูลตัวอย่าง ยกเว้นเดือนปัจจุบัน</span></div>${barsSvg(won/1000)}</div>
+   <div class="card"><div class="sec"><b>สถานะใบเสนอราคา</b></div><div class="row" style="flex-wrap:nowrap;justify-content:space-around">${donutSvg([['ร่าง',cnt(['draft']),'#94a3b8'],['ส่งแล้ว',cnt(['sent']),'#2563eb'],['ลูกค้าตกลง',cnt(['accepted']),'#16a34a'],['ปฏิเสธ/ยกเลิก',cnt(['rejected','cancelled','expired']),'#ef4444']])}
+    <div class="lg">${[['ร่าง',cnt(['draft']),'#94a3b8'],['ส่งแล้ว',cnt(['sent']),'#2563eb'],['ลูกค้าตกลง',cnt(['accepted']),'#16a34a'],['ปฏิเสธ/ยกเลิก',cnt(['rejected','cancelled','expired']),'#ef4444']].map(x=>`<span><i style="background:${x[2]}"></i>${x[0]} ${x[1]}</span>`).join('')}</div></div></div></div>
+  <div class="r3"><div class="card"><div class="sec"><b>งานที่ต้องทำ</b><a href="#" onclick="go('visits');return false">ดูปฏิทิน</a></div>
+   ${up.map(v=>`<div class="li"><span class="ic2">${ic('calendar')}</span><div style="flex:1"><b>${v.title}</b><div class="muted" style="font-size:13px">${custName(v.cust)}</div></div><span class="muted" style="font-size:12px;white-space:nowrap">${when(v.off)} ${v.s}</span></div>`).join('')}
+   ${over.map(j=>`<div class="li"><span class="ic2">${ic('clip')}</span><div style="flex:1"><b>${j.no}</b> ${j.title}</div><span class="pill bad">เกินกำหนด</span></div>`).join('')}${!up.length&&!over.length?'<div class="muted">ไม่มีงานค้าง</div>':''}</div>
+   <div class="card"><div class="sec"><b>กิจกรรมล่าสุด</b></div>${act.map(x=>`<div class="li"><span class="ic2">${ic(x[0])}</span><span>${x[1]}</span></div>`).join('')||'<div class="muted">ยังไม่มีกิจกรรม</div>'}</div></div>
+  ${low.length?`<div class="card"><div class="sec"><b>สินค้าที่ต้องสั่งเพิ่ม</b><a href="#" onclick="go('stock');return false">ดูสต็อก</a></div>${low.map(p=>`<div class="li pr">${thumb(p,'s')}<div style="flex:1"><b>${p.name}</b><div class="muted" style="font-size:13px">${p.sku}</div></div><span class="pill bad">ใช้ได้ ${avail(p)} / Safety ${p.min}</span></div>`).join('')}</div>`:''}`;
 },
 customers(){
-  return `${roNote('customers')}${S.customers.map(c=>`<div class="card f"><b>${c.name}</b> <span class="muted">${c.code} · ${c.phone} · ${c.addr.length} ที่อยู่</span>
+  return `${roNote('customers')}${S.customers.map(c=>`<div class="card f"><div class="cr"><span class="cav" style="background:${AVC[c.id%5]}">${ini(c.name)}</span><div><b>${c.name}</b><div class="muted">${c.code} · ${c.phone} · ${c.addr.length} ที่อยู่</div></div></div>
    ${c.addr.map(a=>`<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px"><b>${a.label}</b> ${a.def?'<span class="pill ok">ค่าเริ่มต้น</span>':''} <span class="pill">${(S.zones.find(z=>z.id===a.zone)||{}).name||'ไม่ระบุโซน'}</span>
    <div class="muted">${a.line} ${a.prov} · ติดต่อ ${a.contact}</div><div class="muted">พิกัด ${a.lat}, ${a.lng}</div>
    <div class="row"><a href="${mapLink(a.lat,a.lng)}" target="_blank" rel="noopener">เปิดแผนที่</a><a href="${dirLink(a.lat,a.lng)}" target="_blank" rel="noopener">นำทาง</a></div></div>`).join('')}
@@ -375,14 +415,14 @@ jobs(){
   const L={open:'เปิดงาน',in_progress:'กำลังดำเนินการ',waiting_customer:'รอลูกค้า',done:'เสร็จสิ้น',cancelled:'ยกเลิก'};
   const NEXT={open:['in_progress','cancelled'],in_progress:['waiting_customer','done','cancelled'],waiting_customer:['in_progress','cancelled'],done:[],cancelled:[]};
   return `${roNote('jobs')}${S.jobs.map(j=>`<div class="card f"><b>${j.no} · ${j.title}</b><div class="muted">${custName(j.cust)} · กำหนด ${j.due}</div>
-   <div class="row" style="margin:6px 0"><span class="pill ${j.status==='done'?'ok':j.status==='waiting_customer'?'warn':''}">${L[j.status]}</span><span class="pill ${j.pri==='สูง'?'warn':''}">ความสำคัญ: ${j.pri}</span>${j.due<dkey(BASE)&&!['done','cancelled'].includes(j.status)?'<span class="pill bad">เกินกำหนด</span>':''}</div>
+   <div class="row" style="margin:6px 0"><span class="pill ${j.status==='done'?'ok':j.status==='waiting_customer'?'warn':j.status==='in_progress'?'info':''}">${L[j.status]}</span><span class="pill ${j.pri==='สูง'?'warn':''}">ความสำคัญ: ${j.pri}</span>${j.due<dkey(BASE)&&!['done','cancelled'].includes(j.status)?'<span class="pill bad">เกินกำหนด</span>':''}</div>
    <div class="muted">${j.log.map(x=>'• '+x).join('<br>')}</div>
    ${can('jobs')?`<div class="row" style="margin-top:8px">${NEXT[j.status].map(s=>`<button class="btn ghost sm" onclick="moveJob(${j.id},'${s}')">→ ${L[s]}</button>`).join('')}</div>`:''}</div>`).join('')}
    <p class="muted">เลขที่ออกโดยฐานข้อมูล (JT-ปี-ลำดับ แยกตามบริษัท) ประวัติการเปลี่ยนสถานะแก้ย้อนหลังไม่ได้</p>`;
 },
 quotes(){
   const L={draft:'ร่าง',sent:'ส่งแล้ว',accepted:'ลูกค้าตกลง',rejected:'ลูกค้าปฏิเสธ',cancelled:'ยกเลิก'};const NEXT={draft:['sent','cancelled'],sent:['accepted','rejected','cancelled'],accepted:[],rejected:[],cancelled:[]};
-  return `${roNote('quotes')}${S.quotes.map(q=>{const t=qTotals(q);return `<div class="card f"><b>${fmtNo('quote',q.seq)} · ${custName(q.cust)}</b> <span class="pill ${q.status==='accepted'?'ok':q.status==='sent'?'warn':''}">${L[q.status]}</span>
+  return `${roNote('quotes')}<div class="filt"><select onchange="S.qf=this.value;render()">${[['all','ทุกสถานะ'],...Object.entries(L)].map(([k,l])=>`<option value="${k}" ${S.qf===k?'selected':''}>${l}</option>`).join('')}</select></div>${S.quotes.filter(q=>S.qf==='all'||q.status===S.qf).map(q=>{const t=qTotals(q);return `<div class="card f"><b>${fmtNo('quote',q.seq)} · ${custName(q.cust)}</b> <span class="pill ${q.status==='accepted'?'ok':q.status==='sent'?'info':q.status==='rejected'?'bad':''}">${L[q.status]}</span>
    <table style="margin-top:8px">${q.items.map(i=>{const p=prod(i.pid);return `<tr><td style="width:50px">${thumb(p,'s')}</td><td>${p.name} × ${i.q}</td><td class="r">${baht(i.q*i.u)}</td></tr>`}).join('')}
    <tr><td></td><td class="muted">ยอดรวม</td><td class="r">${baht(t.sub)}</td></tr><tr><td></td><td class="muted">ส่วนลด</td><td class="r">${baht(q.discount)}</td></tr><tr><td></td><td class="muted">VAT ${q.vat}%</td><td class="r">${baht(t.vat)}</td></tr>
    <tr><td></td><td><b>รวมสุทธิ</b></td><td class="r"><b>${baht(t.total)} บาท</b></td></tr></table>
@@ -398,7 +438,7 @@ delivery(){
   ${Object.keys(byZone).length===0?'<div class="card muted">ยังไม่มี DO — สร้างด้านบน</div>':''}
   ${Object.entries(byZone).map(([zid,list])=>`<div class="row between"><div class="zone">โซน ${zid} · ${(S.zones.find(z=>z.id===zid)||{}).name} (${list.length} จุด)</div>${can('delivery')?`<button class="btn ghost sm" onclick="autoOrder('${zid}')">เรียงตามระยะใกล้</button>`:''}</div>
    ${list.sort((a,b)=>(a.seq||99)-(b.seq||99)).map((d,i)=>`<div class="card f"><div class="pr">${thumb(prod(d.pid),'s')}<div style="flex:1"><b>${d.seq||i+1}. ${fmtNo('do',d.seq0)} · ${custName(d.cust)}</b><div class="muted">${d.ship}</div><div class="muted">• ${prod(d.pid).name} × ${d.qty}</div></div></div>
-   <div class="row" style="margin:6px 0"><span class="pill ${d.status==='delivered'?'ok':d.status==='dispatched'?'warn':''}">${L[d.status]}</span><a href="${mapLink(d.lat,d.lng)}" target="_blank" rel="noopener">แผนที่</a><a href="${dirLink(d.lat,d.lng)}" target="_blank" rel="noopener">นำทาง</a></div>
+   <div class="row" style="margin:6px 0"><span class="pill ${d.status==='delivered'?'ok':d.status==='dispatched'?'info':''}">${L[d.status]}</span><a href="${mapLink(d.lat,d.lng)}" target="_blank" rel="noopener">แผนที่</a><a href="${dirLink(d.lat,d.lng)}" target="_blank" rel="noopener">นำทาง</a></div>
    <div class="row">${can('delivery')?`${d.status==='draft'?`<button class="btn sm" onclick="doAct(${d.id},'ready')">พร้อมส่ง (จองสต็อก)</button>`:''}${d.status==='ready'?`<button class="btn sm" onclick="doAct(${d.id},'dispatched')">ออกจัดส่ง (ตัดสต็อก)</button>`:''}${d.status==='dispatched'?`<button class="btn sm" onclick="doAct(${d.id},'delivered')">ส่งสำเร็จ</button>`:''}${['draft','ready'].includes(d.status)?`<button class="btn red sm" onclick="doAct(${d.id},'cancelled')">ยกเลิก DO</button>`:''}`:''}
    <button class="btn ghost sm" onclick="printDO(${d.id})">${ic('print',16)} พิมพ์ DO</button>${(()=>{const n=S.dns.find(x=>x.doId===d.id);return n?`<button class="btn ghost sm" onclick="printDN(${n.id})">${ic('print',16)} ใบส่งของ ${fmtNo('dn',n.seq)}</button>`:(can('dns')&&['dispatched','delivered'].includes(d.status)?`<button class="btn sm" onclick="issueDN(${d.id})">ออกใบส่งของ</button>`:'')})()}</div></div>`).join('')}`).join('')}
   <p class="muted">ที่อยู่/พิกัดปลายทางถูกคัดลอกลง DO ตอนสร้าง · "พร้อมส่ง" จองสต็อก (ไม่พอจะปฏิเสธ) · "ออกจัดส่ง" จึงตัดสต็อกจริง</p>`;
@@ -438,7 +478,8 @@ profile(){
   <div class="card pr">${S.company.logo?`<img class="th" src="${S.company.logo}" alt="">`:''}<div><small class="muted">บริษัทที่ใช้งานอยู่</small><div><b>${esc(S.company.name)}</b></div></div></div>
   <div class="card"><label class="f">ดูในบทบาท (เฉพาะตัวอย่างนี้) <select id="role" onchange="S.role=this.value;render()">${Object.entries(ROLE_LABEL).map(([k,l])=>`<option value="${k}" ${S.role===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
   <div class="card" style="padding:4px 13px">${[['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders'],['members','สมาชิก','key'],['zones','โซนส่งของ','pin']].map(([k,l,i])=>`<div class="row" style="padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="go('${k}')">${ic(i)}<span style="flex:1">${l}</span>${!ROLE_EDIT[k]||can(k)?'':'<span class="pill">ดูอย่างเดียว</span>'}<span class="muted">›</span></div>`).join('')}
-   <div class="row" style="padding:11px 0;cursor:pointer" onclick="toast('ออกจากระบบ (ตัวอย่าง)')">${ic('out')}<span>ออกจากระบบ</span></div></div>`;
+   <div class="row" style="padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="toggleTheme()">${ic(S.theme==='dark'?'sun':'moon')}<span>${S.theme==='dark'?'โหมดสว่าง':'โหมดมืด'}</span></div>
+   <div class="row" style="padding:11px 0;cursor:pointer" onclick="go('login')">${ic('out')}<span>ออกจากระบบ</span></div></div>`;
 },
 company(){
   const c=S.cd,ed=can('company');const f=(k,l,ph)=>`<label class="f">${l}<input value="${esc(c[k])}" ${ed?'':'disabled'} placeholder="${ph||''}" oninput="S.cd.${k}=this.value"></label>`;
@@ -510,6 +551,9 @@ function saveProduct(){const g=i=>document.getElementById(i).value.trim();const 
 function gallery(id){const p=prod(id);openModal(`<h3 style="margin:0 0 10px">${p.name}</h3><div class="gal">${p.imgs.map(u=>`<div class="g"><img style="width:150px;height:150px" src="${u}" alt=""></div>`).join('')||'<span class="muted">ยังไม่มีรูป</span>'}</div><div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">ปิด</button></div>`)}
 
 /* ---------- actions (same rules as before) ---------- */
+
+const NAVS=[['home','แดชบอร์ด','home'],['customers','ลูกค้า','users'],['visits','นัดหมาย','calendar'],['g','เอกสาร'],['docs:quotes','ใบเสนอราคา','file'],['docs:jobs','Job Ticket','clip'],['docs:delivery','ส่งของ (DO)','truck'],['docs:dns','ใบส่งของ','dncheck'],['docs:invoices','อินวอยซ์','receipt'],['g','สินค้าและคลัง'],['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['g','ตั้งค่า'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders']];
+function renderSide(){document.getElementById('side').innerHTML=`<div class="sb"><img src="${LOGO_APP}" alt=""><div><b>Sale<span>Pro</span></b><small>by Monte</small></div></div>`+NAVS.map(([k,l,i])=>k==='g'?`<div class="sg">${l}</div>`:`<button class="sn ${(k.startsWith('docs:')?S.page==='docs'&&S.dtab===k.slice(5):S.page===k)?'on':''}" onclick="navTo('${k}')">${ic(i)}${l}</button>`).join('')+`<div class="sf" onclick="go('profile')"><span class="av" style="display:flex;align-items:center;justify-content:center">เอ</span><div><b>คุณเอ</b><div class="muted" style="font-size:12px">${ROLE_LABEL[S.role]}</div></div></div>`}
 const TOPACT=()=>{const p=S.page,t=S.dtab;
   if(p==='customers')return['ลูกค้า',"toast('ฟอร์มเพิ่มลูกค้า: รหัส / ชื่อ / โทรศัพท์ / อีเมล แล้วเพิ่มที่อยู่และพิกัด')",'customers'];
   if(p==='visits')return['นัด','goForm()','visits'];
@@ -517,14 +561,15 @@ const TOPACT=()=>{const p=S.page,t=S.dtab;
   if(p==='zones')return['โซน',"toast('ฟอร์มเพิ่มโซน: รหัส / ชื่อ / จังหวัดในโซน')",'zones'];
   if(p==='docs'&&t==='quotes')return['ใบเสนอราคา','addQuote()','quotes'];
   if(p==='docs'&&t==='jobs')return['Job','addJob()','jobs'];return null};
-const NAVS=[['home','หน้าแรก','home'],['customers','ลูกค้า','users'],['visits','นัดหมาย','calendar'],['g','เอกสาร'],['docs:quotes','ใบเสนอราคา','file'],['docs:jobs','Job Ticket','clip'],['docs:delivery','ส่งของ (DO)','truck'],['docs:dns','ใบส่งของ','dncheck'],['docs:invoices','อินวอยซ์','receipt'],['g','สินค้าและคลัง'],['products','สินค้า','box'],['stock','สต็อก','chart'],['zones','โซนส่งของ','pin'],['g','ตั้งค่า'],['members','สมาชิก','key'],['company','ตั้งค่าบริษัท','building'],['docset','ตั้งค่าเอกสาร','sliders']];
-function navTo(k){if(k.startsWith('docs:')){S.dtab=k.slice(5);go('docs')}else go(k)}
-function renderSide(){const c=S.company;document.getElementById('side').innerHTML=`<div class="sb"><img src="${LOGO_APP}" alt=""><div><b>Sale<span>Pro</span></b><small>by Monte</small></div></div>`+NAVS.map(([k,l,i])=>k==='g'?`<div class="sg">${l}</div>`:`<button class="sn ${(k.startsWith('docs:')?S.page==='docs'&&S.dtab===k.slice(5):S.page===k)?'on':''}" onclick="navTo('${k}')">${ic(i)}${l}</button>`).join('')+`<div class="sf">${c.logo?`<img src="${c.logo}" alt="">`:''}<span>${esc(c.name)}</span></div>`}
-function render(){renderSide();
-  const home=S.page==='home';document.body.classList.toggle('home',home);
-  document.getElementById('bar').innerHTML=BAR.map(([k,l,i])=>{const on=k==='tools'?TOOLPAGES.includes(S.page):S.page===k;return `<button class="bi ${on?'on':''} ${k==='tools'?'mid':''}" onclick="go('${k}')">${k==='tools'?`<span class="disc">${ic(i,26)}</span>`:ic(i)}<span>${l}</span></button>`}).join('');
-  document.getElementById('back').innerHTML=ic('back');document.getElementById('back').className='ib'+(BAR.some(b=>b[0]===S.page)?' hid':'');document.getElementById('sbtn').innerHTML=ic('search');document.getElementById('avt').textContent='เอ';
-  document.getElementById('ptitle').textContent=TITLES[S.page]||'';
+function render(){
+  const login=S.page==='login';document.body.classList.toggle('login',login);applyTheme();
+  if(login){document.getElementById('view').innerHTML=V.login();return}
+  renderSide();
+  document.getElementById('bar').innerHTML=BAR.map(([k,l,i])=>{const on=k==='more'?(TOOLPAGES.includes(S.page)||(S.page==='docs'&&S.dtab!=='quotes')):k==='quotes'?(S.page==='docs'&&S.dtab==='quotes'):S.page===k;return `<button class="bi ${on?'on':''}" onclick="go('${k}')">${ic(i)}<span>${l}</span></button>`}).join('');
+  const bk=document.getElementById('back');bk.innerHTML=ic('back');bk.className='ib'+(inBarPage()?' hid':'');
+  document.getElementById('sbtn').innerHTML=ic('search');document.getElementById('avt').textContent='เอ';
+  document.getElementById('thm').innerHTML=ic(S.theme==='dark'?'sun':'moon');document.getElementById('bell').innerHTML=ic('bell')+(alertsList().length?'<span class="dot"></span>':'');
+  document.getElementById('ptitle').textContent=S.page==='docs'?DTITLE[S.dtab]:(TITLES[S.page]||'');
   const ta=TOPACT();document.getElementById('topact').innerHTML=ta&&can(ta[2])?`<button class="btn sm" style="min-height:40px" onclick="${ta[1]}">${ic('plus',16)} ${ta[0]}</button>`:'';
   document.getElementById('sbtn').style.display=['home','profile','company','docset'].includes(S.page)?'none':'';
   document.getElementById('view').innerHTML=V[S.page]();applySearch();if(S.page==='docset')updPV();fitPapers()}
