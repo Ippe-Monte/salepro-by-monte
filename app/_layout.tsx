@@ -13,14 +13,15 @@ function Guard() {
 
   useEffect(() => {
     if (gate === 'loading') return;
-    const target = gate === 'ready' ? '/(app)' : gate === 'signed-out' ? '/sign-in' : '/pending';
+    const target =
+      gate === 'ready' ? '/(app)' : gate === 'signed-out' ? '/sign-in' : gate === 'no-org' ? '/onboarding' : '/suspended';
     const inApp = top === '(app)';
     const inAuth = top === 'sign-in' || top === 'sign-up';
-    const inPending = top === 'pending';
     const ok =
-      (gate === 'ready' && inApp) ||
+      (gate === 'ready' && (inApp || top === 'onboarding')) ||
       (gate === 'signed-out' && inAuth) ||
-      ((gate === 'pending' || gate === 'disabled') && inPending);
+      (gate === 'no-org' && top === 'onboarding') ||
+      (gate === 'suspended' && (top === 'suspended' || top === 'onboarding'));
     if (!ok) router.replace(target as never);
   }, [gate, top, router]);
 

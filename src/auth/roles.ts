@@ -1,43 +1,68 @@
 export const ROLES = ['admin', 'sales', 'warehouse', 'dispatcher', 'viewer'] as const;
 export type Role = (typeof ROLES)[number];
-export const STATUSES = ['pending', 'active', 'disabled'] as const;
-export type Status = (typeof STATUSES)[number];
 
-export type Profile = {
+export type Profile = { id: string; email: string; display_name: string };
+export type Org = {
   id: string;
-  email: string;
-  display_name: string;
-  role: Role;
-  status: Status;
+  name: string;
+  status: 'active' | 'suspended';
+  tax_id: string | null;
+  address: string | null;
+  phone: string | null;
+  currency: string;
+  vat_rate: number;
 };
+export type Membership = { org_id: string; role: Role; status: 'active' | 'disabled'; org: Org };
 
-export type Gate = 'loading' | 'signed-out' | 'pending' | 'disabled' | 'ready';
+export type Gate = 'loading' | 'signed-out' | 'no-org' | 'suspended' | 'ready';
 
-/** Where a session should be allowed to go. UI gate only; RLS is the real control. */
-export function gateFor(signedIn: boolean | null, profile: Profile | null): Gate {
-  if (signedIn === null) return 'loading';
-  if (!signedIn) return 'signed-out';
-  if (!profile) return 'loading';
-  if (profile.status === 'pending') return 'pending';
-  if (profile.status === 'disabled') return 'disabled';
-  return 'ready';
+export type Access = { gate: Gate; current: Membership | null };
+
+/**
+ * Decide where a session may go and which company is current. UI gate only — RLS is the real control.
+ * `preferredOrgId` is the company the user last chose (if still usable it wins).
+ */
+export function resolveAccess(
+  signedIn: boolean | null,
+  profile: Profile | null,
+  memberships: Membership[] | null,
+  isPlatform: boolean,
+  preferredOrgId: string | null,
+): Access {
+  if (signedIn === null) return { gate: 'loading', current: null };
+  if (!signedIn) return { gate: 'signed-out', current: null };
+  if (!profile || memberships === null) return { gate: 'loading', current: null };
+  const active = memberships.filter((m) => m.status === 'active');
+  const usable = active.filter((m) => m.org.status === 'active');
+  const current = usable.find((m) => m.org_id === preferredOrgId) ?? usable[0] ?? null;
+  if (current) return { gate: 'ready', current };
+  if (isPlatform) return { gate: 'ready', current: null };
+  if (active.length > 0) return { gate: 'suspended', current: null };
+  return { gate: 'no-org', current: null };
 }
 
 /** Which role may open which module (menu visibility only; enforced again in the database). */
 export const MODULE_ROLES: Record<string, readonly Role[]> = {
   dashboard: ROLES,
-  users: ['admin'],
+  members: ['admin'],
+  settings: ROLES,
 };
+export const EDIT_ROLES: Record<string, readonly Role[]> = { settings: ['admin'] };
 
 export function canOpen(module: string, role: Role | undefined): boolean {
   return !!role && (MODULE_ROLES[module] ?? []).includes(role);
 }
-
-export function validatePassword(pw: string): string | null {
-  if (pw.length < 8) return 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
-  return null;
+export function canEdit(module: string, role: Role | undefined): boolean {
+  return !!role && (EDIT_ROLES[module] ?? []).includes(role);
 }
 
+export function validatePassword(pw: string): string | null {
+  return pw.length < 8 ? 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร' : null;
+}
 export function validateEmail(email: string): string | null {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? null : 'อีเมลไม่ถูกต้อง';
+}
+export function validateOrgName(name: string): string | null {
+  const n = name.trim();
+  return n.length < 2 || n.length > 120 ? 'ชื่อบริษัทต้องยาว 2–120 ตัวอักษร' : null;
 }

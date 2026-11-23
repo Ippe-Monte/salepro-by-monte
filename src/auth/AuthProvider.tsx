@@ -1,52 +1,78 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { neon } from '@/lib/neon';
-import { gateFor, type Gate, type Profile } from './roles';
+import { resolveAccess, type Gate, type Membership, type Org, type Profile } from './roles';
 
 type Ctx = {
   gate: Gate;
   profile: Profile | null;
+  memberships: Membership[];
+  current: Membership | null;
+  isPlatform: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  selectOrg: (orgId: string) => void;
 };
 
 const AuthContext = createContext<Ctx | null>(null);
+const ORG_KEY = 'salepro.currentOrg';
+
+function loadPreferredOrg(): string | null {
+  try { return globalThis.localStorage?.getItem(ORG_KEY) ?? null; } catch { return null; }
+}
+function savePreferredOrg(id: string) {
+  try { globalThis.localStorage?.setItem(ORG_KEY, id); } catch { /* storage unavailable: keep in memory only */ }
+}
 
 function message(e: unknown): string {
   const m = (e as { message?: string } | null)?.message;
   return m && m.length < 200 ? m : 'เกิดข้อผิดพลาด กรุณาลองใหม่';
 }
 
+type MembershipRow = { org_id: string; role: Membership['role']; status: Membership['status']; organizations: Org | Org[] | null };
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [memberships, setMemberships] = useState<Membership[] | null>(null);
+  const [isPlatform, setIsPlatform] = useState(false);
+  const [preferred, setPreferred] = useState<string | null>(loadPreferredOrg);
   const [error, setError] = useState<string | null>(null);
+
+  const reset = useCallback(() => {
+    setProfile(null); setMemberships(null); setIsPlatform(false);
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
       const { data } = await neon.auth.getSession();
-      if (!data?.session) {
-        setSignedIn(false);
-        setProfile(null);
-        return;
-      }
+      if (!data?.session) { setSignedIn(false); reset(); return; }
       setSignedIn(true);
-      // Creates the profile on first sign-in (first user = admin, others pending).
-      const res = await neon.rpc('ensure_profile');
-      if (res.error) throw res.error;
-      setProfile(res.data as unknown as Profile);
+      const pr = await neon.rpc('ensure_profile');
+      if (pr.error) throw pr.error;
+      const mr = await neon
+        .from('memberships')
+        .select('org_id,role,status,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)');
+      if (mr.error) throw mr.error;
+      const rows = (mr.data ?? []) as unknown as MembershipRow[];
+      const ms: Membership[] = rows.flatMap((r) => {
+        const org = Array.isArray(r.organizations) ? r.organizations[0] : r.organizations;
+        return org ? [{ org_id: r.org_id, role: r.role, status: r.status, org }] : [];
+      });
+      const pl = await neon.rpc('am_platform_admin');
+      setProfile(pr.data as unknown as Profile);
+      setMemberships(ms);
+      setIsPlatform(pl.data === true);
       setError(null);
     } catch (e) {
       setError(message(e));
       setSignedIn((s) => s ?? false);
     }
-  }, []);
+  }, [reset]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error: err } = await neon.auth.signIn.email({ email: email.trim(), password });
@@ -64,13 +90,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await neon.auth.signOut();
-    setProfile(null);
+    reset();
     setSignedIn(false);
-  }, []);
+  }, [reset]);
+
+  const selectOrg = useCallback((orgId: string) => { savePreferredOrg(orgId); setPreferred(orgId); }, []);
+
+  const access = useMemo(
+    () => resolveAccess(signedIn, profile, memberships, isPlatform, preferred),
+    [signedIn, profile, memberships, isPlatform, preferred],
+  );
 
   const value = useMemo<Ctx>(
-    () => ({ gate: gateFor(signedIn, profile), profile, error, signIn, signUp, signOut, refresh }),
-    [signedIn, profile, error, signIn, signUp, signOut, refresh],
+    () => ({
+      gate: access.gate, profile, memberships: memberships ?? [], current: access.current,
+      isPlatform, error, signIn, signUp, signOut, refresh, selectOrg,
+    }),
+    [access, profile, memberships, isPlatform, error, signIn, signUp, signOut, refresh, selectOrg],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -4,16 +4,19 @@ import { canOpen } from '@/auth/roles';
 import { colors } from '@/ui/theme';
 
 export default function AppLayout() {
-  const { profile } = useAuth();
-  const role = profile?.role;
+  const { current, isPlatform } = useAuth();
+  const role = current?.role;
+  const hide = { href: null } as const;
   return (
     <Tabs screenOptions={{
       headerStyle: { backgroundColor: colors.bg }, headerTintColor: colors.text,
       tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
       tabBarActiveTintColor: colors.accent, tabBarInactiveTintColor: colors.muted,
     }}>
-      <Tabs.Screen name="index" options={{ title: 'แดชบอร์ด' }} />
-      <Tabs.Screen name="users" options={{ title: 'ผู้ใช้', href: canOpen('users', role) ? undefined : null }} />
+      <Tabs.Screen name="index" options={{ title: 'แดชบอร์ด', ...(current ? {} : hide) }} />
+      <Tabs.Screen name="members" options={{ title: 'สมาชิก', ...(canOpen('members', role) ? {} : hide) }} />
+      <Tabs.Screen name="settings" options={{ title: 'บริษัท', ...(current ? {} : hide) }} />
+      <Tabs.Screen name="platform" options={{ title: 'แพลตฟอร์ม', ...(isPlatform ? {} : hide) }} />
       <Tabs.Screen name="account" options={{ title: 'บัญชี' }} />
     </Tabs>
   );
