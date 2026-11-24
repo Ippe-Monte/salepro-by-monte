@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
@@ -41,6 +42,8 @@ export default function Invoices() {
   const [thumbs, setThumbs] = useState<Record<string, Img>>({});
   const [filter, setFilter] = useState<'all' | Inv['status']>('all');
   const [sel, setSel] = useState<string | null>(null);
+  const { open: openParam } = useLocalSearchParams<{ open?: string }>();
+  useEffect(() => { if (openParam) setSel(String(openParam)); }, [openParam]);
   const [pickQ, setPickQ] = useState('');
   const [text, setText] = useState({ note: '', pay: '', reason: '' });
   const [err, setErr] = useState<string | null>(null);

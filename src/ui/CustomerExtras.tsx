@@ -39,7 +39,7 @@ export function LogoEditor({ orgId, customerId }: { orgId: string; customerId: s
   async function change() {
     const p = await pickImage({ maxSide: 400, format: 'png' });
     if (p === null) return;
-    if (p === 'too-big') return setErr('รูปใหญ่เกินไป ลองรูปอื่น');
+    if (typeof p === 'string') return setErr('รูปใหญ่เกินไป ลองรูปอื่น');
     const { error } = await neon.from('customer_logos').upsert({ org_id: orgId, customer_id: customerId, mime: p.mime, data: toByteaParam(p.b64) }, { onConflict: 'customer_id' });
     if (error) return setErr(friendly(error));
     setErr(null); await fetchLogo(customerId);

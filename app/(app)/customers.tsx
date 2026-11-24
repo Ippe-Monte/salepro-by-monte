@@ -11,6 +11,7 @@ import { searchPlaces, type Place } from '@/lib/places';
 import type { ScanResult } from '@/lib/cardscan';
 import { CardScanner, Contacts, CustomerLogo, LogoEditor } from '@/ui/CustomerExtras';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
 import { colors } from '@/ui/theme';
 
 type Addr = {
@@ -32,6 +33,7 @@ export default function Customers() {
   const [open, setOpen] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [nc, setNc] = useState({ code: '', name: '', phone: '', email: '' });
   // Prefill from an internet search or a scanned card; saved together with the new customer.
   const [pre, setPre] = useState<{ place: Place | null; contact: ScanResult | null }>({ place: null, contact: null });
@@ -95,7 +97,14 @@ export default function Customers() {
     }
     setBusy(false);
     setNc({ code: '', name: '', phone: '', email: '' }); setPre({ place: null, contact: null }); setQs(''); setFound(null);
-    setErr(warn.length ? warn.join(' / ') : null); await load();
+    setErr(warn.length ? warn.join(' / ') : null); setAdding(false); await load();
+  }
+
+  async function archiveCustomer(id: string) {
+    const { error } = await neon.from('customers').update({ archived_at: new Date().toISOString() }).eq('id', id);
+    if (error) return setErr(friendly(error));
+    if (open === id) setOpen(null);
+    setErr(null); await load();
   }
 
   async function useMyLocation() {
@@ -141,8 +150,8 @@ export default function Customers() {
       <ScrollView keyboardShouldPersistTaps="handled">
         <Title>ลูกค้า</Title>
         {err ? <Body tone="danger">{err}</Body> : null}
-        <Field label="ค้นหา (ชื่อหรือรหัส)" value={q} onChangeText={setQ} />
-        {editable ? (
+        {editable ? <AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เพิ่มลูกค้า" /> : null}
+        {editable && adding ? (
           <Card>
             <Body>เพิ่มลูกค้า</Body>
             <Field label="ค้นหาบริษัทจากอินเทอร์เน็ต (พิมพ์ชื่อ)" value={qs} onChangeText={setQs} />
@@ -165,19 +174,23 @@ export default function Customers() {
             <Button title="เพิ่มลูกค้า" onPress={addCustomer} busy={busy} />
           </Card>
         ) : null}
+        <Field label="ค้นหา (ชื่อหรือรหัส)" value={q} onChangeText={setQ} />
         {shown.length === 0 ? <Empty>ยังไม่มีลูกค้า</Empty> : null}
         {shown.map((c) => {
           const list = addrs.filter((a) => a.customer_id === c.id);
           const isOpen = open === c.id;
           return (
             <Card key={c.id}>
-              <Pressable accessibilityRole="button" onPress={() => setOpen(isOpen ? null : c.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <CustomerLogo customerId={c.id} size={44} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
-                  <Text style={{ color: colors.muted }}>{c.code}{c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
-                </View>
-              </Pressable>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Pressable accessibilityRole="button" onPress={() => setOpen(isOpen ? null : c.id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <CustomerLogo customerId={c.id} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
+                    <Text style={{ color: colors.muted }}>{c.code}{c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+                  </View>
+                </Pressable>
+                {editable ? <ConfirmTrash label="ลบลูกค้า" onConfirm={() => void archiveCustomer(c.id)} /> : null}
+              </View>
               {isOpen ? (
                 <View style={{ marginTop: 12 }}>
                   {editable && orgId ? <LogoEditor orgId={orgId} customerId={c.id} /> : null}

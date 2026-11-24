@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
@@ -11,7 +12,7 @@ import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/
 import { colors } from '@/ui/theme';
 
 type D = {
-  id: string; doc_no: string; customer_id: string; zone_id: string | null; status: string; planned_date: string | null; driver: string | null; vehicle: string | null;
+  id: string; doc_no: string; quotation_id: string | null; customer_id: string; zone_id: string | null; status: string; planned_date: string | null; driver: string | null; vehicle: string | null;
   route_seq: number | null; ship_address: string | null; ship_lat: number | null; ship_lng: number | null; contact_name: string | null; contact_phone: string | null;
 };
 type It = { id: string; order_id: string; description: string; qty: number; unit: string };
@@ -37,6 +38,7 @@ export default function Delivery() {
   const [prods, setProds] = useState<P[]>([]);
   const [quotes, setQuotes] = useState<Q[]>([]);
   const [date, setDate] = useState(dayKey(new Date()));
+  const { quote: quoteParam } = useLocalSearchParams<{ quote?: string }>();
   const [err, setErr] = useState<string | null>(null);
   const [f, setF] = useState({ customer: '', zone: '', product: '', qty: '1' });
   const [draftItems, setDraftItems] = useState<{ product_id: string; description: string; qty: number; unit: string }[]>([]);
@@ -45,7 +47,7 @@ export default function Delivery() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const [d, i, c, a, z, p, q] = await Promise.all([
-      neon.from('delivery_orders').select('id,doc_no,customer_id,zone_id,status,planned_date,driver,vehicle,route_seq,ship_address,ship_lat,ship_lng,contact_name,contact_phone').eq('org_id', orgId).order('route_seq', { nullsFirst: false }),
+      neon.from('delivery_orders').select('id,doc_no,quotation_id,customer_id,zone_id,status,planned_date,driver,vehicle,route_seq,ship_address,ship_lat,ship_lng,contact_name,contact_phone').eq('org_id', orgId).order('route_seq', { nullsFirst: false }),
       neon.from('delivery_order_items').select('id,order_id,description,qty,unit').eq('org_id', orgId),
       neon.from('customers').select('id,name').eq('org_id', orgId).is('archived_at', null).order('name'),
       neon.from('customer_addresses').select('id,customer_id,is_default,label').eq('org_id', orgId),
@@ -103,6 +105,9 @@ export default function Delivery() {
     setErr(null); await load();
   }
 
+  const waiting = quotes.filter((q) => !rows.some((d) => d.quotation_id === q.id && d.status !== 'cancelled'));
+  const fromJob = quoteParam ? waiting.find((q) => q.id === String(quoteParam)) : undefined;
+
   const plan = useMemo(() => {
     const day = rows.filter((r) => r.planned_date === date && r.status !== 'cancelled');
     const byZone = new Map<string, D[]>();
@@ -116,13 +121,20 @@ export default function Delivery() {
         <Title>ใบส่งของ (DO) และแผนจัดส่ง</Title>
         {err ? <Body tone="danger">{err}</Body> : null}
         <Field label="วันที่จัดส่ง (ปปปป-ดด-วว)" value={date} onChangeText={setDate} />
+        {editable && fromJob ? (
+          <Card>
+            <Body>ออก DO จาก Job Ticket → ใบเสนอราคา {fromJob.doc_no}</Body>
+            <Body tone="muted">{custs.find((c) => c.id === fromJob.customer_id)?.name ?? ''} · วันที่จัดส่ง {date}</Body>
+            <Button title="สร้าง DO จากใบเสนอราคานี้" onPress={() => createDO(fromJob)} />
+          </Card>
+        ) : null}
         {editable ? (
           <Card>
             <Body>สร้าง DO</Body>
-            {quotes.length > 0 ? (
+            {waiting.length > 0 ? (
               <View style={{ marginBottom: 8 }}>
                 <Body tone="muted">จากใบเสนอราคาที่ลูกค้าตกลง</Body>
-                {quotes.map((q) => <Button key={q.id} title={`${q.doc_no} · ${custs.find((c) => c.id === q.customer_id)?.name ?? ''}`} variant="ghost" onPress={() => createDO(q)} />)}
+                {waiting.map((q) => <Button key={q.id} title={`${q.doc_no} · ${custs.find((c) => c.id === q.customer_id)?.name ?? ''}`} variant="ghost" onPress={() => createDO(q)} />)}
               </View>
             ) : null}
             <Body tone="muted">หรือสร้างเอง — ลูกค้า</Body>

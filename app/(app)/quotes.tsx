@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
@@ -38,6 +39,7 @@ export default function Quotes() {
   const [it, setIt] = useState({ desc: '', qty: '1', unit: 'ชิ้น', price: '', product: '' });
   const [hdr, setHdr] = useState({ discount: '', vat: '', valid: '' });
   const [pq, setPq] = useState('');
+  const { open: openParam } = useLocalSearchParams<{ open?: string }>();
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -59,6 +61,14 @@ export default function Quotes() {
     if (sel === q.id) return setSel(null);
     setSel(q.id); setHdr({ discount: String(q.discount), vat: String(q.vat_rate), valid: q.valid_until ?? '' }); await loadItems(q.id);
   }
+
+  // Opened from a Job Ticket: expand that quotation once the list has loaded.
+  useEffect(() => {
+    const id = openParam ? String(openParam) : null;
+    const q = id ? rows.find((r) => r.id === id) : undefined;
+    if (q && sel !== q.id) void open(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openParam, rows]);
 
   async function create() {
     if (!orgId || !newCust) return setErr('เลือกลูกค้า');

@@ -5,8 +5,14 @@ import { MAX_IMAGE_BYTES, base64Bytes } from './image';
 export type Picked = { b64: string; mime: 'image/png' | 'image/jpeg'; bytes: number };
 
 /** Let the user choose a photo, shrink it to fit the database limit (300 KB) and return base64. */
-export async function pickImage(opts: { maxSide: number; format: 'png' | 'jpeg' }): Promise<Picked | null | 'too-big'> {
-  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1 });
+export async function pickImage(opts: { maxSide: number; format: 'png' | 'jpeg'; source?: 'camera' | 'library' }): Promise<Picked | null | 'too-big' | 'denied'> {
+  if (opts.source === 'camera') {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) return 'denied';
+  }
+  const res = opts.source === 'camera'
+    ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 1 })
+    : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1 });
   if (res.canceled || !res.assets?.[0]) return null;
   const a = res.assets[0];
   const png = opts.format === 'png';

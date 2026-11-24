@@ -27,7 +27,7 @@ export function ProductImages({ orgId, productId, editable }: { orgId: string; p
     if (busy) return;
     const p = await pickImage({ maxSide: 640, format: 'jpeg' });
     if (p === null) return;
-    if (p === 'too-big') return setErr('รูปใหญ่เกินไป (ไม่เกิน 300 KB) ลองรูปอื่น');
+    if (typeof p === 'string') return setErr('รูปใหญ่เกินไป (ไม่เกิน 300 KB) ลองรูปอื่น');
     setBusy(true);
     const existing = rows.find((r) => r.position === position);
     const { error } = existing

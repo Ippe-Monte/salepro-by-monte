@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
+import { nextAction, STEPS, stepOf, SUB_LABEL, subOf, summarize, type PipelineRow, type Sub } from '@/lib/pipeline';
 import { JobFiles } from '@/ui/JobFiles';
+import { AddToggle } from '@/ui/ListBits';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 import { dateLocale } from '@/i18n';
@@ -17,10 +20,39 @@ type C = { id: string; name: string };
 const STATUS: Record<string, string> = { open: 'เปิดงาน', in_progress: 'กำลังดำเนินการ', waiting_customer: 'รอลูกค้า', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' };
 const PRIORITY: Record<string, string> = { low: 'ต่ำ', normal: 'ปกติ', high: 'สูง', urgent: 'ด่วน' };
 const SOURCE: Record<string, string> = { phone: 'โทรศัพท์', email: 'อีเมล', line: 'LINE', visit: 'เข้าพบ', other: 'อื่นๆ' };
-const NEXT: Record<string, string[]> = { open: ['in_progress', 'cancelled'], in_progress: ['waiting_customer', 'done', 'cancelled'], waiting_customer: ['in_progress', 'cancelled'], done: [], cancelled: [] };
+const NEXT: Record<string, string[]> = { open: ['in_progress', 'done', 'cancelled'], in_progress: ['waiting_customer', 'done', 'cancelled'], waiting_customer: ['in_progress', 'cancelled'], done: [], cancelled: [] };
 const tone = (s: string) => (s === 'done' ? 'ok' : s === 'cancelled' ? 'muted' : s === 'waiting_customer' ? 'warn' : 'muted') as 'ok' | 'muted' | 'warn';
 
+function Stepper({ step, label }: { step: number; label: string }) {
+  return (
+    <View style={{ marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 4 }}>
+        {STEPS.map((s) => <View key={s.n} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: s.n <= step ? colors.primary : colors.border }} />)}
+      </View>
+      <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>ขั้น {step}/5 · {label}</Text>
+    </View>
+  );
+}
+
+/** Documents that belong to this job, in process order. */
+function Flow({ p }: { p: PipelineRow | undefined }) {
+  const rows: [string, string | null, string | null][] = [
+    ['2. ใบเสนอราคา', p?.quote_no ?? null, p?.quote_status ?? null], ['3. DO', p?.do_no ?? null, p?.do_status ?? null],
+    ['4. ใบส่งของ', p?.dn_no ?? null, p?.dn_status ?? null], ['5. Invoice', p?.inv_no ?? null, p?.inv_status ?? null],
+  ];
+  const ST: Record<string, string> = { draft: 'ร่าง', sent: 'ส่งแล้ว', accepted: 'ลูกค้าตกลง', ready: 'พร้อมส่ง', dispatched: 'ออกจัดส่ง', delivered: 'ส่งสำเร็จ', issued: 'ออกแล้ว', received: 'ลูกค้ารับแล้ว', paid: 'ชำระแล้ว' };
+  return (
+    <View style={{ marginVertical: 8 }}>
+      <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>เอกสารในงานนี้</Text>
+      {rows.map(([name, no, st]) => (
+        <Body key={name} tone={no ? undefined : 'muted'}>{name}: {no ? `${no} · ${ST[st ?? ''] ?? st}` : 'ยังไม่ออก'}</Body>
+      ))}
+    </View>
+  );
+}
+
 export default function Jobs() {
+  const router = useRouter();
   const { current } = useAuth();
   const orgId = current?.org_id;
   const editable = canEdit('jobs', current?.role);
@@ -28,6 +60,10 @@ export default function Jobs() {
   const [custs, setCusts] = useState<C[]>([]);
   const [filter, setFilter] = useState<'active' | 'closed'>('active');
   const [sel, setSel] = useState<string | null>(null);
+  const [pipe, setPipe] = useState<Record<string, PipelineRow>>({});
+  const [step, setStep] = useState(0);
+  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [evs, setEvs] = useState<Ev[]>([]);
   const [comment, setComment] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -35,12 +71,14 @@ export default function Jobs() {
 
   const load = useCallback(async () => {
     if (!orgId) return;
-    const [t, c] = await Promise.all([
+    const [t, c, pl] = await Promise.all([
       neon.from('job_tickets').select('id,doc_no,customer_id,title,description,priority,status,source,due_date').eq('org_id', orgId).order('created_at', { ascending: false }),
       neon.from('customers').select('id,name').eq('org_id', orgId).is('archived_at', null).order('name'),
+      neon.from('job_pipeline').select('*').eq('org_id', orgId),
     ]);
-    if (t.error || c.error) return setErr('โหลดข้อมูลไม่สำเร็จ');
+    if (t.error || c.error || pl.error) return setErr('โหลดข้อมูลไม่สำเร็จ');
     setErr(null); setRows(t.data as T[]); setCusts(c.data as C[]);
+    setPipe(Object.fromEntries((pl.data as PipelineRow[]).map((r) => [r.ticket_id, r])));
   }, [orgId]);
   useEffect(() => { void load(); }, [load]);
 
@@ -61,7 +99,7 @@ export default function Jobs() {
     if (f.due && !/^\d{4}-\d{2}-\d{2}$/.test(f.due)) return setErr('กำหนดเสร็จต้องเป็นรูปแบบ ปปปป-ดด-วว');
     const { error } = await neon.from('job_tickets').insert({ org_id: orgId, customer_id: f.customer, title: f.title.trim(), description: f.desc.trim() || null, priority: f.priority, source: f.source, due_date: f.due || null });
     if (error) return setErr(friendly(error));
-    setF({ ...f, title: '', desc: '', due: '' }); setErr(null); await load();
+    setF({ ...f, title: '', desc: '', due: '' }); setErr(null); setAdding(false); await load();
   }
   async function move(t: T, status: string) {
     const { error } = await neon.from('job_tickets').update({ status }).eq('id', t.id);
@@ -75,15 +113,65 @@ export default function Jobs() {
     setComment(''); setErr(null); await loadEvents(t.id);
   }
 
-  const shown = rows.filter((r) => (filter === 'active' ? !['done', 'cancelled'].includes(r.status) : ['done', 'cancelled'].includes(r.status)));
+  async function go(t: T, n: NonNullable<ReturnType<typeof nextAction>>) {
+    if (busy) return;
+    setBusy(true); setErr(null);
+    try {
+      if (n.kind === 'make_quote') {
+        const { data, error } = await neon.from('quotations').insert({ org_id: orgId, customer_id: t.customer_id, ticket_id: t.id }).select('id').single();
+        if (error || !data) return setErr(friendly(error));
+        await load(); router.push({ pathname: '/quotes', params: { open: data.id } } as never);
+      } else if (n.kind === 'open_quote') router.push({ pathname: '/quotes', params: { open: n.id } } as never);
+      else if (n.kind === 'make_do') router.push({ pathname: '/delivery', params: { quote: n.quoteId } } as never);
+      else if (n.kind === 'open_do') router.push('/delivery' as never);
+      else if (n.kind === 'make_dn') {
+        const { data, error } = await neon.rpc('issue_delivery_note', { p_do: n.doId });
+        if (error) return setErr(friendly(error));
+        await load(); router.push({ pathname: '/notes', params: { open: (data as { id: string } | null)?.id ?? '' } } as never);
+      } else if (n.kind === 'open_dn') router.push({ pathname: '/notes', params: { open: n.id } } as never);
+      else if (n.kind === 'make_invoice') {
+        const { data, error } = await neon.rpc('issue_invoice', { p_quotation: n.quoteId, p_note: null });
+        if (error) return setErr(friendly(error));
+        await load(); router.push({ pathname: '/invoices', params: { open: (data as { id: string } | null)?.id ?? '' } } as never);
+      } else if (n.kind === 'open_invoice') router.push({ pathname: '/invoices', params: { open: n.id } } as never);
+    } finally { setBusy(false); }
+  }
+
+  const isOpen = (r: T) => !['done', 'cancelled'].includes(r.status);
+  const subs = useMemo(() => rows.filter(isOpen).map((r) => ({ id: r.id, sub: subOf(pipe[r.id]) })), [rows, pipe]);
+  const counts = useMemo(() => summarize(subs), [subs]);
+  const subById = Object.fromEntries(subs.map((x) => [x.id, x.sub])) as Record<string, Sub>;
+
+  const shown = rows.filter((r) => (filter === 'active' ? !['done', 'cancelled'].includes(r.status) && (step === 0 || stepOf(subById[r.id] ?? 'open') === step) : ['done', 'cancelled'].includes(r.status)));
   const today = new Date().toISOString().slice(0, 10);
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
         <Title>Job Ticket</Title>
         {err ? <Body tone="danger">{err}</Body> : null}
-        <Chips value={filter} options={[{ v: 'active', label: 'กำลังติดตาม' }, { v: 'closed', label: 'ปิดแล้ว' }]} onPick={setFilter} />
-        {editable ? (
+        {editable ? <AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เปิด Job Ticket รับงาน" /> : null}
+        <Card>
+          <Text style={{ color: colors.text, fontWeight: '800' }}>สรุปสถานะงาน (ทุกเอกสารเริ่มจาก Job Ticket)</Text>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+            {STEPS.map((s) => {
+              const n = s.subs.reduce((a, k) => a + counts[k], 0);
+              const on = step === s.n;
+              return (
+                <Pressable key={s.n} accessibilityRole="button" onPress={() => { setFilter('active'); setStep(on ? 0 : s.n); }}
+                  style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 2, borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text, fontSize: 20, fontWeight: '800' }}>{n}</Text>
+                  <Text numberOfLines={2} style={{ color: colors.muted, fontSize: 11, textAlign: 'center' }}>{s.n}. {s.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {STEPS.filter((s) => step === 0 || s.n === step).flatMap((s) => s.subs).filter((k) => counts[k] > 0 && k !== 'inv_paid').map((k) => (
+            <Body key={k} tone="muted">• {SUB_LABEL[k]}: {counts[k]}</Body>
+          ))}
+          {subs.length === 0 ? <Body tone="muted">ยังไม่มีงานที่กำลังติดตาม</Body> : null}
+        </Card>
+        <Chips value={filter} options={[{ v: 'active', label: 'กำลังติดตาม' }, { v: 'closed', label: 'ปิดแล้ว' }]} onPick={(v) => { setFilter(v); setStep(0); }} />
+        {editable && adding ? (
           <Card>
             <Body>รับงานจากลูกค้า</Body>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
@@ -115,10 +203,19 @@ export default function Jobs() {
                   <Pill text={`ความสำคัญ: ${PRIORITY[t.priority]}`} tone={t.priority === 'urgent' ? 'danger' : t.priority === 'high' ? 'warn' : 'muted'} />
                   {overdue ? <Pill text="เกินกำหนด" tone="danger" /> : null}
                 </View>
+                {isOpen(t) ? <Stepper step={stepOf(subById[t.id] ?? 'open')} label={SUB_LABEL[subById[t.id] ?? 'open']} /> : null}
               </Pressable>
               {sel === t.id ? (
                 <View style={{ marginTop: 10 }}>
                   {t.description ? <Body>{t.description}</Body> : null}
+                  <Flow p={pipe[t.id]} />
+                  {(() => {
+                    const n = isOpen(t) ? nextAction(pipe[t.id]) : null;
+                    if (!n) return null;
+                    const label: Record<string, string> = { make_quote: 'ออกใบเสนอราคาจาก Job นี้', open_quote: 'เปิดใบเสนอราคา', make_do: 'ออก DO', open_do: 'เปิด DO', make_dn: 'ออกใบส่งของ', open_dn: 'เปิดใบส่งของ', make_invoice: 'ออก Invoice', open_invoice: 'เปิด Invoice' };
+                    if (n.kind.startsWith('make') && !editable) return null;
+                    return <Button title={`ขั้นต่อไป: ${label[n.kind] ?? ''}`} busy={busy} onPress={() => void go(t, n)} />;
+                  })()}
                   {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={editable} /> : null}
                   {editable && (NEXT[t.status] ?? []).length > 0 ? (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>

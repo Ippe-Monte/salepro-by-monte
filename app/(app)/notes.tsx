@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
@@ -30,6 +31,8 @@ export default function DeliveryNotes() {
   const [ctx, setCtx] = useState<DocContext>({ settings: defaultSettings('delivery_note'), branding: null, logo: null });
   const [thumbs, setThumbs] = useState<Record<string, Img>>({});
   const [sel, setSel] = useState<string | null>(null);
+  const { open: openParam } = useLocalSearchParams<{ open?: string }>();
+  useEffect(() => { if (openParam) setSel(String(openParam)); }, [openParam]);
   const [rcv, setRcv] = useState({ name: '', note: '' });
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

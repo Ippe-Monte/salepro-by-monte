@@ -22,6 +22,7 @@ export type Profile = {
   id: string; email: string; display_name: string;
   phone?: string | null; position?: string | null; department?: string | null; line_id?: string | null; website?: string | null;
   card_theme?: 'blue' | 'dark' | 'green' | 'orange' | 'purple'; card_show_logo?: boolean; card_show_photo?: boolean;
+  card_color?: string | null; card_template_id?: string | null;
 };
 export type Org = {
   id: string;

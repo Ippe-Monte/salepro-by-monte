@@ -64,7 +64,7 @@ export default function CompanySettings() {
     if (!org) return;
     const p = await pickImage({ maxSide: 400, format: 'png' });
     if (p === null) return;
-    if (p === 'too-big') return setMsg({ text: 'รูปใหญ่เกินไป (ไม่เกิน 300 KB) ลองรูปอื่น', ok: false });
+    if (typeof p === 'string') return setMsg({ text: 'รูปใหญ่เกินไป (ไม่เกิน 300 KB) ลองรูปอื่น', ok: false });
     const e = await saveRow('org_logos', { org_id: org.id }, { mime: p.mime, data: toByteaParam(p.b64) });
     if (e) return setMsg({ text: friendly(e), ok: false });
     setMsg({ text: 'อัปโหลดโลโก้แล้ว', ok: true });
