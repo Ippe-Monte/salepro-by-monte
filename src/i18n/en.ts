@@ -1,6 +1,16 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
+  "123 ถนนตัวอย่าง กรุงเทพฯ 10110": "123 Example Road, Bangkok 10110",
+  "จัดส่งถึง": "Deliver to",
+  "ชุด": "set",
+  "ดูตัวอย่างเอกสาร": "Preview document",
+  "ตัวอย่างนี้ใช้ข้อมูลสมมุติ และค่าที่ตั้งอยู่บนหน้าจอ (ยังไม่ต้องกดบันทึกก็ดูได้)": "This preview uses sample data and the values currently on screen (no need to save first).",
+  "บริษัท ตัวอย่าง จำกัด": "Example Co., Ltd.",
+  "ปิดตัวอย่าง": "Close preview",
+  "สินค้าตัวอย่าง A": "Sample product A",
+  "สินค้าตัวอย่าง B": "Sample product B",
+  "หมายเหตุตัวอย่าง": "Sample note",
   "ภาษาไทย": "Thai",
   "\"ส่งของ (DO)\" คือใบปล่อยของภายในบริษัท เมื่อปล่อยของออกแล้วจึงออก \"ใบส่งของ\" ให้ลูกค้าตรวจรับและเซ็นรับ ระบบจะตัดสต็อกให้เอง": "\"Delivery (DO)\" is the internal release order. Once the goods are released, issue a \"Delivery note\" for the customer to inspect and sign. Stock is deducted automatically.",
   "(คุณ)": "(you)",

@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { saveRow } from '@/lib/db';
 import { formatDocNo, validateColor, validatePrefix } from '@/lib/docno';
-import { DEFAULT_TITLE, DOC_LABEL, type DocType } from '@/lib/docmeta';
+import { DEFAULT_TITLE, DOC_LABEL, loadDocContext, type DocContext, type DocType } from '@/lib/docmeta';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Field, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
+import { DocPaper, printPaper } from '@/ui/DocPaper';
 
 const DEFAULT_PREFIX: Record<DocType, string> = { quote: 'QT', invoice: 'IV', delivery_note: 'DN', delivery_order: 'DO' };
 
@@ -41,6 +42,7 @@ export default function DocSettings() {
   const [f, setF] = useState<Form>(defaults('quote'));
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<DocContext | null>(null);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
 
   const load = useCallback(async () => {
@@ -81,6 +83,24 @@ export default function DocSettings() {
     setBusy(false);
     if (e) return setMsg({ text: e.code === '23505' ? 'รหัสนำหน้านี้ถูกใช้กับเอกสารประเภทอื่นแล้ว' : friendly(e), ok: false });
     setMsg({ text: 'บันทึกแล้ว (มีผลกับเลขเอกสารที่ออกหลังจากนี้)', ok: true });
+  }
+
+
+  /** Shows a sample document using the values currently on screen (saved or not). */
+  async function openPreview() {
+    if (!orgId) return;
+    const base = await loadDocContext(orgId, type);
+    const sigs = f.sigs.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 4);
+    const vat = intOrNull(f.vat_rate);
+    setPreview({
+      ...base,
+      settings: {
+        ...base.settings, title_th: f.title_th.trim() || null, title_en: f.title_en.trim() || null, logo_show: f.logo_show, logo_pos: f.logo_pos,
+        header_color: validateColor(f.header_color) === null ? f.header_color : '#2563EB', col_image: f.col_image, col_code: f.col_code, col_unit: f.col_unit,
+        show_prices: type === 'quote' || type === 'invoice', validity_days: intOrNull(f.validity_days), credit_days: intOrNull(f.credit_days),
+        vat_rate: vat, notes: f.notes.trim() || null, footer: f.footer.trim() || null, sig_labels: sigs,
+      },
+    });
   }
 
   const digitsN = Number(f.digits);
@@ -131,8 +151,39 @@ export default function DocSettings() {
           <Field label="ช่องลายเซ็น (คั่นด้วย , สูงสุด 4)" value={f.sigs} onChangeText={(v) => set('sigs', v)} editable={!dis} />
           {msg && <Body tone={msg.ok ? 'ok' : 'danger'}>{msg.text}</Body>}
           {editable && <Button title="บันทึก" onPress={() => void save()} busy={busy} />}
+          <Button title="ดูตัวอย่างเอกสาร" variant="ghost" icon="documents" onPress={() => void openPreview()} />
         </Card>
       </ScrollView>
+
+      {preview && current ? (() => {
+        const st = preview.settings;
+        const rate = st.vat_rate ?? current.org.vat_rate ?? 7;
+        const rows = [
+          { code: 'P-001', desc: 'สินค้าตัวอย่าง A', qty: 2, unit: 'ชิ้น', price: 1500 },
+          { code: 'P-002', desc: 'สินค้าตัวอย่าง B', qty: 10, unit: 'ชุด', price: 250 },
+        ].map((r) => ({ ...r, total: r.qty * r.price }));
+        const subtotal = rows.reduce((a, r) => a + r.total, 0);
+        const vat = Math.round(subtotal * rate) / 100;
+        const meta: [string, string][] = type === 'quote' ? [['ยืนราคา', `${st.validity_days ?? 30} วัน`]] : type === 'invoice' ? [['เครดิต', `${st.credit_days ?? 30} วัน`]] : [];
+        return (
+          <Modal visible animationType="slide" onRequestClose={() => setPreview(null)}>
+            <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: 16 }}>
+              <ScrollView contentContainerStyle={{ padding: 16 }}>
+                <Body tone="muted">ตัวอย่างนี้ใช้ข้อมูลสมมุติ และค่าที่ตั้งอยู่บนหน้าจอ (ยังไม่ต้องกดบันทึกก็ดูได้)</Body>
+                <DocPaper
+                  ctx={preview} org={current.org} docNo={sample} date={new Date().toLocaleDateString('th-TH')}
+                  party={{ label: type === 'delivery_order' ? 'จัดส่งถึง' : 'ลูกค้า', name: 'บริษัท ตัวอย่าง จำกัด', lines: ['123 ถนนตัวอย่าง กรุงเทพฯ 10110'] }}
+                  meta={meta} items={rows}
+                  totals={{ subtotal, discount: 0, vat, vatRate: rate, total: subtotal + vat }}
+                  note="หมายเหตุตัวอย่าง"
+                />
+                <Button title="พิมพ์ / บันทึกเป็น PDF" variant="ghost" onPress={printPaper} />
+                <Button title="ปิดตัวอย่าง" onPress={() => setPreview(null)} />
+              </ScrollView>
+            </View>
+          </Modal>
+        );
+      })() : null}
     </Screen>
   );
 }
