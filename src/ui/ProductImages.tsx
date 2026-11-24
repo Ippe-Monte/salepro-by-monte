@@ -12,10 +12,11 @@ import { colors } from './theme';
 type Row = { id: string; position: number; mime: string; data: string };
 
 /** Up to three images per product. Images are loaded only when this panel is opened. */
-export function ProductImages({ orgId, productId, editable }: { orgId: string; productId: string; editable: boolean }) {
+export function ProductImages({ orgId, productId, editable, onChanged }: { orgId: string; productId: string; editable: boolean; onChanged?: () => void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error } = await neon.from('product_images').select('id,position,mime,data').eq('org_id', orgId).eq('product_id', productId).order('position');
@@ -34,17 +35,19 @@ export function ProductImages({ orgId, productId, editable }: { orgId: string; p
       ? await neon.from('product_images').update({ mime: p.mime, data: toByteaParam(p.b64) }).eq('id', existing.id)
       : await neon.from('product_images').insert({ org_id: orgId, product_id: productId, position, mime: p.mime, data: toByteaParam(p.b64) });
     setBusy(false);
-    if (error) return setErr(friendly(error));
-    await load();
+    if (error) { setOk(null); return setErr(friendly(error)); }
+    setErr(null); setOk('บันทึกรูปแล้ว');
+    await load(); onChanged?.();
   }
   async function del(id: string) {
     const { error } = await neon.from('product_images').delete().eq('id', id);
-    if (error) setErr(friendly(error)); else await load();
+    if (error) setErr(friendly(error)); else { setErr(null); setOk('ลบรูปแล้ว'); await load(); onChanged?.(); }
   }
 
   return (
     <View style={{ marginTop: 8 }}>
       {err ? <Body tone="danger">{err}</Body> : null}
+      {ok && !err ? <Body tone="ok">{ok}</Body> : null}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {[1, 2, 3].map((pos) => {
           const r = rows.find((x) => x.position === pos);
@@ -62,7 +65,7 @@ export function ProductImages({ orgId, productId, editable }: { orgId: string; p
           );
         })}
       </View>
-      <Body tone="muted">รูปที่ 1 ใช้เป็นรูปหลักบนเอกสาร (ย่อให้อัตโนมัติ ไม่เกิน 300 KB)</Body>
+      {editable ? <Body tone="muted">รูปที่ 1 ใช้เป็นรูปหลักบนเอกสาร (ย่อให้อัตโนมัติ ไม่เกิน 300 KB) แตะช่องเพื่อเลือกรูป รูปจะบันทึกทันที</Body> : null}
     </View>
   );
 }

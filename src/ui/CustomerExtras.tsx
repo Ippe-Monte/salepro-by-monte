@@ -6,6 +6,7 @@ import { neon } from '@/lib/neon';
 import { pickImage } from '@/lib/pickImage';
 import { fromVCardText, ocrCard, pickFileWeb, readQr, type ScanResult } from '@/lib/cardscan';
 import { Icon } from './Icon';
+import { AddToggle } from './ListBits';
 import { Body, Button, Field } from './kit';
 import { Text } from './Text';
 import { colors } from './theme';
@@ -100,6 +101,7 @@ export function Contacts({ orgId, customerId, editable }: { orgId: string; custo
   const [f, setF] = useState(empty);
   const [source, setSource] = useState<'typed' | 'card_photo' | 'qr'>('typed');
   const [err, setErr] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const load = useCallback(async () => {
     const { data, error } = await neon.from('customer_contacts').select('id,name,position,department,phone,email,line_id,source').eq('org_id', orgId).eq('customer_id', customerId).order('created_at');
     if (error) setErr(friendly(error)); else setRows(data as Contact[]);
@@ -110,7 +112,7 @@ export function Contacts({ orgId, customerId, editable }: { orgId: string; custo
     if (!f.name.trim()) return setErr('กรอกชื่อผู้ติดต่อ');
     const { error } = await neon.from('customer_contacts').insert({ org_id: orgId, customer_id: customerId, name: f.name.trim(), position: f.position.trim() || null, department: f.department.trim() || null, phone: f.phone.trim() || null, email: f.email.trim() || null, line_id: f.line.trim() || null, source });
     if (error) return setErr(friendly(error));
-    setF(empty); setSource('typed'); setErr(null); await load();
+    setF(empty); setSource('typed'); setErr(null); setAdding(false); await load();
   }
   async function remove(id: string) {
     const { error } = await neon.from('customer_contacts').delete().eq('id', id);
@@ -128,7 +130,8 @@ export function Contacts({ orgId, customerId, editable }: { orgId: string; custo
           {editable ? <Pressable accessibilityRole="button" accessibilityLabel="ลบผู้ติดต่อ" onPress={() => void remove(c.id)} style={{ padding: 6 }}><Icon name="x" size={18} color={colors.muted} /></Pressable> : null}
         </View>
       ))}
-      {editable ? (
+      {editable ? <View style={{ marginTop: 8 }}><AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เพิ่มผู้ติดต่อ" /></View> : null}
+      {editable && adding ? (
         <View style={{ marginTop: 6 }}>
           <CardScanner onResult={(r) => { setF({ name: r.name, position: r.position, department: r.department, phone: r.phone, email: r.email, line: r.lineId }); setSource(r.source); }} />
           <Field label="ชื่อผู้ติดต่อ" value={f.name} onChangeText={(v) => setF({ ...f, name: v })} />

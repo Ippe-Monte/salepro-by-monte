@@ -11,6 +11,7 @@ import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit'
 import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
 import { ProductFiles } from '@/ui/ProductFiles';
 import { ProductImages } from '@/ui/ProductImages';
+import { DetailRows, EditActions } from '@/ui/ViewEdit';
 import { colors } from '@/ui/theme';
 
 type P = { id: string; sku: string; name: string; unit: string; price: number; cost: number; min_qty: number; archived_at: string | null };
@@ -28,6 +29,8 @@ export default function Products() {
   const [f, setF] = useState(EMPTY);
   const [open, setOpen] = useState<string | null>(null);
   const [ed, setEd] = useState({ name: '', unit: '', price: '', min: '' });
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -52,19 +55,21 @@ export default function Products() {
     const { data, error } = await neon.from('products').insert({ org_id: orgId, sku: f.sku.trim(), name: f.name.trim(), unit: f.unit.trim() || 'ชิ้น', price, cost, min_qty: min }).select('id').single();
     if (error) return setErr(error.code === '23505' ? 'รหัสสินค้านี้ถูกใช้แล้ว' : friendly(error));
     setF(EMPTY); setErr(null); setAdding(false); await load();
-    if (data) setOpen(data.id); // go straight to the new product so images and datasheet can be added
+    if (data) { setOpen(data.id); setEd({ name: f.name.trim(), unit: f.unit.trim() || 'ชิ้น', price: String(price), min: String(min) }); setEditing(true); setSaved(false); } // straight to the new product in edit mode so images and datasheet can be added
   }
   function pick(p: P) {
+    setEditing(false); setSaved(false);
     if (open === p.id) return setOpen(null);
     setOpen(p.id); setEd({ name: p.name, unit: p.unit, price: String(p.price), min: String(p.min_qty) });
   }
+  function startEdit(p: P) { setEd({ name: p.name, unit: p.unit, price: String(p.price), min: String(p.min_qty) }); setSaved(false); setErr(null); setEditing(true); }
   async function saveEdit(id: string) {
     const price = num(ed.price); const min = num(ed.min);
     if (!ed.name.trim()) return setErr('กรอกชื่อสินค้า');
     if ([price, min].some((n) => !Number.isFinite(n) || n < 0)) return setErr('ราคาและ Safety Stock ต้องเป็นตัวเลขไม่ติดลบ');
     const { error } = await neon.from('products').update({ name: ed.name.trim(), unit: ed.unit.trim() || 'ชิ้น', price, min_qty: min }).eq('id', id);
     if (error) return setErr(friendly(error));
-    setErr(null); await load();
+    setErr(null); setEditing(false); setSaved(true); await load();
   }
   async function archive(id: string) {
     const { error } = await neon.from('products').update({ archived_at: new Date().toISOString() }).eq('id', id);
@@ -110,18 +115,19 @@ export default function Products() {
               {isOpen ? (
                 <View style={{ marginTop: 12 }}>
                   <Pill text={`Safety Stock ${p.min_qty}`} tone={p.min_qty > 0 ? 'warn' : 'muted'} />
-                  {orgId ? <ProductImages orgId={orgId} productId={p.id} editable={editable} /> : null}
-                  {orgId ? <ProductFiles orgId={orgId} productId={p.id} editable={editable} /> : null}
-                  {editable ? (
+                  {orgId ? <ProductImages orgId={orgId} productId={p.id} editable={editable && editing} onChanged={() => void load()} /> : null}
+                  {editing ? (
                     <View style={{ marginTop: 12 }}>
-                      <Body>แก้ไขข้อมูลสินค้า</Body>
                       <Field label="ชื่อสินค้า" value={ed.name} onChangeText={(v) => setEd({ ...ed, name: v })} />
                       <Field label="หน่วย" value={ed.unit} onChangeText={(v) => setEd({ ...ed, unit: v })} />
                       <Field label="ราคาขาย" value={ed.price} onChangeText={(v) => setEd({ ...ed, price: v })} keyboardType="decimal-pad" />
                       <Field label="Safety Stock" value={ed.min} onChangeText={(v) => setEd({ ...ed, min: v })} keyboardType="decimal-pad" />
-                      <Button title="บันทึกการแก้ไข" onPress={() => void saveEdit(p.id)} />
                     </View>
-                  ) : null}
+                  ) : (
+                    <DetailRows rows={[['รหัสสินค้า (SKU)', p.sku], ['ชื่อสินค้า', p.name], ['หน่วย', p.unit], ['ราคาขาย', p.price.toLocaleString()], ['ต้นทุน', p.cost.toLocaleString()], ['Safety Stock', String(p.min_qty)]]} />
+                  )}
+                  {orgId ? <ProductFiles orgId={orgId} productId={p.id} editable={editable && editing} /> : null}
+                  <EditActions editing={editing} canEdit={editable} saved={saved} onEdit={() => startEdit(p)} onSave={() => void saveEdit(p.id)} onCancel={() => { setEditing(false); setErr(null); }} />
                 </View>
               ) : null}
             </Card>

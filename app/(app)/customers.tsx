@@ -12,6 +12,7 @@ import type { ScanResult } from '@/lib/cardscan';
 import { CardScanner, Contacts, CustomerLogo, LogoEditor } from '@/ui/CustomerExtras';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
+import { DetailRows, EditActions } from '@/ui/ViewEdit';
 import { colors } from '@/ui/theme';
 
 type Addr = {
@@ -21,6 +22,23 @@ type Addr = {
 };
 type Cust = { id: string; code: string; name: string; phone: string | null; email: string | null; tax_id: string | null; archived_at: string | null };
 type Zone = { id: string; code: string; name: string };
+
+/** Optional: records which delivery zone the customer's coordinates fall in. */
+function ZonePick({ zones, value, onPick }: { zones: Zone[]; value: string; onPick: (id: string) => void }) {
+  return (
+    <View>
+      <Body tone="muted">โซนส่งของ (ไม่บังคับ ใช้บันทึกว่าพิกัดของลูกค้าอยู่ในโซนใด)</Body>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
+        {[{ id: '', name: 'ไม่ระบุ' }, ...zones].map((z) => (
+          <Pressable key={z.id || 'none'} accessibilityRole="button" onPress={() => onPick(z.id)}
+            style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === z.id ? colors.selected : 'transparent' }}>
+            <Text style={{ color: colors.text }}>{z.name}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export default function Customers() {
   const { current } = useAuth();
@@ -34,13 +52,21 @@ export default function Customers() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [nc, setNc] = useState({ code: '', name: '', phone: '', email: '' });
-  // Prefill from an internet search or a scanned card; saved together with the new customer.
-  const [pre, setPre] = useState<{ place: Place | null; contact: ScanResult | null }>({ place: null, contact: null });
+  const [nc, setNc] = useState({ code: '', name: '', phone: '', email: '', tax: '' });
+  // New customer wizard: step 1 = company + its address, step 2 = first contact person.
+  const [step, setStep] = useState<1 | 2>(1);
+  const EMPTY_AD = { label: '', line: '', province: '', lat: '', lng: '', zone: '' };
+  const EMPTY_C1 = { name: '', position: '', phone: '', email: '', line: '', source: 'typed' as 'typed' | 'card_photo' | 'qr' };
+  const [ad, setAd] = useState(EMPTY_AD);
+  const [c1, setC1] = useState(EMPTY_C1);
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [ce, setCe] = useState({ code: '', name: '', phone: '', email: '', tax: '' });
+  const [addingAddr, setAddingAddr] = useState(false);
   const [qs, setQs] = useState('');
   const [found, setFound] = useState<Place[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const [na, setNa] = useState({ label: 'สำนักงานใหญ่', line: '', province: '', lat: '', lng: '', contact: '', phone: '', zone: '' });
+  const [na, setNa] = useState({ label: 'สาขา', line: '', province: '', lat: '', lng: '', contact: '', phone: '', zone: '' });
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -66,38 +92,61 @@ export default function Customers() {
   }
 
   function usePlace(p: Place) {
-    setPre((x) => ({ ...x, place: p }));
     setNc((c) => ({ ...c, name: p.name, phone: c.phone || p.phone, code: c.code || nextCode() }));
+    setAd((a) => ({ ...a, line: a.line || p.address, province: a.province || p.province || '', lat: a.lat || String(p.lat), lng: a.lng || String(p.lng) }));
     setFound(null);
   }
 
   function useCard(r: ScanResult) {
-    setPre((x) => ({ ...x, contact: r }));
-    setNc((c) => ({ ...c, name: c.name || r.company, phone: c.phone || r.phone, email: c.email || r.email, code: c.code || nextCode() }));
+    setNc((c) => ({ ...c, name: c.name || r.company, code: c.code || nextCode() }));
+    setC1({ name: r.name, position: r.position, phone: r.phone, email: r.email, line: r.lineId, source: r.source });
   }
 
   const nextCode = () => `C${String(custs.length + 1).padStart(4, '0')}`;
 
+  function coordsOf(a: { lat: string; lng: string }): { lat: string; lng: string } | string {
+    let lat = a.lat; let lng = a.lng;
+    if (lat && !lng) { const p = parseCoords(lat); if (p) { lat = String(p.lat); lng = String(p.lng); } }
+    return validateCoordPair(lat, lng) ?? { lat, lng };
+  }
+
+  function nextStep() {
+    if (!nc.code.trim() || !nc.name.trim()) return setErr('กรอกรหัสและชื่อลูกค้า');
+    if (!ad.line.trim()) return setErr('กรอกที่อยู่ของบริษัท');
+    if (typeof coordsOf(ad) === 'string') return setErr(coordsOf(ad) as string);
+    setErr(null); setStep(2);
+  }
+
   async function addCustomer() {
     if (!orgId || busy) return;
-    if (!nc.code.trim() || !nc.name.trim()) return setErr('กรอกรหัสและชื่อลูกค้า');
+    if (!c1.name.trim()) return setErr('กรอกชื่อผู้ติดต่อคนแรก');
+    const co = coordsOf(ad);
+    if (typeof co === 'string') return setErr(co);
     setBusy(true);
-    const { data: made, error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null }).select('id').single();
-    if (error || !made) { setBusy(false); return setErr(error?.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error)); }
+    const { data: made, error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null, tax_id: nc.tax.trim() || null }).select('id').single();
+    if (error || !made) { setBusy(false); setStep(1); return setErr(error?.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error)); }
     const warn: string[] = [];
-    if (pre.place) {
-      const p = pre.place;
-      const { data: a, error: ae } = await neon.from('customer_addresses').insert({ org_id: orgId, customer_id: made.id, label: 'สำนักงานใหญ่', address_line: p.address, province: p.province || null, latitude: p.lat, longitude: p.lng }).select('id').single();
-      if (ae || !a) warn.push('บันทึกที่อยู่ไม่สำเร็จ'); else await neon.rpc('set_default_address', { p_address: a.id });
-    }
-    if (pre.contact?.name) {
-      const c = pre.contact;
-      const { error: ce } = await neon.from('customer_contacts').insert({ org_id: orgId, customer_id: made.id, name: c.name, position: c.position || null, department: c.department || null, phone: c.phone || null, email: c.email || null, line_id: c.lineId || null, source: c.source });
-      if (ce) warn.push('บันทึกผู้ติดต่อไม่สำเร็จ');
-    }
+    const { data: a, error: ae } = await neon.from('customer_addresses').insert({
+      org_id: orgId, customer_id: made.id, label: ad.label.trim() || 'สำนักงานใหญ่', address_line: ad.line.trim(), province: ad.province.trim() || null,
+      latitude: co.lat ? Number(co.lat) : null, longitude: co.lng ? Number(co.lng) : null, zone_id: ad.zone || null,
+    }).select('id').single();
+    if (ae || !a) warn.push('บันทึกที่อยู่ไม่สำเร็จ'); else await neon.rpc('set_default_address', { p_address: a.id });
+    const { error: cerr } = await neon.from('customer_contacts').insert({ org_id: orgId, customer_id: made.id, name: c1.name.trim(), position: c1.position.trim() || null, phone: c1.phone.trim() || null, email: c1.email.trim() || null, line_id: c1.line.trim() || null, source: c1.source });
+    if (cerr) warn.push('บันทึกผู้ติดต่อไม่สำเร็จ');
     setBusy(false);
-    setNc({ code: '', name: '', phone: '', email: '' }); setPre({ place: null, contact: null }); setQs(''); setFound(null);
+    setNc({ code: '', name: '', phone: '', email: '', tax: '' }); setAd(EMPTY_AD); setC1(EMPTY_C1); setStep(1); setQs(''); setFound(null);
     setErr(warn.length ? warn.join(' / ') : null); setAdding(false); await load();
+    setOpen(made.id); setEditing(false); setSaved(true);
+  }
+
+  function startEdit(c: Cust) { setCe({ code: c.code, name: c.name, phone: c.phone ?? '', email: c.email ?? '', tax: c.tax_id ?? '' }); setSaved(false); setErr(null); setAddingAddr(false); setEditing(true); }
+  async function saveEdit(id: string) {
+    if (!ce.code.trim() || !ce.name.trim()) return setErr('กรอกรหัสและชื่อลูกค้า');
+    setBusy(true);
+    const { error } = await neon.from('customers').update({ code: ce.code.trim(), name: ce.name.trim(), phone: ce.phone.trim() || null, email: ce.email.trim() || null, tax_id: ce.tax.trim() || null }).eq('id', id);
+    setBusy(false);
+    if (error) return setErr(error.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error));
+    setErr(null); setEditing(false); setSaved(true); await load();
   }
 
   async function archiveCustomer(id: string) {
@@ -133,7 +182,7 @@ export default function Customers() {
     if (!error && first && data) await neon.rpc('set_default_address', { p_address: data.id });
     setBusy(false);
     if (error) return setErr(friendly(error));
-    setNa({ label: 'สาขา', line: '', province: '', lat: '', lng: '', contact: '', phone: '', zone: '' }); setErr(null); await load();
+    setNa({ label: 'สาขา', line: '', province: '', lat: '', lng: '', contact: '', phone: '', zone: '' }); setErr(null); setAddingAddr(false); await load();
   }
 
   async function removeAddr(id: string) {
@@ -153,25 +202,47 @@ export default function Customers() {
         {editable ? <AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เพิ่มลูกค้า" /> : null}
         {editable && adding ? (
           <Card>
-            <Body>เพิ่มลูกค้า</Body>
-            <Field label="ค้นหาบริษัทจากอินเทอร์เน็ต (พิมพ์ชื่อ)" value={qs} onChangeText={setQs} />
-            <Button title="ค้นหาข้อมูลบริษัท" variant="ghost" icon="search" busy={searching} onPress={() => void search()} />
-            {found && found.length === 0 ? <Body tone="muted">ไม่พบข้อมูล — พิมพ์ข้อมูลเองได้เลย</Body> : null}
-            {found?.map((p) => (
-              <Pressable key={p.id} accessibilityRole="button" onPress={() => usePlace(p)} style={{ borderTopColor: colors.border, borderTopWidth: 1, paddingVertical: 8 }}>
-                <Text style={{ color: colors.text, fontWeight: '700' }}>{p.name}</Text>
-                <Text style={{ color: colors.muted, fontSize: 12 }}>{p.address}{p.province ? ` ${p.province}` : ''}{p.phone ? ` · ${p.phone}` : ''}</Text>
-                <Text style={{ color: colors.accent, fontSize: 12 }}>ใช้ข้อมูลนี้</Text>
-              </Pressable>
-            ))}
-            {pre.place ? <Body tone="ok">{`จะเพิ่มที่อยู่และพิกัดจาก: ${pre.place.name} (${pre.place.lat}, ${pre.place.lng})`}</Body> : null}
-            <CardScanner onResult={useCard} />
-            {pre.contact ? <Body tone="ok">{`จะเพิ่มผู้ติดต่อ: ${pre.contact.name}`}</Body> : null}
-            <Field label="รหัสลูกค้า" value={nc.code} onChangeText={(v) => setNc({ ...nc, code: v })} autoCapitalize="characters" />
-            <Field label="ชื่อลูกค้า / บริษัท" value={nc.name} onChangeText={(v) => setNc({ ...nc, name: v })} />
-            <Field label="โทรศัพท์" value={nc.phone} onChangeText={(v) => setNc({ ...nc, phone: v })} keyboardType="phone-pad" />
-            <Field label="อีเมล" value={nc.email} onChangeText={(v) => setNc({ ...nc, email: v })} keyboardType="email-address" autoCapitalize="none" />
-            <Button title="เพิ่มลูกค้า" onPress={addCustomer} busy={busy} />
+            <Body>{step === 1 ? 'ขั้นที่ 1/2 · ข้อมูลบริษัทและที่อยู่' : 'ขั้นที่ 2/2 · ผู้ติดต่อคนแรก'}</Body>
+            {step === 1 ? (
+              <>
+                <Field label="ค้นหาบริษัทจากอินเทอร์เน็ต (พิมพ์ชื่อ)" value={qs} onChangeText={setQs} />
+                <Button title="ค้นหาข้อมูลบริษัท" variant="ghost" icon="search" busy={searching} onPress={() => void search()} />
+                {found && found.length === 0 ? <Body tone="muted">ไม่พบข้อมูล — พิมพ์ข้อมูลเองได้เลย</Body> : null}
+                {found?.map((p) => (
+                  <Pressable key={p.id} accessibilityRole="button" onPress={() => usePlace(p)} style={{ borderTopColor: colors.border, borderTopWidth: 1, paddingVertical: 8 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700' }}>{p.name}</Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>{p.address}{p.province ? ` ${p.province}` : ''}{p.phone ? ` · ${p.phone}` : ''}</Text>
+                    <Text style={{ color: colors.accent, fontSize: 12 }}>ใช้ข้อมูลนี้</Text>
+                  </Pressable>
+                ))}
+                <Field label="รหัสลูกค้า" value={nc.code} onChangeText={(v) => setNc({ ...nc, code: v })} autoCapitalize="characters" />
+                <Field label="ชื่อลูกค้า / บริษัท" value={nc.name} onChangeText={(v) => setNc({ ...nc, name: v })} />
+                <Field label="เลขประจำตัวผู้เสียภาษี" value={nc.tax} onChangeText={(v) => setNc({ ...nc, tax: v })} keyboardType="number-pad" />
+                <Field label="โทรศัพท์บริษัท" value={nc.phone} onChangeText={(v) => setNc({ ...nc, phone: v })} keyboardType="phone-pad" />
+                <Field label="อีเมลบริษัท" value={nc.email} onChangeText={(v) => setNc({ ...nc, email: v })} keyboardType="email-address" autoCapitalize="none" />
+                <Body>ที่อยู่บริษัท (1 บริษัท 1 ที่อยู่ ถ้ามีหลายที่อยู่ให้เพิ่มเป็นสาขาภายหลัง)</Body>
+                <Field label="ชื่อสาขา (เว้นว่าง = สำนักงานใหญ่)" value={ad.label} onChangeText={(v) => setAd({ ...ad, label: v })} />
+                <Field label="ที่อยู่" value={ad.line} onChangeText={(v) => setAd({ ...ad, line: v })} multiline />
+                <Field label="จังหวัด" value={ad.province} onChangeText={(v) => setAd({ ...ad, province: v })} />
+                <Field label="ละติจูด (หรือวาง 13.7563, 100.5018)" value={ad.lat} onChangeText={(v) => setAd({ ...ad, lat: v })} keyboardType="numbers-and-punctuation" />
+                <Field label="ลองจิจูด" value={ad.lng} onChangeText={(v) => setAd({ ...ad, lng: v })} keyboardType="numbers-and-punctuation" />
+                <ZonePick zones={zones} value={ad.zone} onPick={(id) => setAd({ ...ad, zone: id })} />
+                <Button title="ถัดไป: ผู้ติดต่อ" onPress={nextStep} />
+              </>
+            ) : (
+              <>
+                <Body tone="muted">{`บริษัท: ${nc.name}`}</Body>
+                <CardScanner onResult={useCard} />
+                <Field label="ชื่อผู้ติดต่อ" value={c1.name} onChangeText={(v) => setC1({ ...c1, name: v })} />
+                <Field label="ตำแหน่ง" value={c1.position} onChangeText={(v) => setC1({ ...c1, position: v })} />
+                <Field label="โทรศัพท์" value={c1.phone} onChangeText={(v) => setC1({ ...c1, phone: v })} keyboardType="phone-pad" />
+                <Field label="อีเมล" value={c1.email} onChangeText={(v) => setC1({ ...c1, email: v })} keyboardType="email-address" autoCapitalize="none" />
+                <Field label="LINE ID" value={c1.line} onChangeText={(v) => setC1({ ...c1, line: v })} autoCapitalize="none" />
+                <Body tone="muted">ผู้ติดต่อคนอื่นเพิ่มได้ภายหลัง ด้วยปุ่ม + ในหน้ารายละเอียดลูกค้า</Body>
+                <Button title="บันทึกลูกค้า" onPress={addCustomer} busy={busy} />
+                <Button title="ย้อนกลับ" variant="ghost" onPress={() => setStep(1)} />
+              </>
+            )}
           </Card>
         ) : null}
         <Field label="ค้นหา (ชื่อหรือรหัส)" value={q} onChangeText={setQ} />
@@ -182,7 +253,7 @@ export default function Customers() {
           return (
             <Card key={c.id}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Pressable accessibilityRole="button" onPress={() => setOpen(isOpen ? null : c.id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Pressable accessibilityRole="button" onPress={() => { setEditing(false); setSaved(false); setOpen(isOpen ? null : c.id); }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <CustomerLogo customerId={c.id} size={44} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
@@ -193,7 +264,18 @@ export default function Customers() {
               </View>
               {isOpen ? (
                 <View style={{ marginTop: 12 }}>
-                  {editable && orgId ? <LogoEditor orgId={orgId} customerId={c.id} /> : null}
+                  {editing && orgId ? <LogoEditor orgId={orgId} customerId={c.id} /> : null}
+                  {editing ? (
+                    <View>
+                      <Field label="รหัสลูกค้า" value={ce.code} onChangeText={(v) => setCe({ ...ce, code: v })} autoCapitalize="characters" />
+                      <Field label="ชื่อลูกค้า / บริษัท" value={ce.name} onChangeText={(v) => setCe({ ...ce, name: v })} />
+                      <Field label="เลขประจำตัวผู้เสียภาษี" value={ce.tax} onChangeText={(v) => setCe({ ...ce, tax: v })} keyboardType="number-pad" />
+                      <Field label="โทรศัพท์บริษัท" value={ce.phone} onChangeText={(v) => setCe({ ...ce, phone: v })} keyboardType="phone-pad" />
+                      <Field label="อีเมลบริษัท" value={ce.email} onChangeText={(v) => setCe({ ...ce, email: v })} keyboardType="email-address" autoCapitalize="none" />
+                    </View>
+                  ) : (
+                    <DetailRows rows={[['รหัสลูกค้า', c.code], ['ชื่อลูกค้า / บริษัท', c.name], ['เลขประจำตัวผู้เสียภาษี', c.tax_id], ['โทรศัพท์บริษัท', c.phone], ['อีเมลบริษัท', c.email]]} />
+                  )}
                   {list.map((a) => {
                     const has = a.latitude !== null && a.longitude !== null;
                     const pt = has ? { lat: a.latitude as number, lng: a.longitude as number } : null;
@@ -212,36 +294,33 @@ export default function Customers() {
                         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                           {pt ? <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(mapsLink(pt))}><Text style={{ color: colors.accent }}>เปิดแผนที่</Text></Pressable> : null}
                           {pt ? <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(directionsLink(pt))}><Text style={{ color: colors.accent }}>นำทาง</Text></Pressable> : null}
-                          {editable && !a.is_default ? <Pressable accessibilityRole="button" onPress={() => void makeDefault(a.id)}><Text style={{ color: colors.accent }}>ตั้งเป็นค่าเริ่มต้น</Text></Pressable> : null}
-                          {editable ? <Pressable accessibilityRole="button" onPress={() => void removeAddr(a.id)}><Text style={{ color: colors.danger }}>ลบ</Text></Pressable> : null}
+                          {editing && !a.is_default ? <Pressable accessibilityRole="button" onPress={() => void makeDefault(a.id)}><Text style={{ color: colors.accent }}>ตั้งเป็นค่าเริ่มต้น</Text></Pressable> : null}
+                          {editing ? <Pressable accessibilityRole="button" onPress={() => void removeAddr(a.id)}><Text style={{ color: colors.danger }}>ลบ</Text></Pressable> : null}
                         </View>
                       </View>
                     );
                   })}
-                  {orgId ? <Contacts orgId={orgId} customerId={c.id} editable={editable} /> : null}
-                  {editable ? (
-                    <View style={{ marginTop: 14 }}>
-                      <Body>เพิ่มที่อยู่</Body>
-                      <Field label="ชื่อสถานที่ (เช่น โรงงาน, สาขา)" value={na.label} onChangeText={(v) => setNa({ ...na, label: v })} />
-                      <Field label="ที่อยู่" value={na.line} onChangeText={(v) => setNa({ ...na, line: v })} multiline />
-                      <Field label="จังหวัด" value={na.province} onChangeText={(v) => setNa({ ...na, province: v })} />
-                      <Field label="ละติจูด (หรือวาง 13.7563, 100.5018)" value={na.lat} onChangeText={(v) => setNa({ ...na, lat: v })} keyboardType="numbers-and-punctuation" />
-                      <Field label="ลองจิจูด" value={na.lng} onChangeText={(v) => setNa({ ...na, lng: v })} keyboardType="numbers-and-punctuation" />
-                      <Button title="ใช้ตำแหน่งปัจจุบันของฉัน" variant="ghost" onPress={useMyLocation} />
-                      <Field label="ผู้ติดต่อ" value={na.contact} onChangeText={(v) => setNa({ ...na, contact: v })} />
-                      <Field label="โทรศัพท์ผู้ติดต่อ" value={na.phone} onChangeText={(v) => setNa({ ...na, phone: v })} keyboardType="phone-pad" />
-                      <Body tone="muted">โซนส่งของ</Body>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
-                        {[{ id: '', name: 'ไม่ระบุ' }, ...zones].map((z) => (
-                          <Pressable key={z.id || 'none'} accessibilityRole="button" onPress={() => setNa({ ...na, zone: z.id })}
-                            style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: na.zone === z.id ? colors.selected : 'transparent' }}>
-                            <Text style={{ color: colors.text }}>{z.name}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                      <Button title="บันทึกที่อยู่" onPress={() => addAddress(c.id, list.length === 0)} busy={busy} />
+                  {editing ? (
+                    <View style={{ marginTop: 10 }}>
+                      <AddToggle open={addingAddr} onToggle={() => setAddingAddr(!addingAddr)} label="เพิ่มสาขา / ที่อยู่อื่น" />
+                      {addingAddr ? (
+                        <View>
+                          <Field label="ชื่อสาขา (เช่น โรงงาน, สาขา)" value={na.label} onChangeText={(v) => setNa({ ...na, label: v })} />
+                          <Field label="ที่อยู่" value={na.line} onChangeText={(v) => setNa({ ...na, line: v })} multiline />
+                          <Field label="จังหวัด" value={na.province} onChangeText={(v) => setNa({ ...na, province: v })} />
+                          <Field label="ละติจูด (หรือวาง 13.7563, 100.5018)" value={na.lat} onChangeText={(v) => setNa({ ...na, lat: v })} keyboardType="numbers-and-punctuation" />
+                          <Field label="ลองจิจูด" value={na.lng} onChangeText={(v) => setNa({ ...na, lng: v })} keyboardType="numbers-and-punctuation" />
+                          <Button title="ใช้ตำแหน่งปัจจุบันของฉัน" variant="ghost" onPress={useMyLocation} />
+                          <Field label="ผู้ติดต่อ" value={na.contact} onChangeText={(v) => setNa({ ...na, contact: v })} />
+                          <Field label="โทรศัพท์ผู้ติดต่อ" value={na.phone} onChangeText={(v) => setNa({ ...na, phone: v })} keyboardType="phone-pad" />
+                          <ZonePick zones={zones} value={na.zone} onPick={(id) => setNa({ ...na, zone: id })} />
+                          <Button title="เพิ่มสาขานี้" onPress={() => addAddress(c.id, list.length === 0)} busy={busy} />
+                        </View>
+                      ) : null}
                     </View>
                   ) : null}
+                  {orgId ? <Contacts orgId={orgId} customerId={c.id} editable={editable && editing} /> : null}
+                  <EditActions editing={editing} canEdit={editable} busy={busy} saved={saved} onEdit={() => startEdit(c)} onSave={() => void saveEdit(c.id)} onCancel={() => { setEditing(false); setErr(null); }} />
                 </View>
               ) : null}
             </Card>
