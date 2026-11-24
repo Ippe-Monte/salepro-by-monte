@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "SalePro by Monte",
+    "slug": "salepro-by-monte",
+    "scheme": "salepro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#030b2e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.monte.salepro",
+      "buildNumber": "1000"
+    },
+    "android": {
+      "package": "com.monte.salepro",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#030b2e"
+      },
+      "versionCode": 1000
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "SALEPRO by MONTE",
+      "shortName": "SALEPRO",
+      "themeColor": "#030b2e",
+      "backgroundColor": "#030b2e",
+      "lang": "th"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
