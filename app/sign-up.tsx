@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Logo } from '@/ui/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import { validateEmail, validatePassword } from '@/auth/roles';
 import { Body, Button, Field, Screen } from '@/ui/kit';
@@ -28,7 +29,7 @@ export default function SignUp() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
-        <Image source={require('../assets/logo.png')} style={{ width: 120, height: 120, marginVertical: 8 }} accessibilityLabel="SalePro by Monte" />
+        <Logo size={110} />
         <View style={{ width: '100%', maxWidth: 420 }}>
           <Field label="ชื่อ-สกุล" value={name} onChangeText={setName} autoComplete="name" />
           <Field label="อีเมล" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />

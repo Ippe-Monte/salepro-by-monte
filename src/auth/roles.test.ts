@@ -65,3 +65,14 @@ test('validation', () => {
   assert.notEqual(validateOrgName(' a '), null);
   assert.equal(validateOrgName('Alpha Co'), null);
 });
+
+test('new modules: invoices and delivery notes follow the database roles', () => {
+  assert.equal(canEdit('invoices', 'admin'), true);
+  assert.equal(canEdit('invoices', 'sales'), false);
+  assert.equal(canEdit('notes', 'dispatcher'), true);
+  assert.equal(canEdit('notes', 'warehouse'), true);
+  assert.equal(canEdit('notes', 'sales'), false);
+  assert.equal(canEdit('docs', 'owner'), true);
+  assert.equal(canEdit('docs', 'warehouse'), false);
+  assert.equal(canOpen('invoices', 'viewer'), true);
+});

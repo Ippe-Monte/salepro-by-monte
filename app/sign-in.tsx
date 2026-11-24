@@ -1,6 +1,9 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { Logo } from '@/ui/Logo';
+import { VersionBadge } from '@/ui/VersionBadge';
+import { colors } from '@/ui/theme';
 import { useAuth } from '@/auth/AuthProvider';
 import { validateEmail } from '@/auth/roles';
 import { isConfigured } from '@/lib/neon';
@@ -28,7 +31,11 @@ export default function SignIn() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
-        <Image source={require('../assets/logo.png')} style={{ width: 160, height: 160, marginVertical: 12 }} accessibilityLabel="SalePro by Monte" />
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <Logo size={140} />
+          <Text style={{ color: colors.text, fontSize: 26, fontWeight: '800', marginTop: 12 }}>SALEPRO</Text>
+          <Text style={{ color: colors.muted }}>by MONTE · Sale Engineer</Text>
+        </View>
         <View style={{ width: '100%', maxWidth: 420 }}>
           {!isConfigured && <Body tone="danger">ยังไม่ได้ตั้งค่า EXPO_PUBLIC_NEON_AUTH_URL / EXPO_PUBLIC_NEON_DATA_API_URL</Body>}
           <Field label="อีเมล" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
@@ -38,6 +45,7 @@ export default function SignIn() {
           <View style={{ marginTop: 16, alignItems: 'center' }}>
             <Link href="/sign-up"><Body tone="muted">ยังไม่มีบัญชี? ลงทะเบียน</Body></Link>
           </View>
+          <VersionBadge />
         </View>
       </ScrollView>
     </Screen>
