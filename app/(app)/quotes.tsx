@@ -10,6 +10,7 @@ import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/
 import { DocPaper, printPaper } from '@/ui/DocPaper';
 import { defaultSettings, loadDocContext, type DocContext } from '@/lib/docmeta';
 import { colors } from '@/ui/theme';
+import { SegTabs } from '@/ui/SegTabs';
 
 type Q = { id: string; doc_no: string; customer_id: string; status: string; valid_until: string | null; discount: number; vat_rate: number; subtotal: number; vat_amount: number; total: number; note: string | null };
 type It = { id: string; line_no: number; description: string; qty: number; unit: string; unit_price: number; line_total: number };
@@ -99,6 +100,7 @@ export default function Quotes() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
+        <SegTabs tabs={[{ href: '/quotes', label: 'ใบเสนอราคา' }, { href: '/invoices', label: 'อินวอยซ์' }]} active="/quotes" />
         <Title>ใบเสนอราคา</Title>
         {err ? <Body tone="danger">{err}</Body> : null}
         {editable ? (

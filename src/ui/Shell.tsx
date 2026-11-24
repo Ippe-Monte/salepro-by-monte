@@ -6,8 +6,9 @@ import { useAuth } from '@/auth/AuthProvider';
 import { canOpen } from '@/auth/roles';
 import { Icon } from './Icon';
 import { LangSwitch } from './LangSwitch';
+import { Logo } from './Logo';
 import { OrgLogo } from './OrgLogo';
-import { BOTTOM, isBottomItem, visibleItems, type NavItem } from './nav';
+import { BOTTOM, isBottomItem, TAB_LABEL, tabOf, visibleItems, type NavItem } from './nav';
 import { useTheme } from './ThemeProvider';
 import { VersionBadge } from './VersionBadge';
 import { colors } from './theme';
@@ -23,7 +24,7 @@ function ThemeButton() {
   const { mode, toggle } = useTheme();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="สลับโหมดสว่าง/มืด" onPress={toggle}
-      style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+      style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
       <Icon name={mode === 'dark' ? 'sun' : 'moon'} size={20} color={colors.muted} />
     </Pressable>
   );
@@ -33,19 +34,35 @@ function OrgBadge() {
   const { current } = useAuth();
   const router = useRouter();
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/account')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
-      <OrgLogo size={32} />
-      <Text numberOfLines={1} style={{ color: colors.text, fontWeight: '700', fontSize: 15, flexShrink: 1 }}>{current?.org.name ?? 'SALEPRO by MONTE'}</Text>
+    <Pressable accessibilityRole="button" onPress={() => router.push('/settings')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+      <OrgLogo size={26} />
+      <Text numberOfLines={1} style={{ color: colors.text, fontWeight: '700', fontSize: 14, flexShrink: 1 }}>{current?.org.name ?? 'SALEPRO by MONTE'}</Text>
     </Pressable>
   );
 }
 
+function ProfileDot() {
+  const { profile } = useAuth();
+  const router = useRouter();
+  const initial = (profile?.display_name || profile?.email || '?').trim().charAt(0).toUpperCase();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="บัญชีของฉัน" onPress={() => router.push('/account')}
+      style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary }}>
+      <Text style={{ color: '#fff', fontWeight: '800' }}>{initial}</Text>
+    </Pressable>
+  );
+}
+
+/** Phone header: row 1 = app logo + tools, row 2 = the company's logo and name. */
 export function TopBar() {
   const insets = useSafeAreaInsets();
   return (
-    <View style={{ paddingTop: insets.top + 8, paddingBottom: 8, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
-      <OrgBadge />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><LangSwitch /><ThemeButton /></View>
+    <View style={{ backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: 1, paddingTop: insets.top + 6 }}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Logo size={38} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><LangSwitch /><ThemeButton /><ProfileDot /></View>
+      </View>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}><OrgBadge /></View>
     </View>
   );
 }
@@ -56,12 +73,10 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
   return (
     <View style={{ width: 240, backgroundColor: colors.side, borderRightColor: colors.border, borderRightWidth: 1, paddingVertical: 16, paddingHorizontal: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 16 }}>
-        <OrgLogo size={44} />
-        <View style={{ flexShrink: 1 }}>
-          <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16 }}>SALEPRO</Text>
-          <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 12 }}>{current?.org.name}</Text>
-        </View>
+        <Logo size={44} />
+        <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16 }}>SALEPRO</Text>
       </View>
+      <View style={{ paddingHorizontal: 8, marginBottom: 14 }}><OrgBadge /></View>
       {items.map((i) => {
         const on = i.name === active;
         return (
@@ -89,7 +104,7 @@ export function BottomBar({ items, active }: { items: NavItem[]; active: string 
   const bottom = BOTTOM.map((n) => items.find((i) => i.name === n)).filter(Boolean) as NavItem[];
   const moreOn = !isBottomItem(active);
   const tabs: { key: string; label: string; icon: string; on: boolean; go: () => void }[] = [
-    ...bottom.map((i) => ({ key: i.name, label: i.label, icon: i.icon, on: i.name === active, go: () => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never) })),
+    ...bottom.map((i) => ({ key: i.name, label: TAB_LABEL[i.name] ?? i.label, icon: i.icon, on: i.name === tabOf(active), go: () => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never) })),
     { key: 'more', label: 'เพิ่มเติม', icon: 'menu', on: moreOn, go: () => router.push('/more') },
   ];
   return (
