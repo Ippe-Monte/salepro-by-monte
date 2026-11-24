@@ -69,3 +69,13 @@ export function nearestOrder<T extends { coords: Coords | null }>(start: Coords 
   }
   return [...out, ...without];
 }
+
+/** "850 ม." under 1 km, otherwise "12.3 กม." */
+export function formatKm(km: number): string {
+  return km < 1 ? `${Math.round(km * 1000)} ม.` : `${km.toFixed(km < 10 ? 1 : 0)} กม.`;
+}
+
+/** Distance of each leg between consecutive stops (stops without coordinates are skipped, not bridged). */
+export function legs(stops: (Coords | null)[]): (number | null)[] {
+  return stops.map((s, i) => (i === 0 || !s || !stops[i - 1] ? null : distanceKm(stops[i - 1] as Coords, s)));
+}

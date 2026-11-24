@@ -1,6 +1,12 @@
 // Line icons on a 24x24 grid (stroke = currentColor). Base set from the FriendTrip Go icon family; box, warehouse, truck,
 // clipboard, building, menu, sun, moon and book are drawn in the same style. Entries starting with FILL: are solid glyphs.
 export const ICON_MARKUP: Record<string, string> = {
+ "chevron-left": "<path d=\"M15 5l-7 7 7 7\"/>",
+ "chevron-right": "<path d=\"M9 5l7 7-7 7\"/>",
+ "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3.5 2\"/>",
+ "paperclip": "<path d=\"M20 11.5l-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L15 8\"/>",
+ "share": "<path d=\"M12 15V4M8 8l4-4 4 4\"/><path d=\"M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7\"/>",
+ "map": "<path d=\"M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5V6.5Z\"/><path d=\"M9 4v13.5M15 6.5V20\"/>",
  "home": "<path d=\"M4 11.5 12 4l8 7.5\"/><path d=\"M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9\"/>",
  "groups": "<circle cx=\"9\" cy=\"8\" r=\"3\"/><path d=\"M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5\"/><circle cx=\"17\" cy=\"8.3\" r=\"2.3\"/><path d=\"M15.3 14.8c2.6.4 4.5 2.4 4.5 5.2\"/>",
  "documents": "<path d=\"M6 2h9l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z\"/><path d=\"M14 2v5h5\"/><path d=\"M8.5 13h7M8.5 17h7\"/>",

@@ -1,6 +1,6 @@
 // Single source of truth for the app version, shown as "V1.00".
 // Change it with: npm run version:set 1.01   (updates app.json and package.json too).
-export const APP_VERSION = '1.08';
+export const APP_VERSION = '1.09';
 
 export const VERSION_LABEL = `V${APP_VERSION}`;
 
