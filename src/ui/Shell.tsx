@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { canOpen } from '@/auth/roles';
 import { Icon } from './Icon';
 import { LangSwitch } from './LangSwitch';
-import { Logo } from './Logo';
+import { OrgLogo } from './OrgLogo';
 import { BOTTOM, isBottomItem, visibleItems, type NavItem } from './nav';
 import { useTheme } from './ThemeProvider';
 import { VersionBadge } from './VersionBadge';
@@ -34,7 +34,7 @@ function OrgBadge() {
   const router = useRouter();
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push('/account')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
-      <Logo size={32} />
+      <OrgLogo size={32} />
       <Text numberOfLines={1} style={{ color: colors.text, fontWeight: '700', fontSize: 15, flexShrink: 1 }}>{current?.org.name ?? 'SALEPRO by MONTE'}</Text>
     </Pressable>
   );
@@ -56,7 +56,7 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
   return (
     <View style={{ width: 240, backgroundColor: colors.side, borderRightColor: colors.border, borderRightWidth: 1, paddingVertical: 16, paddingHorizontal: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 16 }}>
-        <Logo size={44} />
+        <OrgLogo size={44} />
         <View style={{ flexShrink: 1 }}>
           <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16 }}>SALEPRO</Text>
           <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 12 }}>{current?.org.name}</Text>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { refreshOrgLogo } from '@/ui/OrgLogo';
 import { ScrollView, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit, validateOrgName } from '@/auth/roles';
@@ -67,13 +68,13 @@ export default function CompanySettings() {
     const e = await saveRow('org_logos', { org_id: org.id }, { mime: p.mime, data: toByteaParam(p.b64) });
     if (e) return setMsg({ text: friendly(e), ok: false });
     setMsg({ text: 'อัปโหลดโลโก้แล้ว', ok: true });
-    await load();
+    await load(); void refreshOrgLogo(org.id);
   }
   async function removeLogo() {
     if (!org) return;
     const { error } = await neon.from('org_logos').delete().eq('org_id', org.id);
     if (error) return setMsg({ text: friendly(error), ok: false });
-    setLogo(null); setMsg({ text: 'ลบโลโก้แล้ว', ok: true });
+    setLogo(null); setMsg({ text: 'ลบโลโก้แล้ว', ok: true }); void refreshOrgLogo(org.id);
   }
 
   return (

@@ -8,7 +8,7 @@ import { ROLE_LABEL } from '@/auth/roles';
 import { baht } from '@/lib/money';
 import { neon } from '@/lib/neon';
 import { Body, Card, Pill, Screen, Title } from '@/ui/kit';
-import { Logo } from '@/ui/Logo';
+import { OrgLogo } from '@/ui/OrgLogo';
 import { colors, gradients, type GradientName } from '@/ui/theme';
 
 type S = {
@@ -72,7 +72,7 @@ export default function Dashboard() {
     <Screen>
       <ScrollView>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <Logo size={52} />
+          <OrgLogo size={52} />
           <View style={{ flexShrink: 1 }}>
             <Title>{current?.org.name ?? 'SALEPRO by MONTE'}</Title>
             <Body tone="muted">สวัสดี {profile?.display_name || profile?.email}{current ? ` · ${ROLE_LABEL[current.role]}` : ''}</Body>
