@@ -9,6 +9,7 @@ import { baht } from '@/lib/money';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
+import { dateLocale } from '@/i18n';
 
 type Inv = {
   id: string; doc_no: string; quotation_id: string; customer_id: string; address_id: string | null; status: 'issued' | 'paid' | 'cancelled'; issue_date: string; credit_days: number;
@@ -21,7 +22,7 @@ type Q = { id: string; doc_no: string; customer_id: string };
 type P = { id: string; sku: string };
 
 const STATUS = { issued: 'รอชำระ', paid: 'ชำระแล้ว', cancelled: 'ยกเลิก' } as const;
-const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
+const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString(dateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
 const addr = (a?: A) => (a ? [a.address_line, a.subdistrict, a.district, a.province, a.postal_code].filter(Boolean).join(' ') : '');
 
 export default function Invoices() {

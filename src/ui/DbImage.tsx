@@ -1,4 +1,5 @@
-import { Image, View, Text } from 'react-native';
+import { Image, View } from 'react-native';
+import { Text } from './Text';
 import { byteaToDataUri } from '@/lib/image';
 import { colors } from './theme';
 

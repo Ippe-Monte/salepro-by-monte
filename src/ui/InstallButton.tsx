@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { Text } from './Text';
 import { Button } from './kit';
 import { colors } from './theme';
 
@@ -50,7 +51,7 @@ export function InstallButton() {
 
   return (
     <View style={{ width: '100%', maxWidth: 420, marginTop: 8 }}>
-      <Button title="📲 ติดตั้งแอปลงเครื่อง" variant="ghost" onPress={() => { void install(); }} />
+      <Button title="ติดตั้งแอปลงเครื่อง" icon="download" variant="ghost" onPress={() => { void install(); }} />
       {help && !deferred ? (
         <View accessibilityRole="alert" style={{ marginTop: 8, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
           <Text style={{ color: colors.text }}>{steps}</Text>

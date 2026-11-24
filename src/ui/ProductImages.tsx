@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from './Text';
 import { friendly } from '@/lib/errors';
 import { toByteaParam } from '@/lib/image';
 import { neon } from '@/lib/neon';

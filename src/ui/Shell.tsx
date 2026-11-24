@@ -1,8 +1,11 @@
 import { usePathname, useRouter } from 'expo-router';
-import { Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Pressable, View, useWindowDimensions } from 'react-native';
+import { Text } from './Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { canOpen } from '@/auth/roles';
+import { Icon } from './Icon';
+import { LangSwitch } from './LangSwitch';
 import { Logo } from './Logo';
 import { BOTTOM, isBottomItem, visibleItems, type NavItem } from './nav';
 import { useTheme } from './ThemeProvider';
@@ -21,7 +24,7 @@ function ThemeButton() {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="สลับโหมดสว่าง/มืด" onPress={toggle}
       style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-      <Text style={{ fontSize: 18 }}>{mode === 'dark' ? '☀️' : '🌙'}</Text>
+      <Icon name={mode === 'dark' ? 'sun' : 'moon'} size={20} color={colors.muted} />
     </Pressable>
   );
 }
@@ -42,7 +45,7 @@ export function TopBar() {
   return (
     <View style={{ paddingTop: insets.top + 8, paddingBottom: 8, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
       <OrgBadge />
-      <ThemeButton />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><LangSwitch /><ThemeButton /></View>
     </View>
   );
 }
@@ -64,17 +67,17 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
         return (
           <Pressable key={i.name} accessibilityRole="button" onPress={() => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, marginBottom: 2, backgroundColor: on ? colors.selected : 'transparent' }}>
-            <Text style={{ fontSize: 16 }}>{i.icon}</Text>
+            <Icon name={i.icon} size={20} color={on ? colors.primary : colors.muted} />
             <Text style={{ color: on ? colors.text : colors.muted, fontWeight: on ? '700' : '500' }}>{i.label}</Text>
           </Pressable>
         );
       })}
       <View style={{ flex: 1 }} />
       <Pressable accessibilityRole="button" onPress={() => router.push('/account')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8 }}>
-        <Text style={{ fontSize: 16 }}>👤</Text>
+        <Icon name="profile" size={20} color={colors.muted} />
         <Text numberOfLines={1} style={{ color: colors.muted, flexShrink: 1 }}>{profile?.display_name || profile?.email}</Text>
       </Pressable>
-      <View style={{ alignItems: 'flex-start', paddingHorizontal: 4 }}><ThemeButton /></View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 }}><ThemeButton /><LangSwitch /></View>
       <View style={{ paddingHorizontal: 8 }}><VersionBadge align="left" /></View>
     </View>
   );
@@ -87,14 +90,14 @@ export function BottomBar({ items, active }: { items: NavItem[]; active: string 
   const moreOn = !isBottomItem(active);
   const tabs: { key: string; label: string; icon: string; on: boolean; go: () => void }[] = [
     ...bottom.map((i) => ({ key: i.name, label: i.label, icon: i.icon, on: i.name === active, go: () => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never) })),
-    { key: 'more', label: 'เพิ่มเติม', icon: '☰', on: moreOn, go: () => router.push('/more') },
+    { key: 'more', label: 'เพิ่มเติม', icon: 'menu', on: moreOn, go: () => router.push('/more') },
   ];
   return (
     <View style={{ flexDirection: 'row', backgroundColor: colors.card, borderTopColor: colors.border, borderTopWidth: 1, paddingBottom: insets.bottom, paddingTop: 6 }}>
       {tabs.map((t) => (
         <Pressable key={t.key} accessibilityRole="button" accessibilityLabel={t.label} onPress={t.go} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}>
-          <View style={{ paddingHorizontal: 14, paddingVertical: 4, borderRadius: 14, backgroundColor: t.on ? colors.selected : 'transparent' }}>
-            <Text style={{ fontSize: 18 }}>{t.icon}</Text>
+          <View style={{ paddingVertical: 4 }}>
+            <Icon name={t.icon} size={24} color={t.on ? colors.primary : colors.muted} strokeWidth={t.on ? 2.2 : 1.8} />
           </View>
           <Text numberOfLines={1} style={{ fontSize: 11, color: t.on ? colors.primary : colors.muted, fontWeight: t.on ? '700' : '500' }}>{t.label}</Text>
         </Pressable>

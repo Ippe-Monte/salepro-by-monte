@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import * as Location from 'expo-location';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';

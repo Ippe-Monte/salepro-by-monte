@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import * as Location from 'expo-location';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
@@ -9,6 +10,7 @@ import { directionsLink } from '@/lib/geo';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
+import { dateLocale } from '@/i18n';
 
 type V = {
   id: string; customer_id: string; address_id: string | null; assignee: string; title: string; purpose: string | null;
@@ -18,7 +20,7 @@ type C = { id: string; name: string };
 type Mem = { user_id: string; profiles: { display_name: string; email: string } | { display_name: string; email: string }[] | null };
 type A = { id: string; customer_id: string; latitude: number | null; longitude: number | null };
 
-const nameOf = (m: Mem) => { const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles; return p?.display_name || p?.email || m.user_id.slice(0, 6); };
+const nameOf = (m: Mem) => { const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles; return p?.display_name || p?.email || (m.user_id ?? '').slice(0, 6); };
 
 export default function Visits() {
   const { current, profile } = useAuth();
@@ -127,7 +129,7 @@ export default function Visits() {
         {groups.length === 0 ? <Empty>ยังไม่มีนัดเข้าพบ</Empty> : null}
         {groups.map((g) => (
           <View key={g.day}>
-            <Text style={{ color: colors.accent, fontWeight: '700', marginVertical: 8 }}>{new Date(g.day + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+            <Text style={{ color: colors.accent, fontWeight: '700', marginVertical: 8 }}>{new Date(g.day + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
             {g.items.map((v) => {
               const c = custs.find((x) => x.id === v.customer_id);
               const a = addrs.find((x) => x.customer_id === v.customer_id);

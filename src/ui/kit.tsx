@@ -1,4 +1,6 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { ActivityIndicator, Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Text } from './Text';
+import { Icon } from './Icon';
 import { colors } from './theme';
 
 export function Screen({ children }: { children: React.ReactNode }) {
@@ -25,12 +27,17 @@ export function Field(props: TextInputProps & { label: string }) {
     </View>
   );
 }
-export function Button({ title, onPress, busy, variant }: { title: string; onPress: () => void; busy?: boolean; variant?: 'ghost' | 'danger' }) {
+export function Button({ title, onPress, busy, variant, icon }: { title: string; onPress: () => void; busy?: boolean; variant?: 'ghost' | 'danger'; icon?: string }) {
   const bg = variant === 'ghost' ? 'transparent' : variant === 'danger' ? colors.danger : colors.primary;
   return (
     <Pressable accessibilityRole="button" disabled={busy} onPress={onPress}
       style={{ backgroundColor: bg, borderColor: colors.border, borderWidth: variant === 'ghost' ? 1 : 0, borderRadius: 12, minHeight: 48, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.6 : 1, marginTop: 8 }}>
-      {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : '#fff'} /> : <Text style={{ color: variant === 'ghost' ? colors.text : '#fff', fontWeight: '700' }}>{title}</Text>}
+      {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : '#fff'} /> : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.primary : '#fff'} /> : null}
+          <Text style={{ color: variant === 'ghost' ? colors.text : '#fff', fontWeight: '700' }}>{title}</Text>
+        </View>
+      )}
     </Pressable>
   );
 }

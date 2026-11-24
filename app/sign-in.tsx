@@ -1,6 +1,8 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
+import { LangSwitch } from '@/ui/LangSwitch';
 import { Logo } from '@/ui/Logo';
 import { InstallButton } from '@/ui/InstallButton';
 import { VersionBadge } from '@/ui/VersionBadge';
@@ -32,6 +34,7 @@ export default function SignIn() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
+        <View style={{ alignSelf: 'flex-end' }}><LangSwitch /></View>
         <View style={{ alignItems: 'center', marginVertical: 20 }}>
           <Logo size={140} />
           <Text style={{ color: colors.text, fontSize: 26, fontWeight: '800', marginTop: 12 }}>SALEPRO</Text>

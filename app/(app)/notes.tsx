@@ -7,6 +7,7 @@ import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
+import { dateLocale } from '@/i18n';
 
 type N = { id: string; doc_no: string; order_id: string; status: 'issued' | 'received'; receiver_name: string | null; receiver_note: string | null; received_at: string | null; created_at: string };
 type D = { id: string; doc_no: string; customer_id: string; status: string; ship_address: string | null; contact_name: string | null; contact_phone: string | null; planned_date: string | null; driver: string | null; vehicle: string | null };
@@ -14,7 +15,7 @@ type It = { id: string; order_id: string; product_id: string; description: strin
 type C = { id: string; name: string; tax_id: string | null; phone: string | null };
 type P = { id: string; sku: string };
 
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(dateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
 
 export default function DeliveryNotes() {
   const { current } = useAuth();

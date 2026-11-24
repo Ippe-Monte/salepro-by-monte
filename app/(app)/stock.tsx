@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
+import { dateLocale } from '@/i18n';
 
 type L = { product_id: string; sku: string; name: string; unit: string; min_qty: number; on_hand: number; reserved: number; available: number; is_low: boolean; archived_at: string | null };
 type M = { id: string; kind: string; on_hand_delta: number; reserved_delta: number; on_hand_after: number; note: string | null; created_at: string };
@@ -87,7 +89,7 @@ export default function Stock() {
                 {moves.length === 0 ? <Body tone="muted">ยังไม่มีความเคลื่อนไหว</Body> : null}
                 {moves.map((m) => (
                   <Body key={m.id} tone="muted">
-                    {new Date(m.created_at).toLocaleDateString('th-TH')} · {KIND_LABEL[m.kind] ?? m.kind} {m.on_hand_delta !== 0 ? (m.on_hand_delta > 0 ? '+' : '') + m.on_hand_delta : `จอง ${m.reserved_delta > 0 ? '+' : ''}${m.reserved_delta}`} → {m.on_hand_after}{m.note ? ` · ${m.note}` : ''}
+                    {new Date(m.created_at).toLocaleDateString(dateLocale())} · {KIND_LABEL[m.kind] ?? m.kind} {m.on_hand_delta !== 0 ? (m.on_hand_delta > 0 ? '+' : '') + m.on_hand_delta : `จอง ${m.reserved_delta > 0 ? '+' : ''}${m.reserved_delta}`} → {m.on_hand_after}{m.note ? ` · ${m.note}` : ''}
                   </Body>
                 ))}
               </View>

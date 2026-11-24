@@ -4,20 +4,20 @@ export type NavItem = { name: string; label: string; icon: string; module: strin
 
 /** Everything the app can open. `name` is the route file under app/(app). */
 export const ALL_ITEMS: NavItem[] = [
-  { name: 'index', label: 'หน้าหลัก', icon: '🏠', module: 'dashboard' },
-  { name: 'customers', label: 'ลูกค้า', icon: '👥', module: 'customers' },
-  { name: 'quotes', label: 'ใบเสนอราคา', icon: '📄', module: 'quotes' },
-  { name: 'visits', label: 'แผนเข้าพบ', icon: '📅', module: 'visits' },
-  { name: 'jobs', label: 'Job Ticket', icon: '🎫', module: 'jobs' },
-  { name: 'products', label: 'สินค้า', icon: '📦', module: 'products' },
-  { name: 'stock', label: 'สต็อก', icon: '🏬', module: 'stock' },
-  { name: 'delivery', label: 'ส่งของ (DO)', icon: '🚚', module: 'delivery' },
-  { name: 'notes', label: 'ใบส่งของ', icon: '🧾', module: 'notes' },
-  { name: 'invoices', label: 'อินวอยซ์', icon: '💳', module: 'invoices' },
-  { name: 'zones', label: 'โซนส่งของ', icon: '🗺️', module: 'zones' },
-  { name: 'members', label: 'สมาชิก', icon: '🔑', module: 'members' },
-  { name: 'settings', label: 'ตั้งค่าบริษัท', icon: '🏢', module: 'settings' },
-  { name: 'docs', label: 'ตั้งค่าเอกสาร', icon: '⚙️', module: 'docs' },
+  { name: 'index', label: 'หน้าหลัก', icon: 'home', module: 'dashboard' },
+  { name: 'customers', label: 'ลูกค้า', icon: 'groups', module: 'customers' },
+  { name: 'quotes', label: 'ใบเสนอราคา', icon: 'documents', module: 'quotes' },
+  { name: 'visits', label: 'แผนเข้าพบ', icon: 'schedule', module: 'visits' },
+  { name: 'jobs', label: 'Job Ticket', icon: 'ticket', module: 'jobs' },
+  { name: 'products', label: 'สินค้า', icon: 'box', module: 'products' },
+  { name: 'stock', label: 'สต็อก', icon: 'warehouse', module: 'stock' },
+  { name: 'delivery', label: 'ส่งของ (DO)', icon: 'truck', module: 'delivery' },
+  { name: 'notes', label: 'ใบส่งของ', icon: 'clipboard', module: 'notes' },
+  { name: 'invoices', label: 'อินวอยซ์', icon: 'wallet', module: 'invoices' },
+  { name: 'zones', label: 'โซนส่งของ', icon: 'pin', module: 'zones' },
+  { name: 'members', label: 'สมาชิก', icon: 'key', module: 'members' },
+  { name: 'settings', label: 'ตั้งค่าบริษัท', icon: 'building', module: 'settings' },
+  { name: 'docs', label: 'ตั้งค่าเอกสาร', icon: 'settings', module: 'docs' },
 ];
 
 /** The five items always shown in the phone bottom bar; everything else lives under "เพิ่มเติม". */

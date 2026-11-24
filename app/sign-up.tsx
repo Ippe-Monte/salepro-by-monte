@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { LangSwitch } from '@/ui/LangSwitch';
 import { Logo } from '@/ui/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import { validateEmail, validatePassword } from '@/auth/roles';
@@ -29,6 +30,7 @@ export default function SignUp() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
+        <View style={{ alignSelf: 'flex-end' }}><LangSwitch /></View>
         <Logo size={110} />
         <View style={{ width: '100%', maxWidth: 420 }}>
           <Field label="ชื่อ-สกุล" value={name} onChangeText={setName} autoComplete="name" />

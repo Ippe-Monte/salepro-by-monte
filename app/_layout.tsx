@@ -1,10 +1,12 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { ThemeProvider, useTheme } from '@/ui/ThemeProvider';
 import { Button } from '@/ui/kit';
+import { TourHost } from '@/ui/Tour';
 import { VersionBadge } from '@/ui/VersionBadge';
 import { colors } from '@/ui/theme';
 
@@ -57,6 +59,7 @@ function Root() {
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <Guard />
+      <TourHost />
     </>
   );
 }

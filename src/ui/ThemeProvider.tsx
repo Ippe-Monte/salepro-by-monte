@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Fragment } from 'react';
+import { useLang } from '@/i18n';
 import { applyMode, type Mode } from './theme';
 
 const KEY = 'salepro.theme';
@@ -19,8 +20,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
+  const lang = useLang();
   const value = useMemo(() => ({ mode, toggle }), [mode, toggle]);
-  return <Ctx.Provider value={value}><Fragment key={mode}>{children}</Fragment></Ctx.Provider>;
+  return <Ctx.Provider value={value}><Fragment key={`${mode}-${lang}`}>{children}</Fragment></Ctx.Provider>;
 }
 export function useTheme() {
   const v = useContext(Ctx);

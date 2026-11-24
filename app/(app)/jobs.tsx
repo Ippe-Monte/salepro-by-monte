@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
+import { dateLocale } from '@/i18n';
 
 type T = { id: string; doc_no: string; customer_id: string; title: string; description: string | null; priority: string; status: string; source: string; due_date: string | null };
 type Ev = { id: string; kind: string; from_status: string | null; to_status: string | null; body: string | null; created_at: string };
@@ -128,7 +130,7 @@ export default function Jobs() {
                   <Body>ความเคลื่อนไหว</Body>
                   {evs.map((e) => (
                     <Body key={e.id} tone="muted">
-                      {new Date(e.created_at).toLocaleString('th-TH')} · {e.kind === 'created' ? 'เปิดงาน' : e.kind === 'status' ? `${STATUS[e.from_status ?? ''] ?? ''} → ${STATUS[e.to_status ?? ''] ?? ''}` : e.body}
+                      {new Date(e.created_at).toLocaleString(dateLocale())} · {e.kind === 'created' ? 'เปิดงาน' : e.kind === 'status' ? `${STATUS[e.from_status ?? ''] ?? ''} → ${STATUS[e.to_status ?? ''] ?? ''}` : e.body}
                     </Body>
                   ))}
                   {editable ? (
