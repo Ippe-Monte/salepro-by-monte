@@ -1,6 +1,7 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
+  "พอดีจอ": "Fit",
   "123 ถนนตัวอย่าง กรุงเทพฯ 10110": "123 Example Road, Bangkok 10110",
   "จัดส่งถึง": "Deliver to",
   "ชุด": "set",

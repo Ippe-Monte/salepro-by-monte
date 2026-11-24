@@ -28,7 +28,7 @@ function usePrintStyle() {
   useEffect(() => {
     if (Platform.OS !== 'web' || styled || typeof document === 'undefined') return;
     const el = document.createElement('style');
-    el.textContent = '#print-root { display: none; } @media print { body.printing > *:not(#print-root) { display: none !important; } body.printing, html:has(body.printing) { height: auto !important; overflow: visible !important; } body.printing #print-root { display: block !important; } #print-root * { overflow: visible !important; } @page { size: A4; margin: 12mm; } }';
+    el.textContent = '#print-root { display: none; } #print-root, #print-root * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } @media print { body.printing > *:not(#print-root) { display: none !important; } body.printing, html:has(body.printing) { height: auto !important; overflow: visible !important; } body.printing #print-root { display: block !important; } #print-root * { overflow: visible !important; } @page { size: A4; margin: 12mm; } }';
     document.head.appendChild(el);
     styled = true;
   }, []);

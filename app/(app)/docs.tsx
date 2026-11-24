@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Modal, ScrollView, View } from 'react-native';
+import { Modal, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
@@ -11,6 +11,17 @@ import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Field, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
+
+const A4_W = 794; // A4 at 96 dpi
+const A4_H = 1123;
+
+function ZoomBtn({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={{ minWidth: 40, minHeight: 36, paddingHorizontal: 10, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: colors.text, fontWeight: '800' }}>{label}</Text>
+    </Pressable>
+  );
+}
 
 const DEFAULT_PREFIX: Record<DocType, string> = { quote: 'QT', invoice: 'IV', delivery_note: 'DN', delivery_order: 'DO' };
 
@@ -43,6 +54,12 @@ export default function DocSettings() {
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<DocContext | null>(null);
+  const { width: winW } = useWindowDimensions();
+  const [zoom, setZoom] = useState<number | null>(null); // null = fit to screen
+  const [paperH, setPaperH] = useState(A4_H);
+  const fit = Math.min(1.5, Math.max(0.3, (winW - 24) / A4_W));
+  const scale = zoom ?? fit;
+  const step = (d: number) => setZoom(Math.min(2, Math.max(0.3, Math.round((scale + d) * 10) / 10)));
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
 
   const load = useCallback(async () => {
@@ -90,6 +107,7 @@ export default function DocSettings() {
   async function openPreview() {
     if (!orgId) return;
     const base = await loadDocContext(orgId, type);
+    setZoom(null);
     const sigs = f.sigs.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 4);
     const vat = intOrNull(f.vat_rate);
     setPreview({
@@ -167,18 +185,34 @@ export default function DocSettings() {
         const meta: [string, string][] = type === 'quote' ? [['ยืนราคา', `${st.validity_days ?? 30} วัน`]] : type === 'invoice' ? [['เครดิต', `${st.credit_days ?? 30} วัน`]] : [];
         return (
           <Modal visible animationType="slide" onRequestClose={() => setPreview(null)}>
-            <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: 16 }}>
-              <ScrollView contentContainerStyle={{ padding: 16 }}>
-                <Body tone="muted">ตัวอย่างนี้ใช้ข้อมูลสมมุติ และค่าที่ตั้งอยู่บนหน้าจอ (ยังไม่ต้องกดบันทึกก็ดูได้)</Body>
-                <DocPaper
-                  ctx={preview} org={current.org} docNo={sample} date={new Date().toLocaleDateString('th-TH')}
-                  party={{ label: type === 'delivery_order' ? 'จัดส่งถึง' : 'ลูกค้า', name: 'บริษัท ตัวอย่าง จำกัด', lines: ['123 ถนนตัวอย่าง กรุงเทพฯ 10110'] }}
-                  meta={meta} items={rows}
-                  totals={{ subtotal, discount: 0, vat, vatRate: rate, total: subtotal + vat }}
-                  note="หมายเหตุตัวอย่าง"
-                />
-                <Button title="พิมพ์ / บันทึกเป็น PDF" variant="ghost" onPress={printPaper} />
-                <Button title="ปิดตัวอย่าง" onPress={() => setPreview(null)} />
+            <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
+                <ZoomBtn label="−" onPress={() => step(-0.1)} />
+                <Text style={{ color: colors.text, fontWeight: '700', minWidth: 48, textAlign: 'center' }}>{Math.round(scale * 100)}%</Text>
+                <ZoomBtn label="+" onPress={() => step(0.1)} />
+                <ZoomBtn label="พอดีจอ" onPress={() => setZoom(null)} />
+                <ZoomBtn label="100%" onPress={() => setZoom(1)} />
+                <View style={{ flex: 1 }} />
+                <ZoomBtn label="ปิดตัวอย่าง" onPress={() => setPreview(null)} />
+              </View>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 12, alignItems: 'flex-start' }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <View style={{ width: A4_W * scale, height: paperH * scale, overflow: 'hidden', backgroundColor: '#fff', borderRadius: 4 }}>
+                    <View onLayout={(e) => setPaperH(Math.max(A4_H, e.nativeEvent.layout.height))} style={{ width: A4_W, minHeight: A4_H, backgroundColor: '#fff', transform: [{ scale }], transformOrigin: 'top left' }}>
+                      <DocPaper
+                        ctx={preview} org={current.org} docNo={sample} date={new Date().toLocaleDateString('th-TH')}
+                        party={{ label: type === 'delivery_order' ? 'จัดส่งถึง' : 'ลูกค้า', name: 'บริษัท ตัวอย่าง จำกัด', lines: ['123 ถนนตัวอย่าง กรุงเทพฯ 10110'] }}
+                        meta={meta} items={rows}
+                        totals={{ subtotal, discount: 0, vat, vatRate: rate, total: subtotal + vat }}
+                        note="หมายเหตุตัวอย่าง"
+                      />
+                    </View>
+                  </View>
+                </ScrollView>
+                <View style={{ alignSelf: 'stretch', marginTop: 12 }}>
+                  <Body tone="muted">ตัวอย่างนี้ใช้ข้อมูลสมมุติ และค่าที่ตั้งอยู่บนหน้าจอ (ยังไม่ต้องกดบันทึกก็ดูได้)</Body>
+                  <Button title="พิมพ์ / บันทึกเป็น PDF" variant="ghost" onPress={printPaper} />
+                </View>
               </ScrollView>
             </View>
           </Modal>
