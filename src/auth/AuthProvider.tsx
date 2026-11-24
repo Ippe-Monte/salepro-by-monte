@@ -26,6 +26,14 @@ function savePreferredOrg(id: string) {
   try { globalThis.localStorage?.setItem(ORG_KEY, id); } catch { /* storage unavailable: keep in memory only */ }
 }
 
+// A hung request must never leave the app spinning forever: fail with a message that names the step.
+export function withTimeout<T>(p: PromiseLike<T>, step: string, ms = 20000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`หมดเวลารอเซิร์ฟเวอร์ (ขั้น: ${step})`)), ms);
+    Promise.resolve(p).then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+}
+
 function message(e: unknown): string {
   const m = (e as { message?: string } | null)?.message;
   return m && m.length < 200 ? m : 'เกิดข้อผิดพลาด กรุณาลองใหม่';
@@ -47,21 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await neon.auth.getSession();
+      const { data } = await withTimeout(neon.auth.getSession(), 'ตรวจ session');
       if (!data?.session) { setSignedIn(false); reset(); return; }
       setSignedIn(true);
-      const pr = await neon.rpc('ensure_profile');
+      setError(null);
+      const pr = await withTimeout(neon.rpc('ensure_profile'), 'สร้างโปรไฟล์');
       if (pr.error) throw pr.error;
-      const mr = await neon
+      const mr = await withTimeout(neon
         .from('memberships')
-        .select('org_id,role,status,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)');
+        .select('org_id,role,status,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)'), 'ดึงรายชื่อบริษัท');
       if (mr.error) throw mr.error;
       const rows = (mr.data ?? []) as unknown as MembershipRow[];
       const ms: Membership[] = rows.flatMap((r) => {
         const org = Array.isArray(r.organizations) ? r.organizations[0] : r.organizations;
         return org ? [{ org_id: r.org_id, role: r.role, status: r.status, org }] : [];
       });
-      const pl = await neon.rpc('am_platform_admin');
+      const pl = await withTimeout(neon.rpc('am_platform_admin'), 'ตรวจสิทธิ์แพลตฟอร์ม');
       setProfile(pr.data as unknown as Profile);
       setMemberships(ms);
       setIsPlatform(pl.data === true);
@@ -75,15 +84,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => { void refresh(); }, [refresh]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error: err } = await neon.auth.signIn.email({ email: email.trim(), password });
-    if (err) return message(err);
+    try {
+      const { error: err } = await withTimeout(neon.auth.signIn.email({ email: email.trim(), password }), 'เข้าสู่ระบบ');
+      if (err) return message(err);
+    } catch (e) { return message(e); }
     await refresh();
     return null;
   }, [refresh]);
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
-    const { error: err } = await neon.auth.signUp.email({ name: name.trim(), email: email.trim(), password });
-    if (err) return message(err);
+    try {
+      const { error: err } = await withTimeout(neon.auth.signUp.email({ name: name.trim(), email: email.trim(), password }), 'ลงทะเบียน');
+      if (err) return message(err);
+    } catch (e) { return message(e); }
     await refresh();
     return null;
   }, [refresh]);
@@ -97,8 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const selectOrg = useCallback((orgId: string) => { savePreferredOrg(orgId); setPreferred(orgId); }, []);
 
   const access = useMemo(
-    () => resolveAccess(signedIn, profile, memberships, isPlatform, preferred),
-    [signedIn, profile, memberships, isPlatform, preferred],
+    () => resolveAccess(signedIn, profile, memberships, isPlatform, preferred, error),
+    [signedIn, profile, memberships, isPlatform, preferred, error],
   );
 
   const value = useMemo<Ctx>(

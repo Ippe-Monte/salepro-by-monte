@@ -31,7 +31,7 @@ export type Org = {
 };
 export type Membership = { org_id: string; role: Role; status: 'active' | 'disabled'; org: Org };
 
-export type Gate = 'loading' | 'signed-out' | 'no-org' | 'suspended' | 'ready';
+export type Gate = 'loading' | 'signed-out' | 'no-org' | 'suspended' | 'ready' | 'error';
 
 export type Access = { gate: Gate; current: Membership | null };
 
@@ -45,10 +45,11 @@ export function resolveAccess(
   memberships: Membership[] | null,
   isPlatform: boolean,
   preferredOrgId: string | null,
+  loadError: string | null = null,
 ): Access {
   if (signedIn === null) return { gate: 'loading', current: null };
   if (!signedIn) return { gate: 'signed-out', current: null };
-  if (!profile || memberships === null) return { gate: 'loading', current: null };
+  if (!profile || memberships === null) return { gate: loadError ? 'error' : 'loading', current: null };
   const active = memberships.filter((m) => m.status === 'active');
   const usable = active.filter((m) => m.org.status === 'active');
   const current = usable.find((m) => m.org_id === preferredOrgId) ?? usable[0] ?? null;

@@ -15,6 +15,7 @@ const mem = (org_id: string, role: Membership['role'] = 'sales', status: Members
 test('loading until session and memberships are known', () => {
   assert.equal(resolveAccess(null, null, null, false, null).gate, 'loading');
   assert.equal(resolveAccess(true, null, null, false, null).gate, 'loading');
+  assert.equal(resolveAccess(true, null, null, false, null, 'x').gate, 'error');
   assert.equal(resolveAccess(true, prof, null, false, null).gate, 'loading');
 });
 test('signed out', () => assert.equal(resolveAccess(false, null, null, false, null).gate, 'signed-out'));
