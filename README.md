@@ -39,3 +39,10 @@ Database tests (run only on a disposable Neon branch; see headers): `db/tests/te
 - The service worker caches only this site's own files; calls to Neon are never cached. Offline, the app opens but data needs a connection.
 - Version is written `Vx.xx` (for example `V1.00`). Change it with `npm run version:set 1.01`: this updates `src/version.ts`, `app.json` (version, Android `versionCode`, iOS `buildNumber`) and `package.json`. A test fails if they drift apart. Bump it before every release; Google Play needs a higher `versionCode` for every upload.
 - Google Play later: wrap the hosted PWA as a Trusted Web Activity (for example with Bubblewrap), which needs the final HTTPS domain and a `/.well-known/assetlinks.json` file. Or build a native app with EAS from this same code (package `com.monte.salepro`).
+
+## Deploy (GitHub Pages, same as FriendTrip Go)
+
+- Workflow `.github/workflows/deploy-pages.yml` builds and publishes `dist/` on every push to `main` (or by hand: Actions → Deploy web → Run workflow). It sets `EXPO_BASE_URL=/<repo name>`, so the site lives at `https://ippe-monte.github.io/salepro-by-monte/`.
+- One-time setup in GitHub: Settings → Pages → Source = **GitHub Actions**. (A private repo needs a plan that includes Pages for private repos.) Merge the PRs into `main` first.
+- Neon Auth trusted domain `https://ippe-monte.github.io` has been added.
+- On a domain of its own, leave `EXPO_BASE_URL` empty. Unknown paths open the app through `404.html` (GitHub Pages has no rewrite rules).

@@ -7,8 +7,8 @@
     <title>SALEPRO by MONTE</title>
     <meta name="description" content="SALEPRO by MONTE - แอปสำหรับ Sale Engineer" />
     <meta name="theme-color" content="#030b2e" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="__BASE__/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="__BASE__/icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="SALEPRO" />
@@ -36,7 +36,7 @@
     <script>
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').catch(function () {});
+          navigator.serviceWorker.register('__BASE__/sw.js', { scope: '__BASE__/' }).catch(function () {});
         });
       }
     </script>

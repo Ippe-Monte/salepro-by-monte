@@ -1,20 +1,20 @@
 {
-  "id": "/",
+  "id": "__BASE__/",
   "name": "SALEPRO by MONTE",
   "short_name": "SALEPRO",
   "description": "แอปสำหรับ Sale Engineer: ลูกค้า นัดหมาย ใบเสนอราคา สต็อก ใบส่งของ และใบแจ้งหนี้",
   "lang": "th",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "__BASE__/",
+  "scope": "__BASE__/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#030b2e",
   "theme_color": "#030b2e",
   "categories": ["business", "productivity"],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "__BASE__/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "__BASE__/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "__BASE__/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "__BASE__/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
