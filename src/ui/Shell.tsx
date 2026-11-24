@@ -4,6 +4,8 @@ import { Text } from './Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { canOpen } from '@/auth/roles';
+import { Avatar } from './Avatar';
+import { Bell } from './Bell';
 import { Icon } from './Icon';
 import { LangSwitch } from './LangSwitch';
 import { Logo } from './Logo';
@@ -42,15 +44,8 @@ function OrgBadge() {
 }
 
 function ProfileDot() {
-  const { profile } = useAuth();
   const router = useRouter();
-  const initial = (profile?.display_name || profile?.email || '?').trim().charAt(0).toUpperCase();
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel="บัญชีของฉัน" onPress={() => router.push('/account')}
-      style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary }}>
-      <Text style={{ color: '#fff', fontWeight: '800' }}>{initial}</Text>
-    </Pressable>
-  );
+  return <Avatar size={36} onPress={() => router.push('/account')} />;
 }
 
 /** Phone header: row 1 = app logo + tools, row 2 = the company's logo and name. */
@@ -60,7 +55,7 @@ export function TopBar() {
     <View style={{ backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: 1, paddingTop: insets.top + 6 }}>
       <View style={{ paddingHorizontal: 16, paddingBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Logo size={38} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><LangSwitch /><ThemeButton /><ProfileDot /></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><LangSwitch /><ThemeButton /><Bell /><ProfileDot /></View>
       </View>
       <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}><OrgBadge /></View>
     </View>
@@ -92,7 +87,7 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
         <Icon name="profile" size={20} color={colors.muted} />
         <Text numberOfLines={1} style={{ color: colors.muted, flexShrink: 1 }}>{profile?.display_name || profile?.email}</Text>
       </Pressable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 }}><ThemeButton /><LangSwitch /></View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 }}><ThemeButton /><Bell /><LangSwitch /></View>
       <View style={{ paddingHorizontal: 8 }}><VersionBadge align="left" /></View>
     </View>
   );

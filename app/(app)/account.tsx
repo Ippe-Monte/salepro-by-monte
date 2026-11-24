@@ -6,6 +6,7 @@ import { ROLE_LABEL } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Screen, Title } from '@/ui/kit';
+import { ProfileCard } from '@/ui/ProfileCard';
 import { colors } from '@/ui/theme';
 
 export default function Account() {
@@ -28,10 +29,7 @@ export default function Account() {
     <Screen>
       <ScrollView>
         <Title>บัญชีของฉัน</Title>
-        <Card>
-          <Body>{profile?.display_name}</Body>
-          <Body tone="muted">{profile?.email}</Body>
-        </Card>
+        <ProfileCard />
         <Body tone="muted">บริษัทของฉัน (แตะเพื่อสลับ)</Body>
         <View style={{ marginTop: 8 }}>
           {usable.map((m) => (

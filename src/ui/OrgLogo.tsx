@@ -36,3 +36,17 @@ export function OrgLogo({ size }: { size: number }) {
   if (!uri) return <Logo size={size} />;
   return <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size * 0.24 }} accessibilityLabel="Company logo" resizeMode="contain" />;
 }
+
+/** Data URI of the company logo (or null) for places that draw it themselves, e.g. the business card. */
+export function useOrgLogoUri(): string | null {
+  const { current } = useAuth();
+  const orgId = current?.org_id;
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const f = () => bump((n) => n + 1);
+    subs.add(f);
+    if (orgId && !cache.has(orgId)) void fetchLogo(orgId);
+    return () => { subs.delete(f); };
+  }, [orgId]);
+  return orgId ? cache.get(orgId) ?? null : null;
+}
