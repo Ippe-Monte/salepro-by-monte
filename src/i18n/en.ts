@@ -1,6 +1,23 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
+  "ถ่ายรูปชิ้นงาน": "Take photo of workpiece",
+  "ยังไม่มีไฟล์แนบ": "No attachments yet",
+  "ย่อรูปแล้วยังใหญ่เกินไป ลองรูปอื่น": "Still too large after shrinking — try another photo",
+  "รองรับเฉพาะ PDF และรูปภาพ": "Only PDF and images are supported",
+  "รูปถ่าย": "Photo",
+  "ลบไฟล์แนบ": "Delete attachment",
+  "เปิด PDF บนแอพมือถือยังไม่รองรับ": "Opening PDFs in the mobile app is not supported yet",
+  "เปิดไฟล์ไม่ได้": "Cannot open file",
+  "เพิ่มรูปไม่สำเร็จ": "Could not add photo",
+  "เพิ่มไฟล์ไม่สำเร็จ": "Could not add file",
+  "เลือกรูปจากเครื่อง": "Choose photo from device",
+  "แนบ Drawing / PDF": "Attach drawing / PDF",
+  "ไฟล์": "File",
+  "ไฟล์แนบ (": "Attachments (",
+  "ไฟล์ใหญ่เกิน 1.8 MB": "File is larger than 1.8 MB",
+  "ไฟล์ใหญ่เกิน 1.8 MB (ลองลดขนาดไฟล์ก่อน)": "File is larger than 1.8 MB (reduce its size first)",
+  "ไม่ได้รับอนุญาตให้ใช้กล้อง": "Camera permission denied",
   "(เส้นตรง)": "(straight line)",
   "+ เพิ่มนัดเข้าพบ": "+ Add visit",
   "· ยังไม่มีพิกัด": "· no location yet",

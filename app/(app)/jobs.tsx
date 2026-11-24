@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
+import { JobFiles } from '@/ui/JobFiles';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 import { dateLocale } from '@/i18n';
@@ -118,6 +119,7 @@ export default function Jobs() {
               {sel === t.id ? (
                 <View style={{ marginTop: 10 }}>
                   {t.description ? <Body>{t.description}</Body> : null}
+                  {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={editable} /> : null}
                   {editable && (NEXT[t.status] ?? []).length > 0 ? (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
                       {(NEXT[t.status] ?? []).map((s) => (
