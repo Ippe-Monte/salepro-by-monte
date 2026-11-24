@@ -163,8 +163,8 @@ export default function Customers() {
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
                         {[{ id: '', name: 'ไม่ระบุ' }, ...zones].map((z) => (
                           <Pressable key={z.id || 'none'} accessibilityRole="button" onPress={() => setNa({ ...na, zone: z.id })}
-                            style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: na.zone === z.id ? colors.primary : 'transparent' }}>
-                            <Text style={{ color: '#fff' }}>{z.name}</Text>
+                            style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: na.zone === z.id ? colors.selected : 'transparent' }}>
+                            <Text style={{ color: colors.text }}>{z.name}</Text>
                           </Pressable>
                         ))}
                       </View>

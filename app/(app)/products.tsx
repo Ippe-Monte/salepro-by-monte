@@ -5,6 +5,7 @@ import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { ProductImages } from '@/ui/ProductImages';
 import { colors } from '@/ui/theme';
 
 type P = { id: string; sku: string; name: string; unit: string; price: number; cost: number; min_qty: number; archived_at: string | null };
@@ -18,6 +19,7 @@ export default function Products() {
   const [err, setErr] = useState<string | null>(null);
   const [f, setF] = useState({ sku: '', name: '', unit: 'ชิ้น', price: '', cost: '', min: '' });
   const [edit, setEdit] = useState<{ id: string; min: string } | null>(null);
+  const [imgOpen, setImgOpen] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -86,6 +88,8 @@ export default function Products() {
             {editable && edit?.id !== p.id ? (
               <Pressable accessibilityRole="button" onPress={() => setEdit({ id: p.id, min: String(p.min_qty) })}><Text style={{ color: colors.accent, marginTop: 6 }}>แก้ Safety Stock</Text></Pressable>
             ) : null}
+            <Pressable accessibilityRole="button" onPress={() => setImgOpen(imgOpen === p.id ? null : p.id)}><Text style={{ color: colors.accent, marginTop: 6 }}>{imgOpen === p.id ? 'ซ่อนรูปสินค้า' : 'รูปสินค้า'}</Text></Pressable>
+            {imgOpen === p.id && orgId ? <ProductImages orgId={orgId} productId={p.id} editable={editable} /> : null}
             {editable ? <Pressable accessibilityRole="button" onPress={() => void archive(p.id)}><Text style={{ color: colors.danger, marginTop: 6 }}>เลิกใช้สินค้า</Text></Pressable> : null}
           </Card>
         ))}

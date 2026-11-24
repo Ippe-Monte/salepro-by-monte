@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
+import { ThemeProvider, useTheme } from '@/ui/ThemeProvider';
 import { colors } from '@/ui/theme';
 
 function Guard() {
@@ -35,11 +36,16 @@ function Guard() {
   return <Slot />;
 }
 
-export default function RootLayout() {
+function Root() {
+  const { mode } = useTheme();
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <Guard />
-    </AuthProvider>
+    </>
   );
+}
+
+export default function RootLayout() {
+  return <AuthProvider><ThemeProvider><Root /></ThemeProvider></AuthProvider>;
 }

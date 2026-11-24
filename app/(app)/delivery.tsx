@@ -128,8 +128,8 @@ export default function Delivery() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
               {custs.map((c) => (
                 <Pressable key={c.id} accessibilityRole="button" onPress={() => setF({ ...f, customer: c.id })}
-                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.primary : 'transparent' }}>
-                  <Text style={{ color: '#fff' }}>{c.name}</Text>
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{c.name}</Text>
                 </Pressable>
               ))}
             </View>
@@ -139,8 +139,8 @@ export default function Delivery() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
               {prods.map((p) => (
                 <Pressable key={p.id} accessibilityRole="button" onPress={() => setF({ ...f, product: p.id })}
-                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.product === p.id ? colors.primary : 'transparent' }}>
-                  <Text style={{ color: '#fff' }}>{p.sku}</Text>
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.product === p.id ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{p.sku}</Text>
                 </Pressable>
               ))}
             </View>

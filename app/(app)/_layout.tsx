@@ -1,31 +1,28 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { canOpen } from '@/auth/roles';
 import { colors } from '@/ui/theme';
+import { ALL_ITEMS } from '@/ui/nav';
+import { BottomBar, Sidebar, TopBar, useShell } from '@/ui/Shell';
 
 export default function AppLayout() {
-  const { current, isPlatform } = useAuth();
-  const role = current?.role;
-  const hide = { href: null } as const;
+  const { isPlatform } = useAuth();
+  const { wide, items, active } = useShell();
+  const shown = new Set(items.map((i) => i.name));
+  const hidden = { href: null } as const;
   return (
-    <Tabs screenOptions={{
-      headerStyle: { backgroundColor: colors.bg }, headerTintColor: colors.text,
-      tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-      tabBarActiveTintColor: colors.accent, tabBarInactiveTintColor: colors.muted,
-    }}>
-      <Tabs.Screen name="index" options={{ title: 'แดชบอร์ด', ...(current && canOpen('dashboard', role) ? {} : hide) }} />
-      <Tabs.Screen name="customers" options={{ title: 'ลูกค้า', ...(current && canOpen('customers', role) ? {} : hide) }} />
-      <Tabs.Screen name="visits" options={{ title: 'แผนเข้าพบ', ...(current && canOpen('visits', role) ? {} : hide) }} />
-      <Tabs.Screen name="jobs" options={{ title: 'Job Ticket', ...(current && canOpen('jobs', role) ? {} : hide) }} />
-      <Tabs.Screen name="quotes" options={{ title: 'ใบเสนอราคา', ...(current && canOpen('quotes', role) ? {} : hide) }} />
-      <Tabs.Screen name="products" options={{ title: 'สินค้า', ...(current && canOpen('products', role) ? {} : hide) }} />
-      <Tabs.Screen name="stock" options={{ title: 'สต็อก', ...(current && canOpen('stock', role) ? {} : hide) }} />
-      <Tabs.Screen name="delivery" options={{ title: 'ส่งของ (DO)', ...(current && canOpen('delivery', role) ? {} : hide) }} />
-      <Tabs.Screen name="zones" options={{ title: 'โซนส่งของ', ...(current && canOpen('zones', role) ? {} : hide) }} />
-      <Tabs.Screen name="members" options={{ title: 'สมาชิก', ...(canOpen('members', role) ? {} : hide) }} />
-      <Tabs.Screen name="settings" options={{ title: 'บริษัท', ...(current ? {} : hide) }} />
-      <Tabs.Screen name="platform" options={{ title: 'แพลตฟอร์ม', ...(isPlatform ? {} : hide) }} />
-      <Tabs.Screen name="account" options={{ title: 'บัญชี' }} />
-    </Tabs>
+    <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', backgroundColor: colors.bg }}>
+      {wide ? <Sidebar items={items} active={active} /> : null}
+      <View style={{ flex: 1 }}>
+        {wide ? null : <TopBar />}
+        <Tabs tabBar={() => null} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}>
+          {ALL_ITEMS.map((i) => <Tabs.Screen key={i.name} name={i.name} options={shown.has(i.name) ? {} : hidden} />)}
+          <Tabs.Screen name="platform" options={isPlatform ? {} : hidden} />
+          <Tabs.Screen name="account" options={{}} />
+          <Tabs.Screen name="more" options={{}} />
+        </Tabs>
+        {wide ? null : <BottomBar items={items} active={active} />}
+      </View>
+    </View>
   );
 }

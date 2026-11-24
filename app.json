@@ -6,7 +6,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": { "image": "./assets/splash-icon.png", "resizeMode": "contain", "backgroundColor": "#030b2e" },
     "ios": { "supportsTablet": true, "bundleIdentifier": "com.monte.salepro" },

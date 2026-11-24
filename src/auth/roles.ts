@@ -69,8 +69,11 @@ export const MODULE_ROLES: Record<string, readonly Role[]> = {
   jobs: ROLES,
   quotes: ROLES,
   delivery: ROLES,
+  invoices: ROLES,
+  notes: ROLES,
   members: ['owner', 'admin'],
   settings: ROLES,
+  docs: ROLES,
 };
 /** Who may change data in each module (the database enforces the same rule with RLS). */
 export const EDIT_ROLES: Record<string, readonly Role[]> = {
@@ -82,7 +85,10 @@ export const EDIT_ROLES: Record<string, readonly Role[]> = {
   jobs: ['owner', 'admin', 'sales'],
   quotes: ['owner', 'admin', 'sales'],
   delivery: ['owner', 'admin', 'dispatcher', 'warehouse'],
+  invoices: ['owner', 'admin'],
+  notes: ['owner', 'admin', 'dispatcher', 'warehouse'],
   settings: ['owner', 'admin'],
+  docs: ['owner', 'admin'],
 };
 
 export function canOpen(module: string, role: Role | undefined): boolean {

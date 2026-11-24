@@ -15,8 +15,8 @@ function RoleChips({ value, onPick, roles }: { value: Role; onPick: (r: Role) =>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
       {roles.map((r) => (
         <Pressable key={r} accessibilityRole="button" onPress={() => onPick(r)}
-          style={{ paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === r ? colors.primary : 'transparent' }}>
-          <Text style={{ color: '#fff' }}>{ROLE_LABEL[r]}</Text>
+          style={{ paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === r ? colors.selected : 'transparent' }}>
+          <Text style={{ color: colors.text }}>{ROLE_LABEL[r]}</Text>
         </Pressable>
       ))}
     </View>

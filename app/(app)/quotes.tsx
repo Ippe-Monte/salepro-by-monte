@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { baht, parseNonNegative, totals } from '@/lib/money';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { DocPaper, printPaper } from '@/ui/DocPaper';
+import { defaultSettings, loadDocContext, type DocContext } from '@/lib/docmeta';
 import { colors } from '@/ui/theme';
 
 type Q = { id: string; doc_no: string; customer_id: string; status: string; valid_until: string | null; discount: number; vat_rate: number; subtotal: number; vat_amount: number; total: number; note: string | null };
@@ -20,6 +22,9 @@ const tone = (s: string) => (s === 'accepted' ? 'ok' : s === 'rejected' || s ===
 export default function Quotes() {
   const { current } = useAuth();
   const orgId = current?.org_id;
+  const org = current?.org;
+  const [ctx, setCtx] = useState<DocContext>({ settings: defaultSettings('quote'), branding: null, logo: null });
+  useEffect(() => { if (orgId) void loadDocContext(orgId, 'quote').then(setCtx); }, [orgId]);
   const editable = canEdit('quotes', current?.role);
   const [rows, setRows] = useState<Q[]>([]);
   const [custs, setCusts] = useState<C[]>([]);
@@ -101,8 +106,8 @@ export default function Quotes() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
               {custs.map((c) => (
                 <Pressable key={c.id} accessibilityRole="button" onPress={() => setNewCust(c.id)}
-                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: newCust === c.id ? colors.primary : 'transparent' }}>
-                  <Text style={{ color: '#fff' }}>{c.name}</Text>
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: newCust === c.id ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{c.name}</Text>
                 </Pressable>
               ))}
             </View>
@@ -168,7 +173,19 @@ export default function Quotes() {
                       ))}
                     </View>
                   ) : null}
-                  {Platform.OS === 'web' ? <Button title="พิมพ์ / บันทึกเป็น PDF" variant="ghost" onPress={() => window.print()} /> : null}
+                  {org ? (
+                    <>
+                      <DocPaper
+                        ctx={ctx} org={org} docNo={q.doc_no} date={new Date().toLocaleDateString('th-TH')}
+                        party={{ label: 'ลูกค้า', name: custs.find((c) => c.id === q.customer_id)?.name ?? '', lines: [] }}
+                        meta={q.valid_until ? [['ยืนราคาถึง', q.valid_until]] : ctx.settings.validity_days ? [['ยืนราคา', `${ctx.settings.validity_days} วัน`]] : []}
+                        items={items.map((x) => ({ desc: x.description, qty: x.qty, unit: x.unit, price: x.unit_price, total: x.line_total }))}
+                        totals={{ subtotal: q.subtotal, discount: q.discount, vat: q.vat_amount, vatRate: q.vat_rate, total: q.total }}
+                        note={q.note}
+                      />
+                      <Button title="พิมพ์ / บันทึกเป็น PDF" variant="ghost" onPress={printPaper} />
+                    </>
+                  ) : null}
                 </View>
               ) : null}
             </Card>

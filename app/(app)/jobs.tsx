@@ -86,8 +86,8 @@ export default function Jobs() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
               {custs.map((c) => (
                 <Pressable key={c.id} accessibilityRole="button" onPress={() => setF({ ...f, customer: c.id })}
-                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.primary : 'transparent' }}>
-                  <Text style={{ color: '#fff' }}>{c.name}</Text>
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{c.name}</Text>
                 </Pressable>
               ))}
             </View>
