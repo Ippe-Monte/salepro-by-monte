@@ -32,3 +32,10 @@ Database tests (run only on a disposable Neon branch; see headers): `db/tests/te
 - Invite security relies on the code AND the signed-in email matching; Neon Auth email verification status was not checked.
 - Native (Android/iOS) session persistence: the Better Auth client is cookie-based (risk R1).
 - Expo package versions were not cross-checked with `expo install --check` (Expo API unreachable).
+
+## PWA and versions
+
+- Build the installable web app: `npm run export:web` (output in `dist/`, includes `manifest.webmanifest`, `sw.js`, icons). Host `dist/` on HTTPS with every unknown path falling back to `index.html`. On a phone, open the site and choose "Add to Home screen" / "Install app".
+- The service worker caches only this site's own files; calls to Neon are never cached. Offline, the app opens but data needs a connection.
+- Version is written `Vx.xx` (for example `V1.00`). Change it with `npm run version:set 1.01`: this updates `src/version.ts`, `app.json` (version, Android `versionCode`, iOS `buildNumber`) and `package.json`. A test fails if they drift apart. Bump it before every release; Google Play needs a higher `versionCode` for every upload.
+- Google Play later: wrap the hosted PWA as a Trusted Web Activity (for example with Bubblewrap), which needs the final HTTPS domain and a `/.well-known/assetlinks.json` file. Or build a native app with EAS from this same code (package `com.monte.salepro`).

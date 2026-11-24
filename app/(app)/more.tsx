@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { Body, Screen, Title } from '@/ui/kit';
+import { VersionBadge } from '@/ui/VersionBadge';
 import { isBottomItem } from '@/ui/nav';
 import { useShell } from '@/ui/Shell';
 import { colors } from '@/ui/theme';
@@ -29,6 +30,7 @@ export default function More() {
           ))}
         </View>
         {rest.length === 0 ? <Body tone="muted">ไม่มีเมนูเพิ่มเติม</Body> : null}
+        <VersionBadge />
       </ScrollView>
     </Screen>
   );

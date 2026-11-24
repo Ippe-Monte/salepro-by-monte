@@ -6,6 +6,7 @@ import { canOpen } from '@/auth/roles';
 import { Logo } from './Logo';
 import { BOTTOM, isBottomItem, visibleItems, type NavItem } from './nav';
 import { useTheme } from './ThemeProvider';
+import { VersionBadge } from './VersionBadge';
 import { colors } from './theme';
 
 export const WIDE = 1024;
@@ -74,6 +75,7 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
         <Text numberOfLines={1} style={{ color: colors.muted, flexShrink: 1 }}>{profile?.display_name || profile?.email}</Text>
       </Pressable>
       <View style={{ alignItems: 'flex-start', paddingHorizontal: 4 }}><ThemeButton /></View>
+      <View style={{ paddingHorizontal: 8 }}><VersionBadge align="left" /></View>
     </View>
   );
 }

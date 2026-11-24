@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Logo } from '@/ui/Logo';
+import { VersionBadge } from '@/ui/VersionBadge';
 import { colors } from '@/ui/theme';
 import { useAuth } from '@/auth/AuthProvider';
 import { validateEmail } from '@/auth/roles';
@@ -44,6 +45,7 @@ export default function SignIn() {
           <View style={{ marginTop: 16, alignItems: 'center' }}>
             <Link href="/sign-up"><Body tone="muted">ยังไม่มีบัญชี? ลงทะเบียน</Body></Link>
           </View>
+          <VersionBadge />
         </View>
       </ScrollView>
     </Screen>
