@@ -7,6 +7,9 @@ import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { directionsLink, mapsLink, parseCoords, validateCoordPair } from '@/lib/geo';
 import { neon } from '@/lib/neon';
+import { searchPlaces, type Place } from '@/lib/places';
+import type { ScanResult } from '@/lib/cardscan';
+import { CardScanner, Contacts, CustomerLogo, LogoEditor } from '@/ui/CustomerExtras';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 
@@ -30,6 +33,11 @@ export default function Customers() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [nc, setNc] = useState({ code: '', name: '', phone: '', email: '' });
+  // Prefill from an internet search or a scanned card; saved together with the new customer.
+  const [pre, setPre] = useState<{ place: Place | null; contact: ScanResult | null }>({ place: null, contact: null });
+  const [qs, setQs] = useState('');
+  const [found, setFound] = useState<Place[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [na, setNa] = useState({ label: 'สำนักงานใหญ่', line: '', province: '', lat: '', lng: '', contact: '', phone: '', zone: '' });
 
   const load = useCallback(async () => {
@@ -49,14 +57,45 @@ export default function Customers() {
     return custs.filter((c) => !c.archived_at && (!t || c.name.toLowerCase().includes(t) || c.code.toLowerCase().includes(t)));
   }, [custs, q]);
 
+  async function search() {
+    if (searching) return;
+    setSearching(true); setFound(null);
+    try { setFound(await searchPlaces(qs || nc.name)); setErr(null); } catch { setErr('ค้นหาจากอินเทอร์เน็ตไม่สำเร็จ ลองใหม่อีกครั้ง'); } finally { setSearching(false); }
+  }
+
+  function usePlace(p: Place) {
+    setPre((x) => ({ ...x, place: p }));
+    setNc((c) => ({ ...c, name: p.name, phone: c.phone || p.phone, code: c.code || nextCode() }));
+    setFound(null);
+  }
+
+  function useCard(r: ScanResult) {
+    setPre((x) => ({ ...x, contact: r }));
+    setNc((c) => ({ ...c, name: c.name || r.company, phone: c.phone || r.phone, email: c.email || r.email, code: c.code || nextCode() }));
+  }
+
+  const nextCode = () => `C${String(custs.length + 1).padStart(4, '0')}`;
+
   async function addCustomer() {
     if (!orgId || busy) return;
     if (!nc.code.trim() || !nc.name.trim()) return setErr('กรอกรหัสและชื่อลูกค้า');
     setBusy(true);
-    const { error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null });
+    const { data: made, error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null }).select('id').single();
+    if (error || !made) { setBusy(false); return setErr(error?.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error)); }
+    const warn: string[] = [];
+    if (pre.place) {
+      const p = pre.place;
+      const { data: a, error: ae } = await neon.from('customer_addresses').insert({ org_id: orgId, customer_id: made.id, label: 'สำนักงานใหญ่', address_line: p.address, province: p.province || null, latitude: p.lat, longitude: p.lng }).select('id').single();
+      if (ae || !a) warn.push('บันทึกที่อยู่ไม่สำเร็จ'); else await neon.rpc('set_default_address', { p_address: a.id });
+    }
+    if (pre.contact?.name) {
+      const c = pre.contact;
+      const { error: ce } = await neon.from('customer_contacts').insert({ org_id: orgId, customer_id: made.id, name: c.name, position: c.position || null, department: c.department || null, phone: c.phone || null, email: c.email || null, line_id: c.lineId || null, source: c.source });
+      if (ce) warn.push('บันทึกผู้ติดต่อไม่สำเร็จ');
+    }
     setBusy(false);
-    if (error) return setErr(error.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error));
-    setNc({ code: '', name: '', phone: '', email: '' }); await load();
+    setNc({ code: '', name: '', phone: '', email: '' }); setPre({ place: null, contact: null }); setQs(''); setFound(null);
+    setErr(warn.length ? warn.join(' / ') : null); await load();
   }
 
   async function useMyLocation() {
@@ -106,6 +145,19 @@ export default function Customers() {
         {editable ? (
           <Card>
             <Body>เพิ่มลูกค้า</Body>
+            <Field label="ค้นหาบริษัทจากอินเทอร์เน็ต (พิมพ์ชื่อ)" value={qs} onChangeText={setQs} />
+            <Button title="ค้นหาข้อมูลบริษัท" variant="ghost" icon="search" busy={searching} onPress={() => void search()} />
+            {found && found.length === 0 ? <Body tone="muted">ไม่พบข้อมูล — พิมพ์ข้อมูลเองได้เลย</Body> : null}
+            {found?.map((p) => (
+              <Pressable key={p.id} accessibilityRole="button" onPress={() => usePlace(p)} style={{ borderTopColor: colors.border, borderTopWidth: 1, paddingVertical: 8 }}>
+                <Text style={{ color: colors.text, fontWeight: '700' }}>{p.name}</Text>
+                <Text style={{ color: colors.muted, fontSize: 12 }}>{p.address}{p.province ? ` ${p.province}` : ''}{p.phone ? ` · ${p.phone}` : ''}</Text>
+                <Text style={{ color: colors.accent, fontSize: 12 }}>ใช้ข้อมูลนี้</Text>
+              </Pressable>
+            ))}
+            {pre.place ? <Body tone="ok">{`จะเพิ่มที่อยู่และพิกัดจาก: ${pre.place.name} (${pre.place.lat}, ${pre.place.lng})`}</Body> : null}
+            <CardScanner onResult={useCard} />
+            {pre.contact ? <Body tone="ok">{`จะเพิ่มผู้ติดต่อ: ${pre.contact.name}`}</Body> : null}
             <Field label="รหัสลูกค้า" value={nc.code} onChangeText={(v) => setNc({ ...nc, code: v })} autoCapitalize="characters" />
             <Field label="ชื่อลูกค้า / บริษัท" value={nc.name} onChangeText={(v) => setNc({ ...nc, name: v })} />
             <Field label="โทรศัพท์" value={nc.phone} onChangeText={(v) => setNc({ ...nc, phone: v })} keyboardType="phone-pad" />
@@ -119,12 +171,16 @@ export default function Customers() {
           const isOpen = open === c.id;
           return (
             <Card key={c.id}>
-              <Pressable accessibilityRole="button" onPress={() => setOpen(isOpen ? null : c.id)}>
-                <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
-                <Text style={{ color: colors.muted }}>{c.code}{c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+              <Pressable accessibilityRole="button" onPress={() => setOpen(isOpen ? null : c.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <CustomerLogo customerId={c.id} size={44} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
+                  <Text style={{ color: colors.muted }}>{c.code}{c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+                </View>
               </Pressable>
               {isOpen ? (
                 <View style={{ marginTop: 12 }}>
+                  {editable && orgId ? <LogoEditor orgId={orgId} customerId={c.id} /> : null}
                   {list.map((a) => {
                     const has = a.latitude !== null && a.longitude !== null;
                     const pt = has ? { lat: a.latitude as number, lng: a.longitude as number } : null;
@@ -149,6 +205,7 @@ export default function Customers() {
                       </View>
                     );
                   })}
+                  {orgId ? <Contacts orgId={orgId} customerId={c.id} editable={editable} /> : null}
                   {editable ? (
                     <View style={{ marginTop: 14 }}>
                       <Body>เพิ่มที่อยู่</Body>
