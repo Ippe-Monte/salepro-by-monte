@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, View } from 'react-native';
+import { Linking, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import * as Location from 'expo-location';
 import { useAuth } from '@/auth/AuthProvider';
@@ -10,7 +10,8 @@ import { neon } from '@/lib/neon';
 import { searchPlaces, type Place } from '@/lib/places';
 import type { ScanResult } from '@/lib/cardscan';
 import { CardScanner, Contacts, CustomerLogo, LogoEditor } from '@/ui/CustomerExtras';
-import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { Icon } from '@/ui/Icon';
+import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
 import { DetailRows, EditActions } from '@/ui/ViewEdit';
 import { colors } from '@/ui/theme';
@@ -22,6 +23,8 @@ type Addr = {
 };
 type Cust = { id: string; code: string; name: string; phone: string | null; email: string | null; tax_id: string | null; archived_at: string | null };
 type Zone = { id: string; code: string; name: string };
+type CStat = 'regular' | 'negotiating' | 'none';
+const CSTAT: Record<CStat, { label: string; tone: 'ok' | 'warn' | 'muted' }> = { regular: { label: 'ลูกค้าประจำ', tone: 'ok' }, negotiating: { label: 'กำลังเจรจา', tone: 'warn' }, none: { label: 'ยังไม่มีงาน', tone: 'muted' } };
 
 /** Optional: records which delivery zone the customer's coordinates fall in. */
 function ZonePick({ zones, value, onPick }: { zones: Zone[]; value: string; onPick: (id: string) => void }) {
@@ -48,6 +51,9 @@ export default function Customers() {
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [q, setQ] = useState('');
+  const [stat, setStat] = useState<'all' | CStat>('all');
+  const [info, setInfo] = useState<Record<string, { stat: CStat; last: string | null }>>({});
+  const wide = useWindowDimensions().width >= 700;
   const [open, setOpen] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -70,20 +76,30 @@ export default function Customers() {
 
   const load = useCallback(async () => {
     if (!orgId) return;
-    const [c, a, z] = await Promise.all([
+    const [c, a, z, jt, iv] = await Promise.all([
       neon.from('customers').select('id,code,name,phone,email,tax_id,archived_at').eq('org_id', orgId).order('name'),
       neon.from('customer_addresses').select('id,customer_id,label,address_line,province,latitude,longitude,contact_name,contact_phone,is_default,zone_id').eq('org_id', orgId),
       neon.from('delivery_zones').select('id,code,name').eq('org_id', orgId).order('code'),
+      neon.from('job_tickets').select('customer_id,status,created_at').eq('org_id', orgId),
+      neon.from('invoices').select('customer_id,status').eq('org_id', orgId),
     ]);
-    if (c.error || a.error || z.error) return setErr('โหลดข้อมูลไม่สำเร็จ');
+    if (c.error || a.error || z.error || jt.error || iv.error) return setErr('โหลดข้อมูลไม่สำเร็จ');
+    const m: Record<string, { stat: CStat; last: string | null }> = {};
+    for (const t of jt.data as { customer_id: string; status: string; created_at: string }[]) {
+      const x = (m[t.customer_id] ??= { stat: 'none', last: null });
+      if (!['done', 'cancelled'].includes(t.status) && x.stat === 'none') x.stat = 'negotiating';
+      if (!x.last || t.created_at > x.last) x.last = t.created_at;
+    }
+    for (const v of iv.data as { customer_id: string; status: string }[]) if (v.status !== 'cancelled' && v.status !== 'draft') (m[v.customer_id] ??= { stat: 'none', last: null }).stat = 'regular';
+    setInfo(m);
     setErr(null); setCusts(c.data as Cust[]); setAddrs(a.data as Addr[]); setZones(z.data as Zone[]);
   }, [orgId]);
   useEffect(() => { void load(); }, [load]);
 
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return custs.filter((c) => !c.archived_at && (!t || c.name.toLowerCase().includes(t) || c.code.toLowerCase().includes(t)));
-  }, [custs, q]);
+    return custs.filter((c) => !c.archived_at && (stat === 'all' || (info[c.id]?.stat ?? 'none') === stat) && (!t || c.name.toLowerCase().includes(t) || c.code.toLowerCase().includes(t)));
+  }, [custs, q, stat, info]);
 
   async function search() {
     if (searching) return;
@@ -246,10 +262,21 @@ export default function Customers() {
           </Card>
         ) : null}
         <Field label="ค้นหา (ชื่อหรือรหัส)" value={q} onChangeText={setQ} />
+        <Chips value={stat} options={[{ v: 'all', label: 'ทุกสถานะ' }, { v: 'regular', label: 'ลูกค้าประจำ' }, { v: 'negotiating', label: 'กำลังเจรจา' }, { v: 'none', label: 'ยังไม่มีงาน' }]} onPick={setStat} />
         {shown.length === 0 ? <Empty>ยังไม่มีลูกค้า</Empty> : null}
+        {wide && shown.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.border, borderRadius: 10, gap: 8 }}>
+            <Text style={{ flex: 1, color: colors.muted, fontWeight: '700', fontSize: 12, paddingLeft: 56 }}>ลูกค้า</Text>
+            <Text style={{ width: 120, color: colors.muted, fontWeight: '700', fontSize: 12 }}>สถานะ</Text>
+            <Text style={{ width: 120, color: colors.muted, fontWeight: '700', fontSize: 12 }}>โทรศัพท์</Text>
+            <Text style={{ width: 96, color: colors.muted, fontWeight: '700', fontSize: 12 }}>งานล่าสุด</Text>
+            <Text style={{ width: 28 + 40, color: colors.muted, fontWeight: '700', fontSize: 12 }}>ดู</Text>
+          </View>
+        ) : null}
         {shown.map((c) => {
           const list = addrs.filter((a) => a.customer_id === c.id);
           const isOpen = open === c.id;
+          const st = info[c.id]?.stat ?? 'none'; const last = info[c.id]?.last ?? null;
           return (
             <Card key={c.id}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -257,8 +284,17 @@ export default function Customers() {
                   <CustomerLogo customerId={c.id} size={44} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
-                    <Text style={{ color: colors.muted }}>{c.code}{c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+                    <Text style={{ color: colors.muted }}>{c.code}{!wide && c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+                    {!wide ? <View style={{ flexDirection: 'row', marginTop: 4 }}><Pill text={CSTAT[st].label} tone={CSTAT[st].tone} /></View> : null}
                   </View>
+                  {wide ? (
+                    <>
+                      <View style={{ width: 120, alignItems: 'flex-start' }}><Pill text={CSTAT[st].label} tone={CSTAT[st].tone} /></View>
+                      <Text style={{ width: 120, color: colors.text }}>{c.phone ?? '-'}</Text>
+                      <Text style={{ width: 96, color: colors.muted, fontSize: 13 }}>{last ? last.slice(0, 10) : '-'}</Text>
+                      <View style={{ width: 28, alignItems: 'center' }}><Icon name="eye" size={20} color={colors.accent} /></View>
+                    </>
+                  ) : null}
                 </Pressable>
                 {editable ? <ConfirmTrash label="ลบลูกค้า" onConfirm={() => void archiveCustomer(c.id)} /> : null}
               </View>

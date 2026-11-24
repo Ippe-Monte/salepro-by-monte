@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
@@ -10,11 +10,16 @@ import { nextAction, STEPS, stepOf, SUB_LABEL, subOf, summarize, type PipelineRo
 import { JobDocs } from '@/ui/JobDocs';
 import { JobFiles } from '@/ui/JobFiles';
 import { AddToggle } from '@/ui/ListBits';
+import { baht } from '@/lib/money';
+import { Icon } from '@/ui/Icon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 import { dateLocale } from '@/i18n';
 
-type T = { id: string; doc_no: string; customer_id: string; title: string; description: string | null; priority: string; status: string; source: string; due_date: string | null };
+// Baht sign written as an escape so it is not mistaken for translatable Thai text.
+const BAHT = String.fromCharCode(0x0e3f);
+
+type T = { id: string; doc_no: string; customer_id: string; title: string; description: string | null; priority: string; status: string; source: string; due_date: string | null; created_at: string };
 type Ev = { id: string; kind: string; from_status: string | null; to_status: string | null; body: string | null; created_at: string };
 type C = { id: string; name: string };
 
@@ -22,6 +27,8 @@ const STATUS: Record<string, string> = { open: 'เปิดงาน', in_progr
 const PRIORITY: Record<string, string> = { low: 'ต่ำ', normal: 'ปกติ', high: 'สูง', urgent: 'ด่วน' };
 const SOURCE: Record<string, string> = { phone: 'โทรศัพท์', email: 'อีเมล', line: 'LINE', visit: 'เข้าพบ', other: 'อื่นๆ' };
 const NEXT: Record<string, string[]> = { open: ['in_progress', 'done', 'cancelled'], in_progress: ['waiting_customer', 'done', 'cancelled'], waiting_customer: ['in_progress', 'cancelled'], done: [], cancelled: [] };
+const SHORT: Record<Sub, string> = { open: 'รับงานแล้ว', quote_draft: 'ใบเสนอราคา (ร่าง)', quote_sent: 'ส่งใบเสนอราคาแล้ว', quote_ok: 'ลูกค้าตกลง', do_done: 'บันทึก DO แล้ว', dn_wait: 'รอลูกค้ารับของ', dn_done: 'ลูกค้ารับของแล้ว', inv_wait: 'รอชำระเงิน', inv_paid: 'ชำระเงินแล้ว' };
+const PAGE = 8;
 const tone = (s: string) => (s === 'done' ? 'ok' : s === 'cancelled' ? 'muted' : s === 'waiting_customer' ? 'warn' : 'muted') as 'ok' | 'muted' | 'warn';
 
 function Stepper({ step, label }: { step: number; label: string }) {
@@ -64,6 +71,9 @@ export default function Jobs() {
   const [pipe, setPipe] = useState<Record<string, PipelineRow>>({});
   const [step, setStep] = useState(0);
   const [adding, setAdding] = useState(false);
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const wide = useWindowDimensions().width >= 700;
   const [busy, setBusy] = useState(false);
   const [evs, setEvs] = useState<Ev[]>([]);
   const [comment, setComment] = useState('');
@@ -73,7 +83,7 @@ export default function Jobs() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const [t, c, pl] = await Promise.all([
-      neon.from('job_tickets').select('id,doc_no,customer_id,title,description,priority,status,source,due_date').eq('org_id', orgId).order('created_at', { ascending: false }),
+      neon.from('job_tickets').select('id,doc_no,customer_id,title,description,priority,status,source,due_date,created_at').eq('org_id', orgId).order('created_at', { ascending: false }),
       neon.from('customers').select('id,name').eq('org_id', orgId).is('archived_at', null).order('name'),
       neon.from('job_pipeline').select('*').eq('org_id', orgId),
     ]);
@@ -138,7 +148,13 @@ export default function Jobs() {
   const subById = Object.fromEntries(subs.map((x) => [x.id, x.sub])) as Record<string, Sub>;
 
   const shown = rows.filter((r) => (filter === 'active' ? !['done', 'cancelled'].includes(r.status) && (step === 0 || stepOf(subById[r.id] ?? 'open') === step) : ['done', 'cancelled'].includes(r.status)));
+  const needle = q.trim().toLowerCase();
+  const filtered = shown.filter((r) => !needle || `${r.doc_no} ${r.title} ${custs.find((c) => c.id === r.customer_id)?.name ?? ''}`.toLowerCase().includes(needle));
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
+  const cur = Math.min(page, pages);
+  const visible = filtered.slice((cur - 1) * PAGE, cur * PAGE);
   const today = new Date().toISOString().slice(0, 10);
+  const COL = { no: 118, cust: 1.3, title: 1.3, amt: 100, st: 150, date: 92, act: 40 };
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
@@ -152,7 +168,7 @@ export default function Jobs() {
               const n = s.subs.reduce((a, k) => a + counts[k], 0);
               const on = step === s.n;
               return (
-                <Pressable key={s.n} accessibilityRole="button" onPress={() => { setFilter('active'); setStep(on ? 0 : s.n); }}
+                <Pressable key={s.n} accessibilityRole="button" onPress={() => { setFilter('active'); setStep(on ? 0 : s.n); setPage(1); }}
                   style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 2, borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.selected : 'transparent' }}>
                   <Text style={{ color: colors.text, fontSize: 20, fontWeight: '800' }}>{n}</Text>
                   <Text numberOfLines={2} style={{ color: colors.muted, fontSize: 11, textAlign: 'center' }}>{s.n}. {s.label}</Text>
@@ -165,7 +181,7 @@ export default function Jobs() {
           ))}
           {subs.length === 0 ? <Body tone="muted">ยังไม่มีงานที่กำลังติดตาม</Body> : null}
         </Card>
-        <Chips value={filter} options={[{ v: 'active', label: 'กำลังติดตาม' }, { v: 'closed', label: 'ปิดแล้ว' }]} onPick={(v) => { setFilter(v); setStep(0); }} />
+        <Chips value={filter} options={[{ v: 'active', label: 'กำลังติดตาม' }, { v: 'closed', label: 'ปิดแล้ว' }]} onPick={(v) => { setFilter(v); setStep(0); setPage(1); }} />
         {editable && adding ? (
           <Card>
             <Body>รับงานจากลูกค้า</Body>
@@ -185,20 +201,54 @@ export default function Jobs() {
             <Button title="เปิด Job Ticket" onPress={add} />
           </Card>
         ) : null}
-        {shown.length === 0 ? <Empty>ไม่มีงาน</Empty> : null}
-        {shown.map((t) => {
+        <Field label="ค้นหา เลขที่ / ลูกค้า / หัวข้องาน" value={q} onChangeText={(v) => { setQ(v); setPage(1); }} />
+        {filtered.length === 0 ? <Empty>ไม่มีงาน</Empty> : null}
+        {wide && filtered.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.border, borderRadius: 10, gap: 10 }}>
+            <Text style={{ width: COL.no, color: colors.muted, fontWeight: '700', fontSize: 12 }}>เลขที่</Text>
+            <Text style={{ flex: COL.cust, color: colors.muted, fontWeight: '700', fontSize: 12 }}>ลูกค้า</Text>
+            <Text style={{ flex: COL.title, color: colors.muted, fontWeight: '700', fontSize: 12 }}>งาน</Text>
+            <Text style={{ width: COL.amt, color: colors.muted, fontWeight: '700', fontSize: 12, textAlign: 'right' }}>มูลค่า (บาท)</Text>
+            <Text style={{ width: COL.st, color: colors.muted, fontWeight: '700', fontSize: 12 }}>สถานะ</Text>
+            <Text style={{ width: COL.date, color: colors.muted, fontWeight: '700', fontSize: 12 }}>วันที่</Text>
+            <Text style={{ width: COL.act, color: colors.muted, fontWeight: '700', fontSize: 12, textAlign: 'center' }}>ดู</Text>
+          </View>
+        ) : null}
+        {visible.map((t) => {
           const overdue = !!t.due_date && t.due_date < today && !['done', 'cancelled'].includes(t.status);
+          const sub = subById[t.id] ?? subOf(pipe[t.id]);
+          const amount = pipe[t.id]?.inv_total ?? pipe[t.id]?.quote_total ?? null;
+          const cname = custs.find((c) => c.id === t.customer_id)?.name ?? '-';
+          const stText = isOpen(t) ? SHORT[sub] : (STATUS[t.status] ?? t.status);
+          const stTone = !isOpen(t) ? tone(t.status) : sub === 'inv_paid' || sub === 'dn_done' ? 'ok' : sub === 'quote_sent' || sub === 'dn_wait' || sub === 'inv_wait' ? 'warn' : 'muted';
           return (
             <Card key={t.id}>
               <Pressable accessibilityRole="button" onPress={() => void open(t.id)}>
-                <Text style={{ color: colors.text, fontWeight: '700' }}>{t.doc_no} · {t.title}</Text>
-                <Body tone="muted">{custs.find((c) => c.id === t.customer_id)?.name ?? '-'} · {SOURCE[t.source]}{t.due_date ? ` · กำหนด ${t.due_date}` : ''}</Body>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                  <Pill text={STATUS[t.status] ?? t.status} tone={tone(t.status)} />
-                  <Pill text={`ความสำคัญ: ${PRIORITY[t.priority]}`} tone={t.priority === 'urgent' ? 'danger' : t.priority === 'high' ? 'warn' : 'muted'} />
-                  {overdue ? <Pill text="เกินกำหนด" tone="danger" /> : null}
-                </View>
-                {isOpen(t) ? <Stepper step={stepOf(subById[t.id] ?? 'open')} label={SUB_LABEL[subById[t.id] ?? 'open']} /> : null}
+                {wide ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Text style={{ width: COL.no, color: colors.text, fontWeight: '700', fontSize: 13 }}>{t.doc_no}</Text>
+                    <Text numberOfLines={1} style={{ flex: COL.cust, color: colors.text }}>{cname}</Text>
+                    <Text numberOfLines={1} style={{ flex: COL.title, color: colors.text }}>{t.title}</Text>
+                    <Text style={{ width: COL.amt, color: colors.text, textAlign: 'right' }}>{amount !== null ? baht(amount) : '-'}</Text>
+                    <View style={{ width: COL.st, alignItems: 'flex-start' }}><Pill text={stText} tone={stTone} /></View>
+                    <Text style={{ width: COL.date, color: colors.muted, fontSize: 13 }}>{(t.created_at ?? '').slice(0, 10)}</Text>
+                    <View style={{ width: COL.act, alignItems: 'center' }}><Icon name="eye" size={20} color={colors.accent} /></View>
+                  </View>
+                ) : (
+                  <View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                      <Text style={{ color: colors.text, fontWeight: '700', flexShrink: 1 }}>{t.doc_no} · {t.title}</Text>
+                      <Text style={{ color: colors.text, fontWeight: '700' }}>{amount !== null ? `${BAHT} ${baht(amount)}` : ''}</Text>
+                    </View>
+                    <Body tone="muted">{cname} · {SOURCE[t.source]}{t.due_date ? ` · กำหนด ${t.due_date}` : ''}</Body>
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                      <Pill text={stText} tone={stTone} />
+                      {t.priority === 'urgent' || t.priority === 'high' ? <Pill text={`ความสำคัญ: ${PRIORITY[t.priority]}`} tone={t.priority === 'urgent' ? 'danger' : 'warn'} /> : null}
+                      {overdue ? <Pill text="เกินกำหนด" tone="danger" /> : null}
+                    </View>
+                  </View>
+                )}
+                {isOpen(t) ? <Stepper step={stepOf(sub)} label={SUB_LABEL[sub]} /> : null}
               </Pressable>
               {sel === t.id ? (
                 <View style={{ marginTop: 10 }}>
@@ -239,6 +289,18 @@ export default function Jobs() {
             </Card>
           );
         })}
+        {filtered.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 12, gap: 8, flexWrap: 'wrap' }}>
+            <Text style={{ color: colors.muted, fontSize: 13 }}>แสดง {(cur - 1) * PAGE + 1}–{Math.min(cur * PAGE, filtered.length)} จาก {filtered.length} รายการ</Text>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {Array.from({ length: pages }, (_, i) => i + 1).slice(Math.max(0, cur - 3), Math.max(0, cur - 3) + 5).map((n) => (
+                <Pressable key={n} accessibilityRole="button" accessibilityLabel={`หน้า ${n}`} onPress={() => setPage(n)} style={{ minWidth: 36, minHeight: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: n === cur ? colors.primary : colors.border, backgroundColor: n === cur ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{n}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </Screen>
   );
