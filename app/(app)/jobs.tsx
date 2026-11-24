@@ -7,6 +7,7 @@ import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { nextAction, STEPS, stepOf, SUB_LABEL, subOf, summarize, type PipelineRow, type Sub } from '@/lib/pipeline';
+import { JobDocs } from '@/ui/JobDocs';
 import { JobFiles } from '@/ui/JobFiles';
 import { AddToggle } from '@/ui/ListBits';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
@@ -40,12 +41,12 @@ function Flow({ p }: { p: PipelineRow | undefined }) {
     ['2. ใบเสนอราคา', p?.quote_no ?? null, p?.quote_status ?? null], ['3. DO', p?.do_no ?? null, p?.do_status ?? null],
     ['4. ใบส่งของ', p?.dn_no ?? null, p?.dn_status ?? null], ['5. Invoice', p?.inv_no ?? null, p?.inv_status ?? null],
   ];
-  const ST: Record<string, string> = { draft: 'ร่าง', sent: 'ส่งแล้ว', accepted: 'ลูกค้าตกลง', ready: 'พร้อมส่ง', dispatched: 'ออกจัดส่ง', delivered: 'ส่งสำเร็จ', issued: 'ออกแล้ว', received: 'ลูกค้ารับแล้ว', paid: 'ชำระแล้ว' };
+  const ST: Record<string, string> = { draft: 'ร่าง', sent: 'ส่งแล้ว', accepted: 'ลูกค้าตกลง', recorded: 'บันทึกแล้ว', issued: 'ออกแล้ว', received: 'ลูกค้ารับแล้ว', paid: 'ชำระแล้ว' };
   return (
     <View style={{ marginVertical: 8 }}>
       <Text style={{ color: colors.text, fontWeight: '700', marginBottom: 4 }}>เอกสารในงานนี้</Text>
       {rows.map(([name, no, st]) => (
-        <Body key={name} tone={no ? undefined : 'muted'}>{name}: {no ? `${no} · ${ST[st ?? ''] ?? st}` : 'ยังไม่ออก'}</Body>
+        <Body key={name} tone={no ? undefined : 'muted'}>{name}: {no ? `${no} · ${ST[st ?? ''] ?? st}` : 'ยังไม่มี'}</Body>
       ))}
     </View>
   );
@@ -122,13 +123,7 @@ export default function Jobs() {
         if (error || !data) return setErr(friendly(error));
         await load(); router.push({ pathname: '/quotes', params: { open: data.id } } as never);
       } else if (n.kind === 'open_quote') router.push({ pathname: '/quotes', params: { open: n.id } } as never);
-      else if (n.kind === 'make_do') router.push({ pathname: '/delivery', params: { quote: n.quoteId } } as never);
-      else if (n.kind === 'open_do') router.push('/delivery' as never);
-      else if (n.kind === 'make_dn') {
-        const { data, error } = await neon.rpc('issue_delivery_note', { p_do: n.doId });
-        if (error) return setErr(friendly(error));
-        await load(); router.push({ pathname: '/notes', params: { open: (data as { id: string } | null)?.id ?? '' } } as never);
-      } else if (n.kind === 'open_dn') router.push({ pathname: '/notes', params: { open: n.id } } as never);
+      else if (n.kind === 'rec_do' || n.kind === 'rec_dn' || n.kind === 'receive_dn') setSel(t.id);
       else if (n.kind === 'make_invoice') {
         const { data, error } = await neon.rpc('issue_invoice', { p_quotation: n.quoteId, p_note: null });
         if (error) return setErr(friendly(error));
@@ -212,10 +207,11 @@ export default function Jobs() {
                   {(() => {
                     const n = isOpen(t) ? nextAction(pipe[t.id]) : null;
                     if (!n) return null;
-                    const label: Record<string, string> = { make_quote: 'ออกใบเสนอราคาจาก Job นี้', open_quote: 'เปิดใบเสนอราคา', make_do: 'ออก DO', open_do: 'เปิด DO', make_dn: 'ออกใบส่งของ', open_dn: 'เปิดใบส่งของ', make_invoice: 'ออก Invoice', open_invoice: 'เปิด Invoice' };
-                    if (n.kind.startsWith('make') && !editable) return null;
+                    const label: Record<string, string> = { make_quote: 'ออกใบเสนอราคาจาก Job นี้', open_quote: 'เปิดใบเสนอราคา', rec_do: 'บันทึก DO (เลื่อนลงด้านล่าง)', rec_dn: 'บันทึกใบส่งของ (เลื่อนลงด้านล่าง)', receive_dn: 'บันทึกว่าลูกค้ารับของแล้ว', make_invoice: 'ออก Invoice', open_invoice: 'เปิด Invoice' };
+                    if ((n.kind === 'make_quote' || n.kind === 'make_invoice') && !editable) return null;
                     return <Button title={`ขั้นต่อไป: ${label[n.kind] ?? ''}`} busy={busy} onPress={() => void go(t, n)} />;
                   })()}
+                  {orgId ? <JobDocs orgId={orgId} ticketId={t.id} editable={editable || canEdit('delivery', current?.role)} canDelete={current?.role === 'owner' || current?.role === 'admin'} onChanged={() => void load()} /> : null}
                   {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={editable} /> : null}
                   {editable && (NEXT[t.status] ?? []).length > 0 ? (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
