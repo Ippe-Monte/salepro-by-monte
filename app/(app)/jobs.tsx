@@ -292,7 +292,7 @@ export default function Jobs() {
                     const n = isOpen(t) ? nextAction(pipe[t.id]) : null;
                     if (!n) return null;
                     const label: Record<string, string> = { make_quote: 'ออกใบเสนอราคาจาก Job นี้', open_quote: 'เปิดใบเสนอราคา', make_do: 'ออก DO (จองสต็อก)', open_do: 'เปิด DO', make_dn: 'ออกใบส่งของ (ตัดสต็อก)', open_dn: 'เปิดใบส่งของ', make_invoice: 'ออก Invoice', open_invoice: 'เปิด Invoice' };
-                    if (n.kind.startsWith('make') && !mayChange(t)) return null;
+                    if (!mayChange(t)) return null; // view only: no step buttons at all
                     return <Button title={`ขั้นต่อไป: ${label[n.kind] ?? ''}`} busy={busy} onPress={() => void go(t, n)} />;
                   })()}
                   {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={mayChange(t)} /> : null}

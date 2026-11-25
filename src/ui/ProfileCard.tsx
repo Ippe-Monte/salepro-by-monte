@@ -21,25 +21,28 @@ import { Text } from './Text';
 import { colors } from './theme';
 
 /** Saves the card as a .vcf and opens the phone's share sheet (Quick Share on Android, AirDrop on iPhone). */
-export async function shareVCard(vcf: string, name: string): Promise<'shared' | 'downloaded' | 'cancelled'> {
+export async function shareVCard(vcf: string, name: string): Promise<{ result: 'shared' | 'downloaded' | 'cancelled'; why?: string }> {
   if (Platform.OS !== 'web') {
-    try { await Share.share({ message: vcf }); return 'shared'; } catch { return 'cancelled'; }
+    try { await Share.share({ message: vcf }); return { result: 'shared' }; } catch { return { result: 'cancelled' }; }
   }
   // ASCII file name: some Android share targets (Quick Share) reject names with Thai characters
   const base = name.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '') || 'contact';
-  const file = new File([vcf], `${base}.vcf`, { type: 'text/vcard' });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   const aborted = (e: unknown) => (e as { name?: string })?.name === 'AbortError';
+  const why: string[] = [];
   if (nav.share) {
-    if (nav.canShare?.({ files: [file] })) {
-      try { await nav.share({ files: [file], title: name }); return 'shared'; } catch (e) { if (aborted(e)) return 'cancelled'; }
+    for (const type of ['text/vcard', 'text/x-vcard']) {
+      const f = new File([vcf], `${base}.vcf`, { type });
+      if (!nav.canShare?.({ files: [f] })) { why.push(`${type}: not shareable`); continue; }
+      try { await nav.share({ files: [f], title: name }); return { result: 'shared' }; } catch (e) { if (aborted(e)) return { result: 'cancelled' }; why.push(`${type}: ${(e as Error)?.name}`); }
     }
     // the file could not be shared: send the contact as plain text instead
-    try { await nav.share({ title: name, text: vcf }); return 'shared'; } catch (e) { if (aborted(e)) return 'cancelled'; }
-  }
+    try { await nav.share({ title: name, text: vcf }); return { result: 'shared' }; } catch (e) { if (aborted(e)) return { result: 'cancelled' }; why.push(`text: ${(e as Error)?.name}`); }
+  } else why.push('share not supported');
+  const file = new File([vcf], `${base}.vcf`, { type: 'text/vcard' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
-  return 'downloaded';
+  return { result: 'downloaded', why: why.join(' | ') };
 }
 
 export function ProfileCard() {
@@ -169,7 +172,7 @@ export function ProfileCard() {
 
   async function share() {
     const r = await shareVCard(vcf, f.name || 'contact');
-    if (r === 'downloaded') setMsg({ text: 'บันทึกไฟล์นามบัตร (.vcf) แล้ว — เปิดไฟล์เพื่อเพิ่มลงในรายชื่อ หรือส่งต่อผ่าน Quick Share / AirDrop', ok: true });
+    if (r.result === 'downloaded') setMsg({ text: `บันทึกไฟล์นามบัตร (.vcf) แล้ว — เปิดไฟล์เพื่อเพิ่มลงในรายชื่อ หรือส่งต่อผ่าน Quick Share / AirDrop${r.why ? ` (เมนูแชร์ใช้ไม่ได้: ${r.why})` : ''}`, ok: true });
   }
 
   return (

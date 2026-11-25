@@ -75,7 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (pr.error) throw pr.error;
       const mr = await withTimeout(neon
         .from('memberships')
-        .select('org_id,role,status,stock_manager,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)'), 'ดึงรายชื่อบริษัท');
+        .select('org_id,role,status,stock_manager,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)')
+        // memberships are readable for every colleague too: only this user's own rows decide their role
+        .eq('user_id', (pr.data as unknown as Profile).id), 'ดึงรายชื่อบริษัท');
       if (mr.error) throw mr.error;
       const rows = (mr.data ?? []) as unknown as MembershipRow[];
       const ms: Membership[] = rows.flatMap((r) => {
