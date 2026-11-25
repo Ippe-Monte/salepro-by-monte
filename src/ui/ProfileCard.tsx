@@ -30,6 +30,8 @@ export async function shareVCard(vcf: string, name: string): Promise<{ result: '
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   const aborted = (e: unknown) => (e as { name?: string })?.name === 'AbortError';
   const why: string[] = [];
+  const ua = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation;
+  why.push(`activation=${ua ? ua.isActive : '?'}`, `standalone=${window.matchMedia?.('(display-mode: standalone)').matches ? 'y' : 'n'}`);
   if (nav.share) {
     for (const type of ['text/vcard', 'text/x-vcard']) {
       const f = new File([vcf], `${base}.vcf`, { type });

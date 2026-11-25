@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from './Text';
 import { friendly } from '@/lib/errors';
-import { toByteaParam } from '@/lib/image';
+import { byteaToDataUri, toByteaParam } from '@/lib/image';
 import { neon } from '@/lib/neon';
 import { pickImage } from '@/lib/pickImage';
 import { DbImage } from './DbImage';
+import { ImageViewer } from './ImageViewer';
 import { Body } from './kit';
 import { colors } from './theme';
 
@@ -17,6 +18,7 @@ export function ProductImages({ orgId, productId, editable, onChanged }: { orgId
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
+  const [big, setBig] = useState<{ uri: string; pos: number } | null>(null); // image shown full screen
 
   const load = useCallback(async () => {
     const { data, error } = await neon.from('product_images').select('id,position,mime,data').eq('org_id', orgId).eq('product_id', productId).order('position');
@@ -53,7 +55,7 @@ export function ProductImages({ orgId, productId, editable, onChanged }: { orgId
           const r = rows.find((x) => x.position === pos);
           return (
             <View key={pos} style={{ alignItems: 'center', gap: 4 }}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`รูปที่ ${pos}`} disabled={!editable || busy} onPress={() => void put(pos)}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`รูปที่ ${pos}`} disabled={busy || (!editable && !r)} onPress={() => { if (r) { const uri = byteaToDataUri(r.data, r.mime); if (uri) { setBig({ uri, pos }); return; } } void put(pos); }}>
                 {r ? <DbImage data={r.data} mime={r.mime} size={84} /> : (
                   <View style={{ width: 84, height: 84, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: colors.muted, fontSize: 24 }}>{editable ? '＋' : '–'}</Text>
@@ -65,7 +67,9 @@ export function ProductImages({ orgId, productId, editable, onChanged }: { orgId
           );
         })}
       </View>
-      {editable ? <Body tone="muted">รูปที่ 1 ใช้เป็นรูปหลักบนเอกสาร (ย่อให้อัตโนมัติ ไม่เกิน 300 KB) แตะช่องเพื่อเลือกรูป รูปจะบันทึกทันที</Body> : null}
+      <ImageViewer uri={big?.uri ?? null} onClose={() => setBig(null)} onReplace={editable && big ? () => void put(big.pos) : undefined} />
+      {rows.length > 0 ? <Body tone="muted">แตะรูปเพื่อขยายดูรายละเอียด</Body> : null}
+      {editable ? <Body tone="muted">รูปที่ 1 ใช้เป็นรูปหลักบนเอกสาร (ย่อให้อัตโนมัติ ไม่เกิน 300 KB) แตะช่องว่างเพื่อเลือกรูป หรือแตะรูปแล้วกด "เปลี่ยนรูปนี้" รูปจะบันทึกทันที</Body> : null}
     </View>
   );
 }
