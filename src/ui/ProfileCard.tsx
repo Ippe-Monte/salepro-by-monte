@@ -174,9 +174,12 @@ export function ProfileCard() {
     await refreshAvatar(profile.id);
   }
 
+  const TEXT_KEY = 'salepro.share.textOnly'; // this browser could not share the .vcf file but can share text: remember it
+  const textOnly = (() => { try { return globalThis.localStorage?.getItem(TEXT_KEY) === '1'; } catch { return false; } })();
   const [shareFailed, setShareFailed] = useState(false);
-  async function share(mode: 'file' | 'text' | 'download' = 'file') {
+  async function share(mode: 'file' | 'text' | 'download' = textOnly ? 'text' : 'file') {
     const r = await shareVCard(vcf, f.name || 'contact', mode);
+    if (r.result === 'shared' && mode === 'text') { try { globalThis.localStorage?.setItem(TEXT_KEY, '1'); } catch { /* ignore */ } }
     if (r.result === 'failed') { setShareFailed(true); setMsg({ text: `เมนูแชร์ของเบราว์เซอร์ใช้ไม่ได้ (${r.why ?? ''}) ลองแชร์เป็นข้อความ หรือบันทึกไฟล์ .vcf แล้วส่งต่อจากแอปไฟล์`, ok: false }); }
     else if (r.result === 'downloaded') setMsg({ text: 'บันทึกไฟล์นามบัตร (.vcf) แล้ว — เปิดไฟล์เพื่อเพิ่มลงในรายชื่อ หรือส่งต่อผ่าน Quick Share / AirDrop', ok: true });
     else if (r.result === 'shared') { setShareFailed(false); setMsg(null); }
@@ -247,7 +250,7 @@ export function ProfileCard() {
       {msg && !editC ? <Body tone={msg.ok ? 'ok' : 'danger'}>{msg.text}</Body> : null}
       {!editC && !editP ? (
         <View>
-          <Button title="แชร์นามบัตร (Quick Share / AirDrop)" icon="share" onPress={() => void share('file')} />
+          <Button title="แชร์นามบัตร (Quick Share / AirDrop)" icon="share" onPress={() => void share()} />
           {shareFailed ? (
             <>
               <Button title="แชร์เป็นข้อความ" variant="ghost" onPress={() => void share('text')} />
