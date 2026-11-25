@@ -1,4 +1,6 @@
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
+import { installPullRefresh } from '@/ui/pullRefresh';
 import { View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { colors } from '@/ui/theme';
@@ -7,6 +9,7 @@ import { BottomBar, Sidebar, TopBar, useShell } from '@/ui/Shell';
 
 export default function AppLayout() {
   const { isPlatform } = useAuth();
+  useEffect(() => installPullRefresh(), []);
   const { wide, items, active } = useShell();
   const shown = new Set(items.map((i) => i.name));
   const hidden = { href: null } as const;

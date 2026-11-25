@@ -1,6 +1,9 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
+  "กำลังรีเฟรช…": "Refreshing…",
+  "ดึงลงเพื่อรีเฟรช": "Pull down to refresh",
+  "ปล่อยเพื่อรีเฟรช": "Release to refresh",
   "DO ที่ออกแล้ว": "DOs issued",
   "คงเหลือ": "On hand",
   "ค้างส่ง (": "Pending (",
