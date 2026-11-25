@@ -11,6 +11,7 @@ import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Field, Screen, Title } from '@/ui/kit';
 import { colors } from '@/ui/theme';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
+import { EditActions } from '@/ui/ViewEdit';
 
 const A4_W = 794; // A4 at 96 dpi
 const A4_H = 1123;
@@ -53,6 +54,7 @@ export default function DocSettings() {
   const [f, setF] = useState<Form>(defaults('quote'));
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [preview, setPreview] = useState<DocContext | null>(null);
   const { width: winW } = useWindowDimensions();
   const [zoom, setZoom] = useState<number | null>(null); // null = fit to screen
@@ -76,7 +78,7 @@ export default function DocSettings() {
       notes: r.notes ?? '', footer: r.footer ?? '', sigs: (r.sig_labels ?? []).join(','),
     });
   }, [orgId, type]);
-  useEffect(() => { setMsg(null); void load(); }, [load]);
+  useEffect(() => { setMsg(null); setEditing(false); void load(); }, [load]);
 
   async function save() {
     if (!orgId || busy) return;
@@ -99,7 +101,7 @@ export default function DocSettings() {
     });
     setBusy(false);
     if (e) return setMsg({ text: e.code === '23505' ? 'รหัสนำหน้านี้ถูกใช้กับเอกสารประเภทอื่นแล้ว' : friendly(e), ok: false });
-    setMsg({ text: 'บันทึกแล้ว (มีผลกับเลขเอกสารที่ออกหลังจากนี้)', ok: true });
+    setMsg({ text: 'บันทึกแล้ว (มีผลกับเลขเอกสารที่ออกหลังจากนี้)', ok: true }); setEditing(false);
   }
 
 
@@ -123,12 +125,12 @@ export default function DocSettings() {
 
   const digitsN = Number(f.digits);
   const sample = validatePrefix(f.prefix) === null && digitsN >= 3 && digitsN <= 6 ? formatDocNo({ prefix: f.prefix, digits: digitsN, year_fmt: f.year_fmt, separator: f.separator }, 1) : '—';
-  const dis = !editable;
+  const dis = !editable || !editing; // view mode until "แก้ไข" is pressed
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
         <Title>ตั้งค่าเอกสาร</Title>
-        {dis && <Body tone="muted">เฉพาะเจ้าของ/ผู้ดูแลเท่านั้นที่แก้ไขได้</Body>}
+        {!editable && <Body tone="muted">เฉพาะเจ้าของ/ผู้ดูแลเท่านั้นที่แก้ไขได้</Body>}
         <Chips value={type} onPick={setType} options={(Object.keys(DOC_LABEL) as DocType[]).map((v) => ({ v, label: DOC_LABEL[v] }))} />
         <Card>
           <Body>ชื่อเอกสาร</Body>
@@ -168,7 +170,7 @@ export default function DocSettings() {
           <Field label="ข้อความท้ายกระดาษ" value={f.footer} onChangeText={(v) => set('footer', v)} editable={!dis} multiline />
           <Field label="ช่องลายเซ็น (คั่นด้วย , สูงสุด 4)" value={f.sigs} onChangeText={(v) => set('sigs', v)} editable={!dis} />
           {msg && <Body tone={msg.ok ? 'ok' : 'danger'}>{msg.text}</Body>}
-          {editable && <Button title="บันทึก" onPress={() => void save()} busy={busy} />}
+          <EditActions editing={editing} canEdit={editable} busy={busy} onEdit={() => { setMsg(null); setEditing(true); }} onSave={() => void save()} onCancel={() => { setEditing(false); setMsg(null); void load(); }} />
           <Button title="ดูตัวอย่างเอกสาร" variant="ghost" icon="documents" onPress={() => void openPreview()} />
         </Card>
       </ScrollView>
