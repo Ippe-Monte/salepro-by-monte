@@ -21,7 +21,7 @@ test('every ticket falls in exactly one bucket and the percentages follow the to
     { id: 'a', status: 'open', created_at: '2026-11-01' }, { id: 'b', status: 'in_progress', created_at: '2026-11-02' }, { id: 'c', status: 'in_progress', created_at: '2026-11-03' },
     { id: 'd', status: 'done', created_at: '2026-11-04' }, { id: 'e', status: 'cancelled', created_at: '2026-11-05' }, { id: 'old', status: 'open', created_at: '2025-01-01' },
   ];
-  const pipe = { b: { ...base, quote_id: 'q', quote_status: 'sent' }, c: { ...base, quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded' } };
+  const pipe = { b: { ...base, quote_id: 'q', quote_status: 'sent' }, c: { ...base, quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'ready' } };
   const b = Object.fromEntries(jobBuckets(tk, pipe, sinceOf('month', now)).map((x) => [x.key, x]));
   assert.equal(b.new.count, 1); assert.equal(b.quote.count, 1); assert.equal(b.do.count, 1); assert.equal(b.done.count, 1); assert.equal(b.cancelled.count, 1);
   assert.equal(b.new.pct, 20);

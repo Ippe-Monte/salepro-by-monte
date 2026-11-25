@@ -10,6 +10,7 @@ import { neon } from '@/lib/neon';
 import { pickImage } from '@/lib/pickImage';
 import { Body, Button, Card, Field, Screen, Title } from '@/ui/kit';
 import { DbImage } from '@/ui/DbImage';
+import { DetailRows, EditActions } from '@/ui/ViewEdit';
 
 type Logo = { mime: string; data: string };
 
@@ -21,6 +22,7 @@ export default function CompanySettings() {
   const [logo, setLogo] = useState<Logo | null>(null);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const load = useCallback(async () => {
@@ -56,7 +58,7 @@ export default function CompanySettings() {
     });
     setBusy(false);
     if (e2) return setMsg({ text: friendly(e2), ok: false });
-    setMsg({ text: 'บันทึกแล้ว', ok: true });
+    setMsg({ text: 'บันทึกแล้ว', ok: true }); setEditing(false);
     await refresh();
   }
 
@@ -86,7 +88,7 @@ export default function CompanySettings() {
           <Body>โลโก้บริษัท</Body>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 8 }}>
             <DbImage data={logo?.data} mime={logo?.mime ?? 'image/png'} size={88} />
-            {editable ? (
+            {editable && editing ? (
               <View style={{ flex: 1 }}>
                 <Button title={logo ? 'เปลี่ยนโลโก้' : 'อัปโหลดโลโก้'} variant="ghost" onPress={() => void chooseLogo()} />
                 {logo ? <Button title="ลบโลโก้" variant="ghost" onPress={() => void removeLogo()} /> : null}
@@ -96,18 +98,24 @@ export default function CompanySettings() {
           <Body tone="muted">ใช้บนหัวเอกสาร (ย่อให้อัตโนมัติ ไม่เกิน 300 KB)</Body>
         </Card>
         <Card>
-          <Field label="ชื่อบริษัท" value={f.name} onChangeText={set('name')} editable={editable} />
-          <Field label="สาขา (เช่น สำนักงานใหญ่)" value={f.branch} onChangeText={set('branch')} editable={editable} />
-          <Field label="เลขประจำตัวผู้เสียภาษี" value={f.tax} onChangeText={set('tax')} editable={editable} />
-          <Field label="เบอร์โทร" value={f.phone} onChangeText={set('phone')} editable={editable} keyboardType="phone-pad" />
-          <Field label="อีเมล" value={f.email} onChangeText={set('email')} editable={editable} autoCapitalize="none" keyboardType="email-address" />
-          <Field label="เว็บไซต์" value={f.web} onChangeText={set('web')} editable={editable} autoCapitalize="none" />
-          <Field label="สโลแกน / ข้อความใต้ชื่อ" value={f.tagline} onChangeText={set('tagline')} editable={editable} />
-          <Field label="ที่อยู่ (ใช้บนเอกสาร)" value={f.address} onChangeText={set('address')} editable={editable} multiline />
-          <Field label="VAT (%)" value={f.vat} onChangeText={set('vat')} editable={editable} keyboardType="decimal-pad" />
-          <Field label="สกุลเงิน" value={f.currency} onChangeText={(t) => set('currency')(t.toUpperCase())} editable={editable} autoCapitalize="characters" />
+          {editing ? (
+            <>
+              <Field label="ชื่อบริษัท" value={f.name} onChangeText={set('name')} />
+              <Field label="สาขา (เช่น สำนักงานใหญ่)" value={f.branch} onChangeText={set('branch')} />
+              <Field label="เลขประจำตัวผู้เสียภาษี" value={f.tax} onChangeText={set('tax')} />
+              <Field label="เบอร์โทร" value={f.phone} onChangeText={set('phone')} keyboardType="phone-pad" />
+              <Field label="อีเมล" value={f.email} onChangeText={set('email')} autoCapitalize="none" keyboardType="email-address" />
+              <Field label="เว็บไซต์" value={f.web} onChangeText={set('web')} autoCapitalize="none" />
+              <Field label="สโลแกน / ข้อความใต้ชื่อ" value={f.tagline} onChangeText={set('tagline')} />
+              <Field label="ที่อยู่ (ใช้บนเอกสาร)" value={f.address} onChangeText={set('address')} multiline />
+              <Field label="VAT (%)" value={f.vat} onChangeText={set('vat')} keyboardType="decimal-pad" />
+              <Field label="สกุลเงิน" value={f.currency} onChangeText={(t) => set('currency')(t.toUpperCase())} autoCapitalize="characters" />
+            </>
+          ) : (
+            <DetailRows rows={[['ชื่อบริษัท', f.name], ['สาขา (เช่น สำนักงานใหญ่)', f.branch], ['เลขประจำตัวผู้เสียภาษี', f.tax], ['เบอร์โทร', f.phone], ['อีเมล', f.email], ['เว็บไซต์', f.web], ['สโลแกน / ข้อความใต้ชื่อ', f.tagline], ['ที่อยู่ (ใช้บนเอกสาร)', f.address], ['VAT (%)', f.vat], ['สกุลเงิน', f.currency]]} />
+          )}
           {msg && <Body tone={msg.ok ? 'ok' : 'danger'}>{msg.text}</Body>}
-          {editable && <Button title="บันทึก" onPress={() => void save()} busy={busy} />}
+          <EditActions editing={editing} canEdit={editable} busy={busy} onEdit={() => { setMsg(null); setEditing(true); }} onSave={() => void save()} onCancel={() => { setEditing(false); setMsg(null); void load(); }} />
         </Card>
       </ScrollView>
     </Screen>

@@ -5,7 +5,8 @@ import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
-import { Body, Button, Card, Empty, Field, Screen, Title } from '@/ui/kit';
+import { Body, Button, Card, Empty, Field, Screen } from '@/ui/kit';
+import { TitleAdd } from '@/ui/ListBits';
 import { colors } from '@/ui/theme';
 
 type Zone = { id: string; code: string; name: string; provinces: string[] };
@@ -16,6 +17,7 @@ export default function Zones() {
   const editable = canEdit('zones', current?.role);
   const [rows, setRows] = useState<Zone[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [f, setF] = useState({ code: '', name: '', provinces: '' });
 
   const load = useCallback(async () => {
@@ -31,7 +33,7 @@ export default function Zones() {
     const provinces = f.provinces.split(',').map((s) => s.trim()).filter(Boolean);
     const { error } = await neon.from('delivery_zones').insert({ org_id: orgId, code: f.code.trim(), name: f.name.trim(), provinces });
     if (error) return setErr(error.code === '23505' ? 'รหัสโซนนี้ถูกใช้แล้ว' : friendly(error));
-    setF({ code: '', name: '', provinces: '' }); await load();
+    setF({ code: '', name: '', provinces: '' }); setAdding(false); await load();
   }
   async function remove(id: string) {
     const { error } = await neon.from('delivery_zones').delete().eq('id', id);
@@ -41,9 +43,9 @@ export default function Zones() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>โซนส่งของ</Title>
+        <TitleAdd title="โซนส่งของ" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
-        {editable ? (
+        {editable && adding ? (
           <Card>
             <Field label="รหัสโซน (เช่น N1)" value={f.code} onChangeText={(v) => setF({ ...f, code: v })} autoCapitalize="characters" />
             <Field label="ชื่อโซน (เช่น กรุงเทพฯ เหนือ)" value={f.name} onChangeText={(v) => setF({ ...f, name: v })} />

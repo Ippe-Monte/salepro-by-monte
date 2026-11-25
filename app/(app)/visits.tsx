@@ -10,6 +10,7 @@ import { directionsLink, formatKm, legs, type Coords } from '@/lib/geo';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { Icon } from '@/ui/Icon';
+import { TitleAdd } from '@/ui/ListBits';
 import { CalendarGrid, DateField, TimeField, fmtDate } from '@/ui/Pickers';
 import { StopsMap, type Stop } from '@/ui/StopsMap';
 import { colors } from '@/ui/theme';
@@ -46,6 +47,8 @@ export default function Visits() {
   const [loc, setLoc] = useState<Loc>(null); // meeting place chosen for this visit; null = customer's address
   const [pickOpen, setPickOpen] = useState(false);
   const [pick, setPick] = useState<Loc>(null);
+  const [sel, setSel] = useState<string | null>(null); // visit opened from the day list
+  const [ed, setEd] = useState<{ id: string; title: string; date: string; time: string; mins: string } | null>(null);
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -104,7 +107,18 @@ export default function Visits() {
     const patch: Record<string, unknown> = { status };
     if (status === 'done') patch.outcome = (note[v.id] ?? '').trim() || null;
     const { error } = await neon.from('visit_plans').update(patch).eq('id', v.id);
-    if (error) setErr(friendly(error)); else { setErr(null); await load(); }
+    if (error) setErr(friendly(error)); else { setErr(null); setSel(null); await load(); }
+  }
+
+  async function saveEdit() {
+    if (!ed) return;
+    if (!ed.title.trim()) return setErr('กรอกหัวข้อการเข้าพบ');
+    const start = parseLocal(ed.date, ed.time); const mins = Number(ed.mins);
+    if (!start) return setErr('วันที่ต้องเป็นรูปแบบ ปปปป-ดด-วว และเวลา ชช:นน');
+    if (!Number.isFinite(mins) || mins < 5 || mins > 1440) return setErr('ระยะเวลาต้องอยู่ระหว่าง 5 ถึง 1440 นาที');
+    const { error } = await neon.from('visit_plans').update({ title: ed.title.trim(), starts_at: start.toISOString(), ends_at: addMinutes(start, mins).toISOString() }).eq('id', ed.id);
+    if (error) return setErr(friendly(error));
+    setErr(null); setDay(ed.date); setEd(null); await load();
   }
 
   async function checkIn(v: V) {
@@ -137,28 +151,48 @@ export default function Visits() {
     </Pressable>
   );
 
+  /** One appointment in the day list. Tapping it opens the actions; the list itself has no finish/cancel buttons. */
   const visitCard = (v: V, i: number) => {
     const own = isAdmin || v.assignee === profile?.id;
     const p = places[i] ?? null;
+    const open = sel === v.id;
     return (
       <Card key={v.id}>
-        <Text style={{ color: colors.text, fontWeight: '700' }}>{i + 1}. {hhmm(new Date(v.starts_at))}–{hhmm(new Date(v.ends_at))} · {v.title}</Text>
-        <Body tone="muted">{custName(v.customer_id)} · {mem(v.assignee)}</Body>
-        <View style={{ flexDirection: 'row', gap: 6, marginVertical: 6 }}>
-          <Pill text={v.status === 'done' ? 'เสร็จแล้ว' : 'วางแผน'} tone={v.status === 'done' ? 'ok' : 'muted'} />
-          {v.checked_in_at ? <Pill text="เช็คอินแล้ว" tone="ok" /> : null}
-          {v.location_lat !== null ? <Pill text="สถานที่ระบุเอง" tone="muted" /> : null}
-        </View>
-        {v.outcome ? <Body tone="muted">ผล: {v.outcome}</Body> : null}
-        {p ? (
-          <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(directionsLink(p))}><Text style={{ color: colors.accent }}>นำทางไปหาลูกค้า</Text></Pressable>
-        ) : <Body tone="muted">ยังไม่มีพิกัดสถานที่</Body>}
-        {editable && own && v.status === 'planned' ? (
-          <View style={{ marginTop: 8 }}>
-            {!v.checked_in_at ? <Button title="เช็คอินตำแหน่งปัจจุบัน" variant="ghost" onPress={() => checkIn(v)} /> : null}
-            <Field label="สรุปผลการเข้าพบ" value={note[v.id] ?? ''} onChangeText={(t) => setNote({ ...note, [v.id]: t })} />
-            <Button title="จบการเข้าพบ" onPress={() => setStatus(v, 'done')} />
-            <Button title="ยกเลิกนัด" variant="danger" onPress={() => setStatus(v, 'cancelled')} />
+        <Pressable accessibilityRole="button" onPress={() => { setSel(open ? null : v.id); setEd(null); }}>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>{i + 1}. {hhmm(new Date(v.starts_at))}–{hhmm(new Date(v.ends_at))} · {v.title}</Text>
+          <Body tone="muted">{custName(v.customer_id)} · {mem(v.assignee)}</Body>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+            <Pill text={v.status === 'done' ? 'เสร็จแล้ว' : 'วางแผน'} tone={v.status === 'done' ? 'ok' : 'muted'} />
+            {v.checked_in_at ? <Pill text="เช็คอินแล้ว" tone="ok" /> : null}
+            {v.location_lat !== null ? <Pill text="สถานที่ระบุเอง" tone="muted" /> : null}
+          </View>
+        </Pressable>
+        {open ? (
+          <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
+            {v.outcome ? <Body tone="muted">ผล: {v.outcome}</Body> : null}
+            {p ? (
+              <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(directionsLink(p))}><Text style={{ color: colors.accent }}>นำทางไปหาลูกค้า</Text></Pressable>
+            ) : <Body tone="muted">ยังไม่มีพิกัดสถานที่</Body>}
+            {editable && own && v.status === 'planned' ? (
+              ed?.id === v.id ? (
+                <View style={{ marginTop: 8 }}>
+                  <Field label="หัวข้อ" value={ed.title} onChangeText={(t) => setEd({ ...ed, title: t })} />
+                  <DateField label="วันที่" value={ed.date} onChange={(d) => setEd({ ...ed, date: d })} />
+                  <TimeField label="เวลา (24 ชม.)" value={ed.time} onChange={(t) => setEd({ ...ed, time: t })} />
+                  <Chips value={ed.mins} options={[{ v: '30', label: '30 นาที' }, { v: '60', label: '1 ชม.' }, { v: '120', label: '2 ชม.' }, { v: '240', label: '4 ชม.' }]} onPick={(m) => setEd({ ...ed, mins: m })} />
+                  <Button title="บันทึกการแก้ไข" onPress={() => void saveEdit()} />
+                  <Button title="ยกเลิก" variant="ghost" onPress={() => setEd(null)} />
+                </View>
+              ) : (
+                <View style={{ marginTop: 8 }}>
+                  {!v.checked_in_at ? <Button title="เช็คอินตำแหน่งปัจจุบัน" variant="ghost" onPress={() => checkIn(v)} /> : null}
+                  <Button title="แก้ไขนัด" variant="ghost" onPress={() => { const st = new Date(v.starts_at); setEd({ id: v.id, title: v.title, date: dayKey(st), time: hhmm(st), mins: String(Math.round((new Date(v.ends_at).getTime() - st.getTime()) / 60000)) }); }} />
+                  <Field label="สรุปผลการเข้าพบ" value={note[v.id] ?? ''} onChangeText={(t) => setNote({ ...note, [v.id]: t })} />
+                  <Button title="จบการเข้าพบ" onPress={() => setStatus(v, 'done')} />
+                  <Button title="ยกเลิกนัด" variant="danger" onPress={() => setStatus(v, 'cancelled')} />
+                </View>
+              )
+            ) : null}
           </View>
         ) : null}
       </Card>
@@ -171,8 +205,46 @@ export default function Visits() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>แผนเข้าพบลูกค้า</Title>
+        <TitleAdd title="แผนเข้าพบลูกค้า" show={editable} open={adding} onToggle={() => { setAdding(!adding); setF((x) => ({ ...x, date: day })); }} label="เพิ่มนัดเข้าพบ" />
         {err ? <Body tone="danger">{err}</Body> : null}
+        {adding ? (
+          <Card>
+            <Body>เพิ่มนัดเข้าพบ</Body>
+            <Body tone="muted">ลูกค้า</Body>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
+              {custs.map((c) => (
+                <Pressable key={c.id} accessibilityRole="button" onPress={() => { setF({ ...f, customer: c.id }); setLoc(null); }}
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.selected : 'transparent' }}>
+                  <Text style={{ color: colors.text }}>{c.name}</Text>
+                </Pressable>
+              ))}
+              {custs.length === 0 ? <Body tone="muted">ยังไม่มีลูกค้า — เพิ่มที่เมนูลูกค้าก่อน</Body> : null}
+            </View>
+            <Field label="หัวข้อ" value={f.title} onChangeText={(v) => setF({ ...f, title: v })} />
+            <DateField label="วันที่" value={f.date} onChange={(d) => setF({ ...f, date: d })} />
+            <TimeField label="เวลา (24 ชม.)" value={f.time} onChange={(t) => setF({ ...f, time: t })} />
+            <Chips value={f.mins} options={[{ v: '30', label: '30 นาที' }, { v: '60', label: '1 ชม.' }, { v: '120', label: '2 ชม.' }, { v: '240', label: '4 ชม.' }]} onPick={(v) => setF({ ...f, mins: v })} />
+            <Body tone="muted">สถานที่นัด</Body>
+            <Body>{loc ? `พิกัดที่เลือกเอง (${loc.lat}, ${loc.lng})` : defaultPlace ? `ที่อยู่ของ ${cust?.name ?? 'ลูกค้า'}` : f.customer ? 'ลูกค้ายังไม่มีพิกัด — เลือกจุดบนแผนที่ได้' : 'เลือกลูกค้าก่อน'}</Body>
+            {f.customer ? <Button title={loc || defaultPlace ? 'เปลี่ยนสถานที่นัด' : 'ปักหมุดบนแผนที่'} variant="ghost" icon="pin" onPress={() => { setPick(loc ?? defaultPlace); setPickOpen(true); }} /> : null}
+            {loc ? <Button title="ใช้ที่อยู่ลูกค้าตามเดิม" variant="ghost" onPress={() => setLoc(null)} /> : null}
+            {isAdmin ? (
+              <>
+                <Body tone="muted">ผู้รับผิดชอบ</Body>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
+                  {mems.map((m) => (
+                    <Pressable key={m.user_id} accessibilityRole="button" onPress={() => setF({ ...f, assignee: m.user_id })}
+                      style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: (f.assignee || profile?.id) === m.user_id ? colors.selected : 'transparent' }}>
+                      <Text style={{ color: colors.text }}>{nameOf(m)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            ) : null}
+            <Button title="เพิ่มนัด" onPress={add} />
+            <Button title="ยกเลิก" variant="ghost" onPress={() => { setAdding(false); setLoc(null); }} />
+          </Card>
+        ) : null}
         <View style={{ flexDirection: 'row', backgroundColor: colors.bg, borderRadius: 12, padding: 3, marginBottom: 12, borderWidth: 1, borderColor: colors.border }}>
           {tabBtn('cal', 'ปฏิทิน', 'schedule')}
           {tabBtn('map', 'แผนที่', 'map')}
@@ -183,50 +255,13 @@ export default function Visits() {
           <>
             <Card><CalendarGrid value={day} onChange={(d) => { setDay(d); setF((x) => ({ ...x, date: d })); }} marks={marks} /></Card>
             <Text style={{ color: colors.accent, fontWeight: '800', marginVertical: 8 }}>{fmtDate(day)}</Text>
-            {editable && !adding ? <Button title="+ เพิ่มนัดเข้าพบ" onPress={() => { setAdding(true); setF((x) => ({ ...x, date: day })); }} /> : null}
-            {adding ? (
-              <Card>
-                <Body>เพิ่มนัดเข้าพบ</Body>
-                <Body tone="muted">ลูกค้า</Body>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
-                  {custs.map((c) => (
-                    <Pressable key={c.id} accessibilityRole="button" onPress={() => { setF({ ...f, customer: c.id }); setLoc(null); }}
-                      style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: f.customer === c.id ? colors.selected : 'transparent' }}>
-                      <Text style={{ color: colors.text }}>{c.name}</Text>
-                    </Pressable>
-                  ))}
-                  {custs.length === 0 ? <Body tone="muted">ยังไม่มีลูกค้า — เพิ่มที่เมนูลูกค้าก่อน</Body> : null}
-                </View>
-                <Field label="หัวข้อ" value={f.title} onChangeText={(v) => setF({ ...f, title: v })} />
-                <DateField label="วันที่" value={f.date} onChange={(d) => setF({ ...f, date: d })} />
-                <TimeField label="เวลา (24 ชม.)" value={f.time} onChange={(t) => setF({ ...f, time: t })} />
-                <Chips value={f.mins} options={[{ v: '30', label: '30 นาที' }, { v: '60', label: '1 ชม.' }, { v: '120', label: '2 ชม.' }, { v: '240', label: '4 ชม.' }]} onPick={(v) => setF({ ...f, mins: v })} />
-                <Body tone="muted">สถานที่นัด</Body>
-                <Body>{loc ? `พิกัดที่เลือกเอง (${loc.lat}, ${loc.lng})` : defaultPlace ? `ที่อยู่ของ ${cust?.name ?? 'ลูกค้า'}` : f.customer ? 'ลูกค้ายังไม่มีพิกัด — เลือกจุดบนแผนที่ได้' : 'เลือกลูกค้าก่อน'}</Body>
-                {f.customer ? <Button title={loc || defaultPlace ? 'เปลี่ยนสถานที่นัด' : 'ปักหมุดบนแผนที่'} variant="ghost" icon="pin" onPress={() => { setPick(loc ?? defaultPlace); setPickOpen(true); }} /> : null}
-                {loc ? <Button title="ใช้ที่อยู่ลูกค้าตามเดิม" variant="ghost" onPress={() => setLoc(null)} /> : null}
-                {isAdmin ? (
-                  <>
-                    <Body tone="muted">ผู้รับผิดชอบ</Body>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
-                      {mems.map((m) => (
-                        <Pressable key={m.user_id} accessibilityRole="button" onPress={() => setF({ ...f, assignee: m.user_id })}
-                          style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: (f.assignee || profile?.id) === m.user_id ? colors.selected : 'transparent' }}>
-                          <Text style={{ color: colors.text }}>{nameOf(m)}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </>
-                ) : null}
-                <Button title="เพิ่มนัด" onPress={add} />
-                <Button title="ยกเลิก" variant="ghost" onPress={() => { setAdding(false); setLoc(null); }} />
-              </Card>
-            ) : null}
             {dayRows.length === 0 ? <Empty>วันนี้ยังไม่มีนัดเข้าพบ</Empty> : dayRows.map((v, i) => visitCard(v, i))}
           </>
         ) : (
           <>
-            <DateField label="วันที่" value={day} onChange={(d) => { setDay(d); setF((x) => ({ ...x, date: d })); }} />
+            <Text style={{ color: colors.accent, fontWeight: '800', marginBottom: 4 }}>{day === dayKey(new Date()) ? 'แผนเดินทางวันนี้' : 'แผนเดินทาง'} · {fmtDate(day)}</Text>
+            <DateField label="เลือกวันที่" value={day} onChange={(d) => { setDay(d); setF((x) => ({ ...x, date: d })); }} />
+            {day !== dayKey(new Date()) ? <Button title="กลับไปวันนี้" variant="ghost" onPress={() => setDay(dayKey(new Date()))} /> : null}
             {dayRows.length === 0 ? <Empty>วันนี้ยังไม่มีนัดเข้าพบ</Empty> : (
               <>
                 <StopsMap stops={stops} height={340} />

@@ -12,7 +12,7 @@ import type { ScanResult } from '@/lib/cardscan';
 import { CardScanner, Contacts, CustomerLogo, LogoEditor } from '@/ui/CustomerExtras';
 import { Icon } from '@/ui/Icon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
-import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
+import { AddToggle, ConfirmTrash, TitleAdd } from '@/ui/ListBits';
 import { DetailRows, EditActions } from '@/ui/ViewEdit';
 import { colors } from '@/ui/theme';
 
@@ -213,9 +213,8 @@ export default function Customers() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>ลูกค้า</Title>
+        <TitleAdd title="ลูกค้า" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
-        {editable ? <AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เพิ่มลูกค้า" /> : null}
         {editable && adding ? (
           <Card>
             <Body>{step === 1 ? 'ขั้นที่ 1/2 · ข้อมูลบริษัทและที่อยู่' : 'ขั้นที่ 2/2 · ผู้ติดต่อคนแรก'}</Body>

@@ -39,6 +39,11 @@ function message(e: unknown): string {
   return m && m.length < 200 ? m : 'เกิดข้อผิดพลาด กรุณาลองใหม่';
 }
 
+export function isAuthLag(e: unknown): boolean {
+  const x = e as { message?: string; code?: string; status?: number } | null;
+  return !!x && (x.code === '28000' || x.status === 401 || /unauthenticated|jwt|PGRST30[0-9]/i.test(x.message ?? ''));
+}
+
 type MembershipRow = { org_id: string; role: Membership['role']; status: Membership['status']; organizations: Org | Org[] | null };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -59,7 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data?.session) { setSignedIn(false); reset(); return; }
       setSignedIn(true);
       setError(null);
-      const pr = await withTimeout(neon.rpc('ensure_profile'), 'สร้างโปรไฟล์');
+      // Right after opening the app the session can exist before its token is accepted by the Data API
+      // ("unauthenticated"): ask for the session again and retry a few times before showing an error.
+      let pr = await withTimeout(neon.rpc('ensure_profile'), 'สร้างโปรไฟล์');
+      for (let n = 1; n <= 4 && pr.error && isAuthLag(pr.error); n++) {
+        await new Promise((r) => setTimeout(r, 400 * n));
+        await withTimeout(neon.auth.getSession(), 'ตรวจ session');
+        pr = await withTimeout(neon.rpc('ensure_profile'), 'สร้างโปรไฟล์');
+      }
       if (pr.error) throw pr.error;
       const mr = await withTimeout(neon
         .from('memberships')

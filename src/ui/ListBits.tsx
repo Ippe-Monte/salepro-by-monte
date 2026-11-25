@@ -15,6 +15,22 @@ export function AddToggle({ open, onToggle, label }: { open: boolean; onToggle: 
   );
 }
 
+/** Heading row of a list page: the title on the left and a small "+ add" pill on the right (opens or closes the add form). */
+export function TitleAdd({ title, show, open, onToggle, label = 'เพิ่ม' }: { title: string; show: boolean; open: boolean; onToggle: () => void; label?: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
+      <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 22, fontWeight: '700', flexShrink: 1 }}>{title}</Text>
+      {show ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onToggle}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, height: 34, borderRadius: 17, backgroundColor: open ? 'transparent' : colors.primary, borderWidth: open ? 1 : 0, borderColor: colors.border }}>
+          <Icon name={open ? 'x' : 'plus'} size={16} color={open ? colors.text : '#fff'} />
+          <Text style={{ color: open ? colors.text : '#fff', fontWeight: '700', fontSize: 14 }}>{open ? 'ปิด' : label}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 /** Trash button that asks once before calling onConfirm (nothing is deleted by a single tap). */
 export function ConfirmTrash({ label, onConfirm }: { label: string; onConfirm: () => void }) {
   const [ask, setAsk] = useState(false);

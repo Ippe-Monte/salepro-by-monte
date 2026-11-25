@@ -7,6 +7,7 @@ import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { baht, parseNonNegative, totals } from '@/lib/money';
 import { neon } from '@/lib/neon';
+import { TitleAdd } from '@/ui/ListBits';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
 import { defaultSettings, loadDocContext, type DocContext } from '@/lib/docmeta';
@@ -36,6 +37,7 @@ export default function Quotes() {
   const [items, setItems] = useState<It[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [newCust, setNewCust] = useState('');
+  const [adding, setAdding] = useState(false);
   const [it, setIt] = useState({ desc: '', qty: '1', unit: 'ชิ้น', price: '', product: '' });
   const [hdr, setHdr] = useState({ discount: '', vat: '', valid: '' });
   const [pq, setPq] = useState('');
@@ -74,7 +76,7 @@ export default function Quotes() {
     if (!orgId || !newCust) return setErr('เลือกลูกค้า');
     const { data, error } = await neon.from('quotations').insert({ org_id: orgId, customer_id: newCust }).select('id').single();
     if (error) return setErr(friendly(error));
-    setErr(null); setNewCust(''); await load(); if (data) { setSel(data.id); setHdr({ discount: '0', vat: '7', valid: '' }); setItems([]); }
+    setErr(null); setNewCust(''); setAdding(false); await load(); if (data) { setSel(data.id); setHdr({ discount: '0', vat: '7', valid: '' }); setItems([]); }
   }
 
   async function addItem(q: Q) {
@@ -111,9 +113,9 @@ export default function Quotes() {
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
         <SegTabs tabs={[{ href: '/quotes', label: 'ใบเสนอราคา' }, { href: '/invoices', label: 'อินวอยซ์' }]} active="/quotes" />
-        <Title>ใบเสนอราคา</Title>
+        <TitleAdd title="ใบเสนอราคา" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
-        {editable ? (
+        {editable && adding ? (
           <Card>
             <Body>สร้างใบเสนอราคาใหม่ — เลือกลูกค้า</Body>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>

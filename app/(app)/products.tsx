@@ -8,7 +8,7 @@ import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { DbImage } from '@/ui/DbImage';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
-import { AddToggle, ConfirmTrash } from '@/ui/ListBits';
+import { ConfirmTrash, TitleAdd } from '@/ui/ListBits';
 import { ProductFiles } from '@/ui/ProductFiles';
 import { ProductImages } from '@/ui/ProductImages';
 import { DetailRows, EditActions } from '@/ui/ViewEdit';
@@ -80,9 +80,8 @@ export default function Products() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>สินค้า</Title>
+        <TitleAdd title="สินค้า" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
-        {editable ? <AddToggle open={adding} onToggle={() => setAdding(!adding)} label="เพิ่มสินค้า" /> : null}
         {editable && adding ? (
           <Card>
             <Body>ลงทะเบียนสินค้า (เพิ่มรูปและ Datasheet ได้หลังบันทึก)</Body>

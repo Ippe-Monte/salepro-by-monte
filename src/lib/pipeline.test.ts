@@ -15,20 +15,21 @@ test('each document moves the job one step on', () => {
   assert.equal(subOf(row({ quote_id: 'q', quote_status: 'draft' })), 'quote_draft');
   assert.equal(subOf(row({ quote_id: 'q', quote_status: 'sent' })), 'quote_sent');
   assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted' })), 'quote_ok');
-  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded' })), 'do_done');
-  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded', dn_id: 'n', dn_status: 'recorded' })), 'dn_wait');
-  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded', dn_id: 'n', dn_status: 'received' })), 'dn_done');
+  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'ready' })), 'do_prep');
+  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'dispatched' })), 'do_ship');
+  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'delivered', dn_id: 'n', dn_status: 'issued' })), 'dn_wait');
+  assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'delivered', dn_id: 'n', dn_status: 'received' })), 'dn_done');
   assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', inv_id: 'i', inv_status: 'issued' })), 'inv_wait');
   assert.equal(subOf(row({ quote_id: 'q', quote_status: 'accepted', inv_id: 'i', inv_status: 'paid' })), 'inv_paid');
 });
 test('step numbers follow the five-step order', () => {
-  assert.deepEqual((['open', 'quote_sent', 'do_done', 'dn_done', 'inv_paid'] as const).map(stepOf), [1, 2, 3, 4, 5]);
+  assert.deepEqual((['open', 'quote_sent', 'do_ship', 'dn_done', 'inv_paid'] as const).map(stepOf), [1, 2, 3, 4, 5]);
 });
 test('next action tells what to do next', () => {
-  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted' })), { kind: 'rec_do' });
-  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded' })), { kind: 'rec_dn' });
-  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'recorded', dn_id: 'n', dn_status: 'recorded' })), { kind: 'receive_dn' });
-  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', dn_id: 'n', dn_status: 'received', do_id: 'd', do_status: 'recorded' })), { kind: 'make_invoice', quoteId: 'q' });
+  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted' })), { kind: 'make_do', quoteId: 'q' });
+  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'delivered' })), { kind: 'make_dn', doId: 'd' });
+  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', do_id: 'd', do_status: 'dispatched' })), { kind: 'make_dn', doId: 'd' });
+  assert.deepEqual(nextAction(row({ quote_id: 'q', quote_status: 'accepted', dn_id: 'n', dn_status: 'received', do_id: 'd', do_status: 'delivered' })), { kind: 'make_invoice', quoteId: 'q' });
   assert.equal(nextAction(row({ quote_id: 'q', quote_status: 'accepted', inv_id: 'i', inv_status: 'paid' })), null);
 });
 test('summary counts jobs per sub-status', () => {
