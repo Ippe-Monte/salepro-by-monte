@@ -25,10 +25,17 @@ export async function shareVCard(vcf: string, name: string): Promise<'shared' | 
   if (Platform.OS !== 'web') {
     try { await Share.share({ message: vcf }); return 'shared'; } catch { return 'cancelled'; }
   }
-  const file = new File([vcf], `${name.replace(/[^\w฀-๿ -]/g, '') || 'contact'}.vcf`, { type: 'text/vcard' });
+  // ASCII file name: some Android share targets (Quick Share) reject names with Thai characters
+  const base = name.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '') || 'contact';
+  const file = new File([vcf], `${base}.vcf`, { type: 'text/vcard' });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (nav.share && nav.canShare?.({ files: [file] })) {
-    try { await nav.share({ files: [file], title: name }); return 'shared'; } catch { return 'cancelled'; }
+  const aborted = (e: unknown) => (e as { name?: string })?.name === 'AbortError';
+  if (nav.share) {
+    if (nav.canShare?.({ files: [file] })) {
+      try { await nav.share({ files: [file], title: name }); return 'shared'; } catch (e) { if (aborted(e)) return 'cancelled'; }
+    }
+    // the file could not be shared: send the contact as plain text instead
+    try { await nav.share({ title: name, text: vcf }); return 'shared'; } catch (e) { if (aborted(e)) return 'cancelled'; }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();

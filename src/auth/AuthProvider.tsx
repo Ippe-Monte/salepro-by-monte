@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null); setMemberships(null); setIsPlatform(false);
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (quiet = false) => {
     try {
       const { data } = await withTimeout(neon.auth.getSession(), 'ตรวจ session');
       if (!data?.session) { setSignedIn(false); reset(); return; }
@@ -88,12 +88,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsPlatform(pl.data === true);
       setError(null);
     } catch (e) {
+      if (quiet) return; // background re-check failed: keep what we have, no error screen
       setError(message(e));
       setSignedIn((s) => s ?? false);
     }
   }, [reset]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  // Roles can change while the app stays open (an owner changes your role, you are disabled...):
+  // re-read memberships when the app comes back to the foreground and every minute while it is visible.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const again = () => { if (document.visibilityState === 'visible') void refresh(true); };
+    document.addEventListener('visibilitychange', again);
+    const timer = setInterval(again, 60000);
+    return () => { document.removeEventListener('visibilitychange', again); clearInterval(timer); };
+  }, [refresh]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
