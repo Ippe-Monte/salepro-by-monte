@@ -44,7 +44,7 @@ export function isAuthLag(e: unknown): boolean {
   return !!x && (x.code === '28000' || x.status === 401 || /unauthenticated|jwt|PGRST30[0-9]/i.test(x.message ?? ''));
 }
 
-type MembershipRow = { org_id: string; role: Membership['role']; status: Membership['status']; organizations: Org | Org[] | null };
+type MembershipRow = { org_id: string; role: Membership['role']; status: Membership['status']; stock_manager?: boolean; organizations: Org | Org[] | null };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -75,12 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (pr.error) throw pr.error;
       const mr = await withTimeout(neon
         .from('memberships')
-        .select('org_id,role,status,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)'), 'ดึงรายชื่อบริษัท');
+        .select('org_id,role,status,stock_manager,organizations(id,name,status,tax_id,address,phone,currency,vat_rate)'), 'ดึงรายชื่อบริษัท');
       if (mr.error) throw mr.error;
       const rows = (mr.data ?? []) as unknown as MembershipRow[];
       const ms: Membership[] = rows.flatMap((r) => {
         const org = Array.isArray(r.organizations) ? r.organizations[0] : r.organizations;
-        return org ? [{ org_id: r.org_id, role: r.role, status: r.status, org }] : [];
+        return org ? [{ org_id: r.org_id, role: r.role, status: r.status, stock_manager: r.stock_manager === true, org }] : [];
       });
       const pl = await withTimeout(neon.rpc('am_platform_admin'), 'ตรวจสิทธิ์แพลตฟอร์ม');
       setProfile(pr.data as unknown as Profile);

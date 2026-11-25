@@ -3,7 +3,7 @@ import { Linking, Modal, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import * as Location from 'expo-location';
 import { useAuth } from '@/auth/AuthProvider';
-import { canEdit } from '@/auth/roles';
+import { canChangeOwned, canEdit } from '@/auth/roles';
 import { addMinutes, dayKey, groupByDay, hhmm, parseLocal } from '@/lib/dates';
 import { friendly } from '@/lib/errors';
 import { directionsLink, formatKm, legs, type Coords } from '@/lib/geo';
@@ -17,7 +17,7 @@ import { colors } from '@/ui/theme';
 import { dateLocale } from '@/i18n';
 
 type V = {
-  id: string; customer_id: string; address_id: string | null; assignee: string; title: string; purpose: string | null;
+  id: string; customer_id: string; address_id: string | null; assignee: string; created_by: string | null; title: string; purpose: string | null;
   starts_at: string; ends_at: string; status: 'planned' | 'done' | 'cancelled'; outcome: string | null; checked_in_at: string | null;
   location_name: string | null; location_lat: number | null; location_lng: number | null;
 };
@@ -53,7 +53,7 @@ export default function Visits() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const [v, c, m, a] = await Promise.all([
-      neon.from('visit_plans').select('id,customer_id,address_id,assignee,title,purpose,starts_at,ends_at,status,outcome,checked_in_at,location_name,location_lat,location_lng').eq('org_id', orgId).order('starts_at'),
+      neon.from('visit_plans').select('id,customer_id,address_id,assignee,created_by,title,purpose,starts_at,ends_at,status,outcome,checked_in_at,location_name,location_lat,location_lng').eq('org_id', orgId).order('starts_at'),
       neon.from('customers').select('id,name').eq('org_id', orgId).is('archived_at', null).order('name'),
       neon.from('memberships').select('user_id,profiles(display_name,email)').eq('org_id', orgId).eq('status', 'active'),
       neon.from('customer_addresses').select('id,customer_id,latitude,longitude').eq('org_id', orgId).eq('is_default', true),
@@ -153,7 +153,7 @@ export default function Visits() {
 
   /** One appointment in the day list. Tapping it opens the actions; the list itself has no finish/cancel buttons. */
   const visitCard = (v: V, i: number) => {
-    const own = isAdmin || v.assignee === profile?.id;
+    const own = canChangeOwned(current?.role, v.created_by, profile?.id); // only the member who opened the visit (or owner/admin)
     const p = places[i] ?? null;
     const open = sel === v.id;
     return (
@@ -169,6 +169,7 @@ export default function Visits() {
         </Pressable>
         {open ? (
           <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
+            {!own ? <Body tone="muted">ดูอย่างเดียว — แก้ไขได้เฉพาะผู้เปิดนัด เจ้าของ และแอดมิน</Body> : null}
             {v.outcome ? <Body tone="muted">ผล: {v.outcome}</Body> : null}
             {p ? (
               <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(directionsLink(p))}><Text style={{ color: colors.accent }}>นำทางไปหาลูกค้า</Text></Pressable>

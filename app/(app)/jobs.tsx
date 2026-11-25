@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
-import { canEdit } from '@/auth/roles';
+import { canChangeOwned, canEdit } from '@/auth/roles';
+import { useOrgMembers } from '@/lib/members';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { nextAction, STEPS, stepOf, SUB_LABEL, subOf, summarize, type PipelineRow, type Sub } from '@/lib/pipeline';
@@ -19,7 +20,7 @@ import { dateLocale } from '@/i18n';
 // Baht sign written as an escape so it is not mistaken for translatable Thai text.
 const BAHT = String.fromCharCode(0x0e3f);
 
-type T = { id: string; doc_no: string; customer_id: string; title: string; description: string | null; priority: string; status: string; source: string; due_date: string | null; created_at: string };
+type T = { id: string; doc_no: string; customer_id: string; title: string; description: string | null; priority: string; status: string; source: string; due_date: string | null; created_at: string; created_by: string | null };
 type Ev = { id: string; kind: string; from_status: string | null; to_status: string | null; body: string | null; created_at: string };
 type C = { id: string; name: string };
 
@@ -61,9 +62,12 @@ function Flow({ p }: { p: PipelineRow | undefined }) {
 
 export default function Jobs() {
   const router = useRouter();
-  const { current } = useAuth();
+  const { current, profile } = useAuth();
   const orgId = current?.org_id;
-  const editable = canEdit('jobs', current?.role);
+  const canOpenNew = canEdit('jobs', current?.role);
+  const { nameOf } = useOrgMembers(current?.org_id);
+  /** Only the member who opened the ticket (or owner/admin) can change it; others view only. */
+  const mayChange = (t: T) => canChangeOwned(current?.role, t.created_by, profile?.id);
   const [rows, setRows] = useState<T[]>([]);
   const [custs, setCusts] = useState<C[]>([]);
   const [filter, setFilter] = useState<'active' | 'closed'>('active');
@@ -83,7 +87,7 @@ export default function Jobs() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const [t, c, pl] = await Promise.all([
-      neon.from('job_tickets').select('id,doc_no,customer_id,title,description,priority,status,source,due_date,created_at').eq('org_id', orgId).order('created_at', { ascending: false }),
+      neon.from('job_tickets').select('id,doc_no,customer_id,title,description,priority,status,source,due_date,created_at,created_by').eq('org_id', orgId).order('created_at', { ascending: false }),
       neon.from('customers').select('id,name').eq('org_id', orgId).is('archived_at', null).order('name'),
       neon.from('job_pipeline').select('*').eq('org_id', orgId),
     ]);
@@ -188,7 +192,7 @@ export default function Jobs() {
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
         <JobTabs active="/jobs" />
-        <TitleAdd title="Job Ticket" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
+        <TitleAdd title="Job Ticket" show={canOpenNew} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
         <Card>
           <Text style={{ color: colors.text, fontWeight: '800' }}>สรุปสถานะงาน (ทุกเอกสารเริ่มจาก Job Ticket)</Text>
@@ -211,7 +215,7 @@ export default function Jobs() {
           {subs.length === 0 ? <Body tone="muted">ยังไม่มีงานที่กำลังติดตาม</Body> : null}
         </Card>
         <Chips value={filter} options={[{ v: 'active', label: 'กำลังติดตาม' }, { v: 'closed', label: 'ปิดแล้ว' }]} onPick={(v) => { setFilter(v); setStep(0); setPage(1); }} />
-        {editable && adding ? (
+        {canOpenNew && adding ? (
           <Card>
             <Body>รับงานจากลูกค้า</Body>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
@@ -281,17 +285,18 @@ export default function Jobs() {
               </Pressable>
               {sel === t.id ? (
                 <View style={{ marginTop: 10 }}>
+                  <Body tone="muted">ผู้เปิดงาน: {nameOf(t.created_by)}{mayChange(t) ? '' : ' · ดูอย่างเดียว (แก้ไขได้เฉพาะผู้เปิดงาน เจ้าของ และแอดมิน)'}</Body>
                   {t.description ? <Body>{t.description}</Body> : null}
                   <Flow p={pipe[t.id]} />
                   {(() => {
                     const n = isOpen(t) ? nextAction(pipe[t.id]) : null;
                     if (!n) return null;
                     const label: Record<string, string> = { make_quote: 'ออกใบเสนอราคาจาก Job นี้', open_quote: 'เปิดใบเสนอราคา', make_do: 'ออก DO (จองสต็อก)', open_do: 'เปิด DO', make_dn: 'ออกใบส่งของ (ตัดสต็อก)', open_dn: 'เปิดใบส่งของ', make_invoice: 'ออก Invoice', open_invoice: 'เปิด Invoice' };
-                    if (n.kind.startsWith('make') && !editable) return null;
+                    if (n.kind.startsWith('make') && !mayChange(t)) return null;
                     return <Button title={`ขั้นต่อไป: ${label[n.kind] ?? ''}`} busy={busy} onPress={() => void go(t, n)} />;
                   })()}
-                  {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={editable} /> : null}
-                  {editable && (NEXT[t.status] ?? []).length > 0 ? (
+                  {orgId ? <JobFiles orgId={orgId} ticketId={t.id} editable={mayChange(t)} /> : null}
+                  {mayChange(t) && (NEXT[t.status] ?? []).length > 0 ? (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
                       {(NEXT[t.status] ?? []).map((s) => (
                         <Pressable key={s} accessibilityRole="button" onPress={() => void move(t, s)} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.accent }}>
@@ -306,7 +311,7 @@ export default function Jobs() {
                       {new Date(e.created_at).toLocaleString(dateLocale())} · {e.kind === 'created' ? 'เปิดงาน' : e.kind === 'status' ? `${STATUS[e.from_status ?? ''] ?? ''} → ${STATUS[e.to_status ?? ''] ?? ''}` : e.body}
                     </Body>
                   ))}
-                  {editable ? (
+                  {mayChange(t) ? (
                     <>
                       <Field label="เพิ่มบันทึก" value={comment} onChangeText={setComment} />
                       <Button title="บันทึก" variant="ghost" onPress={() => addComment(t)} />

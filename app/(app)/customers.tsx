@@ -3,7 +3,8 @@ import { Linking, Pressable, ScrollView, useWindowDimensions, View } from 'react
 import { Text } from '@/ui/Text';
 import * as Location from 'expo-location';
 import { useAuth } from '@/auth/AuthProvider';
-import { canEdit } from '@/auth/roles';
+import { canArchiveCustomer, canEdit } from '@/auth/roles';
+import { useOrgMembers } from '@/lib/members';
 import { friendly } from '@/lib/errors';
 import { directionsLink, mapsLink, parseCoords, validateCoordPair } from '@/lib/geo';
 import { neon } from '@/lib/neon';
@@ -21,12 +22,21 @@ type Addr = {
   latitude: number | null; longitude: number | null; contact_name: string | null; contact_phone: string | null;
   is_default: boolean; zone_id: string | null;
 };
-type Cust = { id: string; code: string; name: string; phone: string | null; email: string | null; tax_id: string | null; archived_at: string | null };
+type Cust = { id: string; code: string; name: string; phone: string | null; email: string | null; tax_id: string | null; archived_at: string | null; account_manager: string | null };
 type Zone = { id: string; code: string; name: string };
 type CStat = 'regular' | 'negotiating' | 'none';
 const CSTAT: Record<CStat, { label: string; tone: 'ok' | 'warn' | 'muted' }> = { regular: { label: 'ลูกค้าประจำ', tone: 'ok' }, negotiating: { label: 'กำลังเจรจา', tone: 'warn' }, none: { label: 'ยังไม่มีงาน', tone: 'muted' } };
 
 /** Optional: records which delivery zone the customer's coordinates fall in. */
+function ManagerPick({ members, value, onPick }: { members: { user_id: string; name: string }[]; value: string; onPick: (id: string) => void }) {
+  return (
+    <View style={{ marginVertical: 6 }}>
+      <Body tone="muted">ผู้ดูแลลูกค้า (สมาชิกที่รับผิดชอบ)</Body>
+      <Chips value={value} options={members.map((m) => ({ v: m.user_id, label: m.name }))} onPick={onPick} />
+    </View>
+  );
+}
+
 function ZonePick({ zones, value, onPick }: { zones: Zone[]; value: string; onPick: (id: string) => void }) {
   return (
     <View>
@@ -44,7 +54,7 @@ function ZonePick({ zones, value, onPick }: { zones: Zone[]; value: string; onPi
 }
 
 export default function Customers() {
-  const { current } = useAuth();
+  const { current, profile } = useAuth();
   const orgId = current?.org_id;
   const editable = canEdit('customers', current?.role);
   const [custs, setCusts] = useState<Cust[]>([]);
@@ -58,6 +68,9 @@ export default function Customers() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
+  const { members, nameOf } = useOrgMembers(current?.org_id);
+  const [mgr, setMgr] = useState<string>(''); // account manager of the customer being added / edited
+  const canArchive = canArchiveCustomer(current?.role);
   const [nc, setNc] = useState({ code: '', name: '', phone: '', email: '', tax: '' });
   // New customer wizard: step 1 = company + its address, step 2 = first contact person.
   const [step, setStep] = useState<1 | 2>(1);
@@ -77,7 +90,7 @@ export default function Customers() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const [c, a, z, jt, iv] = await Promise.all([
-      neon.from('customers').select('id,code,name,phone,email,tax_id,archived_at').eq('org_id', orgId).order('name'),
+      neon.from('customers').select('id,code,name,phone,email,tax_id,archived_at,account_manager').eq('org_id', orgId).order('name'),
       neon.from('customer_addresses').select('id,customer_id,label,address_line,province,latitude,longitude,contact_name,contact_phone,is_default,zone_id').eq('org_id', orgId),
       neon.from('delivery_zones').select('id,code,name').eq('org_id', orgId).order('code'),
       neon.from('job_tickets').select('customer_id,status,created_at').eq('org_id', orgId),
@@ -139,7 +152,7 @@ export default function Customers() {
     const co = coordsOf(ad);
     if (typeof co === 'string') return setErr(co);
     setBusy(true);
-    const { data: made, error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null, tax_id: nc.tax.trim() || null }).select('id').single();
+    const { data: made, error } = await neon.from('customers').insert({ org_id: orgId, code: nc.code.trim(), name: nc.name.trim(), phone: nc.phone.trim() || null, email: nc.email.trim() || null, tax_id: nc.tax.trim() || null, account_manager: mgr || profile?.id || null }).select('id').single();
     if (error || !made) { setBusy(false); setStep(1); return setErr(error?.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error)); }
     const warn: string[] = [];
     const { data: a, error: ae } = await neon.from('customer_addresses').insert({
@@ -155,11 +168,11 @@ export default function Customers() {
     setOpen(made.id); setEditing(false); setSaved(true);
   }
 
-  function startEdit(c: Cust) { setCe({ code: c.code, name: c.name, phone: c.phone ?? '', email: c.email ?? '', tax: c.tax_id ?? '' }); setSaved(false); setErr(null); setAddingAddr(false); setEditing(true); }
+  function startEdit(c: Cust) { setMgr(c.account_manager ?? ''); setCe({ code: c.code, name: c.name, phone: c.phone ?? '', email: c.email ?? '', tax: c.tax_id ?? '' }); setSaved(false); setErr(null); setAddingAddr(false); setEditing(true); }
   async function saveEdit(id: string) {
     if (!ce.code.trim() || !ce.name.trim()) return setErr('กรอกรหัสและชื่อลูกค้า');
     setBusy(true);
-    const { error } = await neon.from('customers').update({ code: ce.code.trim(), name: ce.name.trim(), phone: ce.phone.trim() || null, email: ce.email.trim() || null, tax_id: ce.tax.trim() || null }).eq('id', id);
+    const { error } = await neon.from('customers').update({ code: ce.code.trim(), name: ce.name.trim(), phone: ce.phone.trim() || null, email: ce.email.trim() || null, tax_id: ce.tax.trim() || null, account_manager: mgr || null }).eq('id', id);
     setBusy(false);
     if (error) return setErr(error.code === '23505' ? 'รหัสลูกค้านี้ถูกใช้แล้ว' : friendly(error));
     setErr(null); setEditing(false); setSaved(true); await load();
@@ -213,7 +226,7 @@ export default function Customers() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <TitleAdd title="ลูกค้า" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
+        <TitleAdd title="ลูกค้า" show={editable} open={adding} onToggle={() => { setMgr(profile?.id ?? ''); setAdding(!adding); }} />
         {err ? <Body tone="danger">{err}</Body> : null}
         {editable && adding ? (
           <Card>
@@ -235,6 +248,7 @@ export default function Customers() {
                 <Field label="เลขประจำตัวผู้เสียภาษี" value={nc.tax} onChangeText={(v) => setNc({ ...nc, tax: v })} keyboardType="number-pad" />
                 <Field label="โทรศัพท์บริษัท" value={nc.phone} onChangeText={(v) => setNc({ ...nc, phone: v })} keyboardType="phone-pad" />
                 <Field label="อีเมลบริษัท" value={nc.email} onChangeText={(v) => setNc({ ...nc, email: v })} keyboardType="email-address" autoCapitalize="none" />
+                <ManagerPick members={members} value={mgr || profile?.id || ''} onPick={setMgr} />
                 <Body>ที่อยู่บริษัท (1 บริษัท 1 ที่อยู่ ถ้ามีหลายที่อยู่ให้เพิ่มเป็นสาขาภายหลัง)</Body>
                 <Field label="ชื่อสาขา (เว้นว่าง = สำนักงานใหญ่)" value={ad.label} onChangeText={(v) => setAd({ ...ad, label: v })} />
                 <Field label="ที่อยู่" value={ad.line} onChangeText={(v) => setAd({ ...ad, line: v })} multiline />
@@ -284,6 +298,7 @@ export default function Customers() {
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{c.name}</Text>
                     <Text style={{ color: colors.muted }}>{c.code}{!wide && c.phone ? ` · ${c.phone}` : ''} · {list.length} ที่อยู่</Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>ผู้ดูแล: {nameOf(c.account_manager)}</Text>
                     {!wide ? <View style={{ flexDirection: 'row', marginTop: 4 }}><Pill text={CSTAT[st].label} tone={CSTAT[st].tone} /></View> : null}
                   </View>
                   {wide ? (
@@ -295,7 +310,7 @@ export default function Customers() {
                     </>
                   ) : null}
                 </Pressable>
-                {editable ? <ConfirmTrash label="ลบลูกค้า" onConfirm={() => void archiveCustomer(c.id)} /> : null}
+                {editable && canArchive ? <ConfirmTrash label="ลบลูกค้า" onConfirm={() => void archiveCustomer(c.id)} /> : null}
               </View>
               {isOpen ? (
                 <View style={{ marginTop: 12 }}>
@@ -307,9 +322,10 @@ export default function Customers() {
                       <Field label="เลขประจำตัวผู้เสียภาษี" value={ce.tax} onChangeText={(v) => setCe({ ...ce, tax: v })} keyboardType="number-pad" />
                       <Field label="โทรศัพท์บริษัท" value={ce.phone} onChangeText={(v) => setCe({ ...ce, phone: v })} keyboardType="phone-pad" />
                       <Field label="อีเมลบริษัท" value={ce.email} onChangeText={(v) => setCe({ ...ce, email: v })} keyboardType="email-address" autoCapitalize="none" />
+                      <ManagerPick members={members} value={mgr} onPick={setMgr} />
                     </View>
                   ) : (
-                    <DetailRows rows={[['รหัสลูกค้า', c.code], ['ชื่อลูกค้า / บริษัท', c.name], ['เลขประจำตัวผู้เสียภาษี', c.tax_id], ['โทรศัพท์บริษัท', c.phone], ['อีเมลบริษัท', c.email]]} />
+                    <DetailRows rows={[['รหัสลูกค้า', c.code], ['ชื่อลูกค้า / บริษัท', c.name], ['เลขประจำตัวผู้เสียภาษี', c.tax_id], ['โทรศัพท์บริษัท', c.phone], ['อีเมลบริษัท', c.email], ['ผู้ดูแลลูกค้า', nameOf(c.account_manager)]]} />
                   )}
                   {list.map((a) => {
                     const has = a.latitude !== null && a.longitude !== null;

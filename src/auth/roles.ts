@@ -34,7 +34,21 @@ export type Org = {
   currency: string;
   vat_rate: number;
 };
-export type Membership = { org_id: string; role: Role; status: 'active' | 'disabled'; org: Org };
+export type Membership = { org_id: string; role: Role; status: 'active' | 'disabled'; stock_manager?: boolean; org: Org };
+
+/** May change stock quantities: owner, admin, the warehouse role, or anyone granted the extra "stock manager" permission. */
+export function canManageStock(m: { role: Role; stock_manager?: boolean } | null | undefined): boolean {
+  return !!m && (m.role === 'owner' || m.role === 'admin' || m.role === 'warehouse' || m.stock_manager === true);
+}
+
+/** May change an item that someone opened (Job Ticket, visit): its creator, or owner/admin. */
+export function canChangeOwned(role: Role | undefined, createdBy: string | null | undefined, userId: string | undefined): boolean {
+  if (role === 'owner' || role === 'admin') return true;
+  return role === 'sales' && !!userId && createdBy === userId;
+}
+
+/** May archive ("delete") a customer: owner and admin only. */
+export function canArchiveCustomer(role: Role | undefined): boolean { return role === 'owner' || role === 'admin'; }
 
 export type Gate = 'loading' | 'signed-out' | 'no-org' | 'suspended' | 'ready' | 'error';
 
@@ -77,7 +91,7 @@ export const MODULE_ROLES: Record<string, readonly Role[]> = {
   delivery: ROLES,
   invoices: ROLES,
   notes: ROLES,
-  members: ['owner', 'admin'],
+  members: ROLES, // everyone can see their colleagues; managing them is owner/admin only
   settings: ROLES,
   docs: ROLES,
 };

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
-import { canEdit } from '@/auth/roles';
+import { canEdit, canManageStock } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Icon } from '@/ui/Icon';
@@ -25,7 +25,8 @@ export default function Stock() {
   const router = useRouter();
   const { current } = useAuth();
   const orgId = current?.org_id;
-  const editable = canEdit('stock', current?.role);
+  const editable = canManageStock(current); // quantity actions: owner/admin/warehouse or granted "stock manager"
+  const prodEditable = canEdit('products', current?.role);
   const [rows, setRows] = useState<L[]>([]);
   const [filter, setFilter] = useState<'all' | 'low'>('all');
   const [sel, setSel] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export default function Stock() {
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
         <SegTabs active="/stock" tabs={[{ href: '/stock', label: 'สต็อก' }, { href: '/products', label: 'รายละเอียดสินค้า' }]} />
-        <TitleAdd title="สต็อก" show={editable && canEdit('products', current?.role)} open={false} onToggle={() => router.push({ pathname: '/products', params: { add: '1' } } as never)} label="สินค้า" />
+        <TitleAdd title="สต็อก" show={prodEditable} open={false} onToggle={() => router.push({ pathname: '/products', params: { add: '1' } } as never)} label="สินค้า" />
         {err ? <Body tone="danger">{err}</Body> : null}
         <Chips value={filter} options={[{ v: 'all', label: 'ทั้งหมด' }, { v: 'low', label: `ต่ำกว่า Safety Stock (${rows.filter((r) => r.is_low).length})` }]} onPick={setFilter} />
         {shown.length === 0 ? <Empty>{filter === 'low' ? 'ไม่มีสินค้าที่ต่ำกว่า Safety Stock' : 'ยังไม่มีสินค้า'}</Empty> : (
@@ -118,8 +119,8 @@ export default function Stock() {
               ) : null}
               {sel === r.product_id ? (
                 <View style={{ marginTop: 12 }}>
-                  {orgId ? <ProductImages orgId={orgId} productId={r.product_id} editable={editable} /> : null}
-                  {orgId ? <ProductFiles orgId={orgId} productId={r.product_id} editable={editable} /> : null}
+                  {orgId ? <ProductImages orgId={orgId} productId={r.product_id} editable={prodEditable} /> : null}
+                  {orgId ? <ProductFiles orgId={orgId} productId={r.product_id} editable={prodEditable} /> : null}
                   <Text style={{ color: colors.text, fontWeight: '700', marginTop: 12 }}>ประวัติล่าสุด</Text>
                   {moves.length === 0 ? <Body tone="muted">ยังไม่มีความเคลื่อนไหว</Body> : null}
                   {moves.map((m) => (

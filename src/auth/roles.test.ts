@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { canArchiveCustomer, canChangeOwned, canManageStock,
   resolveAccess, canOpen, canEdit, assignableRoles, canManageMember, validateEmail, validatePassword, validateOrgName,
   type Membership, type Profile,
 } from './roles.ts';
@@ -39,7 +39,7 @@ test('platform admin without a company can still enter', () => {
 });
 test('module access', () => {
   assert.equal(canOpen('members', 'admin'), true);
-  assert.equal(canOpen('members', 'sales'), false);
+  assert.equal(canOpen('members', 'sales'), true); // colleagues are visible to everyone
   assert.equal(canOpen('dashboard', 'viewer'), true);
   assert.equal(canOpen('dashboard', undefined), false);
   assert.equal(canOpen('unknown', 'admin'), false);
@@ -76,4 +76,19 @@ test('new modules: invoices and delivery notes follow the database roles', () =>
   assert.equal(canEdit('docs', 'owner'), true);
   assert.equal(canEdit('docs', 'warehouse'), false);
   assert.equal(canOpen('invoices', 'viewer'), true);
+});
+
+test('stock manager permission', () => {
+  assert.equal(canManageStock({ role: 'sales' }), false);
+  assert.equal(canManageStock({ role: 'sales', stock_manager: true }), true);
+  assert.equal(canManageStock({ role: 'admin' }), true);
+  assert.equal(canManageStock(null), false);
+});
+test('only the opener or owner/admin may change an item; only owner/admin archive customers', () => {
+  assert.equal(canChangeOwned('sales', 'u1', 'u1'), true);
+  assert.equal(canChangeOwned('sales', 'u1', 'u2'), false);
+  assert.equal(canChangeOwned('admin', 'u1', 'u2'), true);
+  assert.equal(canChangeOwned('viewer', 'u1', 'u1'), false);
+  assert.equal(canArchiveCustomer('sales'), false);
+  assert.equal(canArchiveCustomer('owner'), true);
 });
