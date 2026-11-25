@@ -15,7 +15,7 @@ export default function More() {
   const router = useRouter();
   const { isPlatform } = useAuth();
   const { items } = useShell();
-  const rest = items.filter((i) => !isBottomItem(i.name) && i.name !== 'invoices');
+  const rest = items.filter((i) => !isBottomItem(i.name));
   const extra = [
     ...(isPlatform ? [{ name: 'platform', label: 'แพลตฟอร์ม', icon: 'shield' }] : []),
     { name: 'account', label: 'บัญชีของฉัน', icon: 'profile' },

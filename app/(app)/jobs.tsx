@@ -9,6 +9,7 @@ import { neon } from '@/lib/neon';
 import { nextAction, STEPS, stepOf, SUB_LABEL, subOf, summarize, type PipelineRow, type Sub } from '@/lib/pipeline';
 import { JobFiles } from '@/ui/JobFiles';
 import { TitleAdd } from '@/ui/ListBits';
+import { JobTabs } from '@/ui/SegTabs';
 import { baht } from '@/lib/money';
 import { Icon } from '@/ui/Icon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
@@ -123,6 +124,25 @@ export default function Jobs() {
     setComment(''); setErr(null); await loadEvents(t.id);
   }
 
+  /** Issue a DO from the accepted quotation: copy its product lines, then reserve the stock (mark_do_ready). */
+  async function createDo(t: T, quoteId: string): Promise<string | null> {
+    if (!orgId) return 'ไม่พบบริษัท';
+    const { data: ad } = await neon.from('customer_addresses').select('id,is_default').eq('org_id', orgId).eq('customer_id', t.customer_id);
+    const list = (ad ?? []) as { id: string; is_default: boolean }[];
+    const addr = list.find((a) => a.is_default) ?? list[0];
+    if (!addr) return 'ลูกค้านี้ยังไม่มีที่อยู่ — เพิ่มที่อยู่ในเมนูลูกค้าก่อน';
+    const { data: li, error: e1 } = await neon.from('quotation_items').select('product_id,description,qty,unit').eq('quotation_id', quoteId);
+    if (e1) return friendly(e1);
+    const lines = ((li ?? []) as { product_id: string | null; description: string; qty: number; unit: string }[]).filter((x) => x.product_id);
+    if (lines.length === 0) return 'ใบเสนอราคานี้ไม่มีรายการที่ผูกกับสินค้า จึงจองสต็อกไม่ได้';
+    const { data, error } = await neon.from('delivery_orders').insert({ org_id: orgId, customer_id: t.customer_id, address_id: addr.id, quotation_id: quoteId }).select('id').single();
+    if (error || !data) return friendly(error);
+    const { error: e2 } = await neon.from('delivery_order_items').insert(lines.map((l) => ({ org_id: orgId, order_id: data.id, product_id: l.product_id as string, description: l.description, qty: l.qty, unit: l.unit })));
+    if (e2) return friendly(e2);
+    const { error: e3 } = await neon.rpc('mark_do_ready', { p_do: data.id });
+    return e3 ? `${friendly(e3)} — DO ถูกสร้างเป็นร่างแล้ว กดพร้อมส่งอีกครั้งในหน้า DO เมื่อมีของ` : null;
+  }
+
   async function go(t: T, n: NonNullable<ReturnType<typeof nextAction>>) {
     if (busy) return;
     setBusy(true); setErr(null);
@@ -132,7 +152,11 @@ export default function Jobs() {
         if (error || !data) return setErr(friendly(error));
         await load(); router.push({ pathname: '/quotes', params: { open: data.id } } as never);
       } else if (n.kind === 'open_quote') router.push({ pathname: '/quotes', params: { open: n.id } } as never);
-      else if (n.kind === 'make_do') router.push({ pathname: '/delivery', params: { quote: n.quoteId } } as never);
+      else if (n.kind === 'make_do') {
+        const msg = await createDo(t, n.quoteId);
+        if (msg) return setErr(msg);
+        await load(); router.push('/delivery' as never);
+      }
       else if (n.kind === 'open_do') router.push('/delivery' as never);
       else if (n.kind === 'make_dn') {
         const { data, error } = await neon.rpc('issue_delivery_note', { p_do: n.doId });
@@ -163,6 +187,7 @@ export default function Jobs() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
+        <JobTabs active="/jobs" />
         <TitleAdd title="Job Ticket" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
         <Card>

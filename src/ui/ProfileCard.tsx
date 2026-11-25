@@ -53,6 +53,7 @@ export function ProfileCard() {
   const [layoutId, setLayoutId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [layoutName, setLayoutName] = useState('');
+  const [overwrite, setOverwrite] = useState(true); // saving a changed saved format: overwrite it (same name) or save as a new one
 
   useEffect(() => {
     if (!profile) return;
@@ -113,7 +114,10 @@ export function ProfileCard() {
     if (!profile || !current || busy) return;
     setBusy(true);
     let id = layoutId;
-    if (layout && (dirty || !id)) {
+    if (layout && id && dirty && overwrite) {
+      const up = await neon.from('card_layouts').update({ layout }).eq('id', id).select('id');
+      if (up.error || !up.data?.length) { setBusy(false); return setMsg({ text: up.error ? friendly(up.error) : 'ไม่มีสิทธิ์แก้รูปแบบนี้ (เฉพาะผู้สร้างหรือผู้ดูแล) — เลือก "บันทึกเป็นรูปแบบใหม่"', ok: false }); }
+    } else if (layout && (dirty || !id)) {
       if (!layoutName.trim()) { setBusy(false); return setMsg({ text: 'ตั้งชื่อรูปแบบนามบัตร', ok: false }); }
       const ins = await neon.from('card_layouts').insert({ org_id: current.org_id, name: layoutName.trim(), layout }).select('id').single();
       if (ins.error || !ins.data) { setBusy(false); return setMsg({ text: friendly(ins.error), ok: false }); }
@@ -197,7 +201,8 @@ export function ProfileCard() {
             <CardDesigner orgId={current.org_id} userId={profile.id} canDeleteAll={canAdmin} layout={layout ?? defaultLayout()} layoutId={layoutId}
               onChange={(l) => { setLayout(l); setDirty(true); }} onPickSaved={(id, l) => { setLayout(l); setLayoutId(id); setDirty(false); }}
               data={cardData} vcf={qrVcf} color={f.color} template={tplNow} />
-            {dirty ? <Field label="ชื่อรูปแบบ (บันทึกให้ทั้งบริษัทใช้)" value={layoutName} onChangeText={setLayoutName} /> : null}
+            {dirty && layoutId ? <Chips value={overwrite ? 'o' : 'n'} options={[{ v: 'o', label: 'บันทึกทับรูปแบบเดิม (ชื่อเดิม)' }, { v: 'n', label: 'บันทึกเป็นรูปแบบใหม่' }]} onPick={(v) => setOverwrite(v === 'o')} /> : null}
+            {dirty && (!layoutId || !overwrite) ? <Field label="ชื่อรูปแบบ (บันทึกให้ทั้งบริษัทใช้)" value={layoutName} onChangeText={setLayoutName} /> : null}
             <Body tone="muted">สีนามบัตร (เลือกได้ทุกเฉด)</Body>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
               {CARD_PALETTE.map((k) => (

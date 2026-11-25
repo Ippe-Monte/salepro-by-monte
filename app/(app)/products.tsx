@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
@@ -9,6 +10,7 @@ import { neon } from '@/lib/neon';
 import { DbImage } from '@/ui/DbImage';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { ConfirmTrash, TitleAdd } from '@/ui/ListBits';
+import { SegTabs } from '@/ui/SegTabs';
 import { ProductFiles } from '@/ui/ProductFiles';
 import { ProductImages } from '@/ui/ProductImages';
 import { DetailRows, EditActions } from '@/ui/ViewEdit';
@@ -26,6 +28,8 @@ export default function Products() {
   const [q, setQ] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const { add: addParam } = useLocalSearchParams<{ add?: string }>();
+  useEffect(() => { if (addParam) setAdding(true); }, [addParam]);
   const [f, setF] = useState(EMPTY);
   const [open, setOpen] = useState<string | null>(null);
   const [ed, setEd] = useState({ name: '', unit: '', price: '', min: '' });
@@ -80,7 +84,8 @@ export default function Products() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <TitleAdd title="สินค้า" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
+        <SegTabs active="/products" tabs={[{ href: '/stock', label: 'สต็อก' }, { href: '/products', label: 'รายละเอียดสินค้า' }]} />
+        <TitleAdd title="รายละเอียดสินค้า" show={editable} open={adding} onToggle={() => setAdding(!adding)} />
         {err ? <Body tone="danger">{err}</Body> : null}
         {editable && adding ? (
           <Card>

@@ -11,7 +11,7 @@ import { neon } from '@/lib/neon';
 import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
 import { dateLocale } from '@/i18n';
-import { SegTabs } from '@/ui/SegTabs';
+import { JobTabs } from '@/ui/SegTabs';
 
 type Inv = {
   id: string; doc_no: string; quotation_id: string; customer_id: string; address_id: string | null; status: 'issued' | 'paid' | 'cancelled'; issue_date: string; credit_days: number;
@@ -86,7 +86,7 @@ export default function Invoices() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <SegTabs tabs={[{ href: '/quotes', label: 'ใบเสนอราคา' }, { href: '/invoices', label: 'อินวอยซ์' }]} active="/invoices" />
+        <JobTabs active="/invoices" />
         <Title>อินวอยซ์</Title>
         {err ? <Body tone="danger">{err}</Body> : null}
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>

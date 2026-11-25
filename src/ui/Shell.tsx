@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 import { LangSwitch } from './LangSwitch';
 import { Logo } from './Logo';
 import { OrgLogo } from './OrgLogo';
-import { BOTTOM, isBottomItem, TAB_LABEL, tabOf, visibleItems, type NavItem } from './nav';
+import { BOTTOM, MERGED, isBottomItem, TAB_LABEL, tabOf, visibleItems, type NavItem } from './nav';
 import { useTheme } from './ThemeProvider';
 import { VersionBadge } from './VersionBadge';
 import { colors } from './theme';
@@ -72,8 +72,8 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
         <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16 }}>SALEPRO</Text>
       </View>
       <View style={{ paddingHorizontal: 8, marginBottom: 14 }}><OrgBadge /></View>
-      {items.map((i) => {
-        const on = i.name === active;
+      {items.filter((i) => !MERGED.includes(i.name)).map((i) => {
+        const on = i.name === tabOf(active);
         return (
           <Pressable key={i.name} accessibilityRole="button" onPress={() => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, marginBottom: 2, backgroundColor: on ? colors.selected : 'transparent' }}>

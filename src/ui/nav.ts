@@ -21,14 +21,16 @@ export const ALL_ITEMS: NavItem[] = [
 ];
 
 /** The five items always shown in the phone bottom bar; everything else lives under "เพิ่มเติม". */
-export const BOTTOM = ['index', 'jobs', 'quotes', 'visits'] as const;
+export const BOTTOM = ['index', 'jobs', 'stock', 'visits'] as const;
 
-/** Screens that share a bottom tab with another one (invoices sit under the Quote/Invoice tab). */
-const TAB_OF: Record<string, string> = { invoices: 'quotes' };
+/** Screens that share a bottom tab with another one (quotes, DO, delivery notes and invoices sit under Job Ticket; products under Stock). */
+const TAB_OF: Record<string, string> = { quotes: 'jobs', delivery: 'jobs', notes: 'jobs', invoices: 'jobs', products: 'stock' };
+/** Screens reached through another tab (hidden from the sidebar and the More menu). */
+export const MERGED = Object.keys(TAB_OF);
 export function tabOf(name: string): string { return TAB_OF[name] ?? name; }
 
 /** Short labels for the phone bottom bar. */
-export const TAB_LABEL: Record<string, string> = { jobs: 'Job Ticket', quotes: 'Quote/Invoice', visits: 'ปฏิทิน/แผนที่' };
+export const TAB_LABEL: Record<string, string> = { jobs: 'Job Ticket', stock: 'Stock', visits: 'ปฏิทิน/แผนที่' };
 
 export function isBottomItem(name: string): boolean {
   return (BOTTOM as readonly string[]).includes(tabOf(name));

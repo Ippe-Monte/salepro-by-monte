@@ -50,7 +50,8 @@ export function CardDesigner({ orgId, userId, canDeleteAll, layout, layoutId, on
     if (error) setErr(friendly(error)); else { setErr(null); await load(); }
   }
 
-  const btn = { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: colors.border };
+  const btn = { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 14, borderWidth: 1, borderColor: colors.border, minHeight: 28, justifyContent: 'center' as const };
+  const sm = { color: colors.text, fontSize: 12 };
   return (
     <View>
       {err ? <Body tone="danger">{err}</Body> : null}
@@ -72,7 +73,7 @@ export function CardDesigner({ orgId, userId, canDeleteAll, layout, layoutId, on
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 6 }}>
         {SIZE_PRESETS.map((p) => {
           const on = Math.min(layout.w, layout.h) === Math.min(p.w, p.h) && Math.max(layout.w, layout.h) === Math.max(p.w, p.h);
-          return <Pressable key={p.key} accessibilityRole="button" onPress={() => onChange(setPortrait(setSize(layout, p.w, p.h), isPortrait(layout)))} style={{ ...btn, backgroundColor: on ? colors.selected : 'transparent' }}><Text style={{ color: colors.text, fontSize: 13 }}>{p.label}</Text></Pressable>;
+          return <Pressable key={p.key} accessibilityRole="button" onPress={() => onChange(setPortrait(setSize(layout, p.w, p.h), isPortrait(layout)))} style={{ ...btn, backgroundColor: on ? colors.selected : 'transparent' }}><Text style={sm}>{p.label}</Text></Pressable>;
         })}
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -87,39 +88,39 @@ export function CardDesigner({ orgId, userId, canDeleteAll, layout, layoutId, on
       </View>
 
       <Text style={{ color: colors.text, fontWeight: '700' }}>เพิ่มกล่องข้อความ</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 6 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginVertical: 4 }}>
         {ADDABLE.map((t) => (
-          <Pressable key={t} accessibilityRole="button" accessibilityLabel={`เพิ่ม ${TYPE_LABEL[t]}`} onPress={() => add(t)} style={btn}><Text style={{ color: colors.text, fontSize: 13 }}>+ {TYPE_LABEL[t]}</Text></Pressable>
+          <Pressable key={t} accessibilityRole="button" accessibilityLabel={`เพิ่ม ${TYPE_LABEL[t]}`} onPress={() => add(t)} style={btn}><Text style={sm}>+ {TYPE_LABEL[t]}</Text></Pressable>
         ))}
       </View>
 
       {el ? (
-        <View style={{ borderWidth: 1, borderColor: colors.accent, borderRadius: 10, padding: 10, marginTop: 6 }}>
-          <Text style={{ color: colors.text, fontWeight: '700' }}>กล่องที่เลือก: {TYPE_LABEL[el.t]}</Text>
+        <View style={{ borderWidth: 1, borderColor: colors.accent, borderRadius: 10, padding: 8, marginTop: 6 }}>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>กล่องที่เลือก: {TYPE_LABEL[el.t]}</Text>
           {el.t === 'text' ? <Field label="ข้อความ" value={el.txt ?? ''} onChangeText={(v) => patch(el.id, { txt: v.slice(0, 120) })} /> : null}
-          <View style={{ flexDirection: 'row', gap: 8, marginVertical: 6, flexWrap: 'wrap' }}>
-            <Pressable accessibilityRole="button" accessibilityLabel="ย่อ" onPress={() => step(-1)} style={btn}><Text style={{ color: colors.text }}>ย่อ −</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="ขยาย" onPress={() => step(1)} style={btn}><Text style={{ color: colors.text }}>ขยาย +</Text></Pressable>
-            {!isBox(el.t) ? <Pressable accessibilityRole="button" onPress={() => patch(el.id, { b: !el.b })} style={{ ...btn, backgroundColor: el.b ? colors.selected : 'transparent' }}><Text style={{ color: colors.text, fontWeight: '800' }}>ตัวหนา</Text></Pressable> : null}
+          <View style={{ flexDirection: 'row', gap: 5, marginVertical: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="ย่อ" onPress={() => step(-1)} style={btn}><Text style={sm}>ย่อ −</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="ขยาย" onPress={() => step(1)} style={btn}><Text style={sm}>ขยาย +</Text></Pressable>
+            {!isBox(el.t) ? <Pressable accessibilityRole="button" onPress={() => patch(el.id, { b: !el.b })} style={{ ...btn, backgroundColor: el.b ? colors.selected : 'transparent' }}><Text style={{ ...sm, fontWeight: '800' }}>ตัวหนา</Text></Pressable> : null}
+            {([['◀', -1, 0], ['▲', 0, -1], ['▼', 0, 1], ['▶', 1, 0]] as const).map(([g, dx, dy]) => (
+              <Pressable key={g} accessibilityRole="button" accessibilityLabel={`ขยับ ${g}`} onPress={() => nudge(dx, dy)} style={{ ...btn, paddingHorizontal: 8 }}><Text style={sm}>{g}</Text></Pressable>
+            ))}
+            <Pressable accessibilityRole="button" onPress={() => { onChange({ ...layout, els: layout.els.filter((e) => e.id !== el.id) }); setSel(null); }} style={{ ...btn, borderColor: colors.danger }}><Text style={{ ...sm, color: colors.danger }}>ลบกล่องนี้</Text></Pressable>
           </View>
-          {!isBox(el.t) ? <Chips value={el.a ?? 'l'} options={[{ v: 'l', label: 'ชิดซ้าย' }, { v: 'c', label: 'กึ่งกลาง' }, { v: 'r', label: 'ชิดขวา' }]} onPick={(v) => patch(el.id, { a: v })} /> : null}
           {!isBox(el.t) ? (
-            <View style={{ flexDirection: 'row', gap: 8, marginVertical: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted }}>สีตัวอักษร</Text>
+            <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+              {([['l', 'ชิดซ้าย'], ['c', 'กึ่งกลาง'], ['r', 'ชิดขวา']] as const).map(([v, label]) => (
+                <Pressable key={v} accessibilityRole="button" onPress={() => patch(el.id, { a: v })} style={{ ...btn, backgroundColor: (el.a ?? 'l') === v ? colors.selected : 'transparent' }}><Text style={sm}>{label}</Text></Pressable>
+              ))}
+              <Text style={{ color: colors.muted, fontSize: 12, marginLeft: 4 }}>สี</Text>
               {TEXT_COLORS.map((c) => (
                 <Pressable key={c || 'auto'} accessibilityRole="button" accessibilityLabel={c || 'สีอัตโนมัติ'} onPress={() => patch(el.id, { c })}
-                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c || 'transparent', borderWidth: 3, borderColor: (el.c ?? '') === c ? colors.primary : '#cbd5e1', alignItems: 'center', justifyContent: 'center' }}>
-                  {c === '' ? <Text style={{ fontSize: 11, color: colors.muted }}>A</Text> : null}
+                  style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: c || 'transparent', borderWidth: 2, borderColor: (el.c ?? '') === c ? colors.primary : '#cbd5e1', alignItems: 'center', justifyContent: 'center' }}>
+                  {c === '' ? <Text style={{ fontSize: 10, color: colors.muted }}>A</Text> : null}
                 </Pressable>
               ))}
             </View>
           ) : null}
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginVertical: 6 }}>
-            {([['◀', -1, 0], ['▲', 0, -1], ['▼', 0, 1], ['▶', 1, 0]] as const).map(([g, dx, dy]) => (
-              <Pressable key={g} accessibilityRole="button" accessibilityLabel={`ขยับ ${g}`} onPress={() => nudge(dx, dy)} style={btn}><Text style={{ color: colors.text }}>{g}</Text></Pressable>
-            ))}
-          </View>
-          <Button title="ลบกล่องนี้" variant="ghost" onPress={() => { onChange({ ...layout, els: layout.els.filter((e) => e.id !== el.id) }); setSel(null); }} />
         </View>
       ) : null}
       <Button title="เริ่มใหม่ (รูปแบบมาตรฐาน)" variant="ghost" onPress={() => { onChange(defaultLayout()); setSel(null); }} />

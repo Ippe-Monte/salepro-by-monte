@@ -7,6 +7,7 @@ import { loadDocContext, loadThumbs, defaultSettings, type DocContext, type Img 
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
 import { Body, Button, Card, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { JobTabs } from '@/ui/SegTabs';
 import { DocPaper, printPaper } from '@/ui/DocPaper';
 import { dateLocale } from '@/i18n';
 
@@ -80,7 +81,7 @@ export default function DeliveryNotes() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>ใบส่งของ</Title>
+        <JobTabs active="/notes" />
         <Body tone="muted">ใบส่งของติดไปกับสินค้า ลูกค้าตรวจรับและเซ็นรับ ออกได้เมื่อ DO ออกจัดส่งแล้ว</Body>
         {err ? <Body tone="danger">{err}</Body> : null}
         {missing.length > 0 ? (

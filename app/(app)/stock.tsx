@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/Text';
 import { useAuth } from '@/auth/AuthProvider';
 import { canEdit } from '@/auth/roles';
 import { friendly } from '@/lib/errors';
 import { neon } from '@/lib/neon';
-import { loadThumbs, type Img } from '@/lib/docmeta';
-import { DbImage } from '@/ui/DbImage';
 import { Icon } from '@/ui/Icon';
-import { Body, Button, Card, Chips, Empty, Field, Pill, Screen, Title } from '@/ui/kit';
+import { Body, Button, Card, Chips, Empty, Field, Pill, Screen } from '@/ui/kit';
+import { TitleAdd } from '@/ui/ListBits';
+import { SegTabs } from '@/ui/SegTabs';
 import { ProductFiles } from '@/ui/ProductFiles';
 import { ProductImages } from '@/ui/ProductImages';
 import { colors } from '@/ui/theme';
@@ -21,6 +22,7 @@ const KIND_LABEL: Record<string, string> = { receive: 'รับเข้า', i
 type Mode = 'receive' | 'issue' | 'adjust';
 
 export default function Stock() {
+  const router = useRouter();
   const { current } = useAuth();
   const orgId = current?.org_id;
   const editable = canEdit('stock', current?.role);
@@ -28,7 +30,6 @@ export default function Stock() {
   const [filter, setFilter] = useState<'all' | 'low'>('all');
   const [sel, setSel] = useState<string | null>(null);
   const [act, setAct] = useState<{ id: string; mode: Mode } | null>(null);
-  const [thumbs, setThumbs] = useState<Record<string, Img>>({});
   const [moves, setMoves] = useState<M[]>([]);
   const [qty, setQty] = useState('');
   const [note, setNote] = useState('');
@@ -37,7 +38,7 @@ export default function Stock() {
   const load = useCallback(async () => {
     if (!orgId) return;
     const { data, error } = await neon.from('stock_levels').select('product_id,sku,name,unit,min_qty,on_hand,reserved,available,is_low,archived_at').eq('org_id', orgId).order('name');
-    if (error) setErr('โหลดข้อมูลไม่สำเร็จ'); else { setErr(null); const list = (data as L[]).filter((r) => !r.archived_at); setRows(list); setThumbs(await loadThumbs(orgId, list.slice(0, 60).map((r) => r.product_id))); }
+    if (error) setErr('โหลดข้อมูลไม่สำเร็จ'); else { setErr(null); const list = (data as L[]).filter((r) => !r.archived_at); setRows(list); }
   }, [orgId]);
   useEffect(() => { void load(); }, [load]);
 
@@ -74,30 +75,31 @@ export default function Stock() {
   return (
     <Screen>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <Title>สต็อก</Title>
+        <SegTabs active="/stock" tabs={[{ href: '/stock', label: 'สต็อก' }, { href: '/products', label: 'รายละเอียดสินค้า' }]} />
+        <TitleAdd title="สต็อก" show={editable && canEdit('products', current?.role)} open={false} onToggle={() => router.push({ pathname: '/products', params: { add: '1' } } as never)} label="สินค้า" />
         {err ? <Body tone="danger">{err}</Body> : null}
         <Chips value={filter} options={[{ v: 'all', label: 'ทั้งหมด' }, { v: 'low', label: `ต่ำกว่า Safety Stock (${rows.filter((r) => r.is_low).length})` }]} onPick={setFilter} />
-        {shown.length === 0 ? <Empty>{filter === 'low' ? 'ไม่มีสินค้าที่ต่ำกว่า Safety Stock' : 'ยังไม่มีสินค้า'}</Empty> : null}
+        {shown.length === 0 ? <Empty>{filter === 'low' ? 'ไม่มีสินค้าที่ต่ำกว่า Safety Stock' : 'ยังไม่มีสินค้า'}</Empty> : (
+          <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, marginTop: 8 }}>
+            <Text style={{ flex: 1, color: colors.muted, fontSize: 12, fontWeight: '700' }}>รหัส / สินค้า</Text>
+            {['คงเหลือ', 'จอง', 'ใช้ได้'].map((h) => <Text key={h} style={{ width: 56, textAlign: 'right', color: colors.muted, fontSize: 12, fontWeight: '700' }}>{h}</Text>)}
+          </View>
+        )}
         {shown.map((r) => {
-          const th = thumbs[r.product_id];
           const here = act?.id === r.product_id ? act.mode : null;
           return (
             <Card key={r.product_id}>
-              <Pressable accessibilityRole="button" onPress={() => void pick(r.product_id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                {th ? <DbImage data={th.data} mime={th.mime} size={56} /> : <View style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: colors.border }} />}
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                    <Text style={{ color: colors.text, fontWeight: '700', flex: 1 }}>{r.name}</Text>
-                    {r.is_low ? <Pill text="ต่ำกว่า Safety" tone="danger" /> : null}
-                  </View>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>{r.sku} · จอง {r.reserved} · ใช้ได้ {r.available} · Safety {r.min_qty}</Text>
+              <Pressable accessibilityRole="button" onPress={() => void pick(r.product_id)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1, paddingRight: 6 }}>
+                  <Text style={{ color: colors.text, fontWeight: '700' }}>{r.name}</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{r.sku} · {r.unit} · Safety {r.min_qty}</Text>
+                  {r.is_low ? <View style={{ alignSelf: 'flex-start', marginTop: 4 }}><Pill text="ต่ำกว่า Safety" tone="danger" /></View> : null}
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ color: r.is_low ? colors.danger : colors.text, fontSize: 22, fontWeight: '800' }}>{r.on_hand}</Text>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>{r.unit}</Text>
-                </View>
+                <Text style={{ width: 56, textAlign: 'right', color: r.is_low ? colors.danger : colors.text, fontWeight: '800' }}>{r.on_hand}</Text>
+                <Text style={{ width: 56, textAlign: 'right', color: colors.muted }}>{r.reserved}</Text>
+                <Text style={{ width: 56, textAlign: 'right', color: colors.text }}>{r.available}</Text>
               </Pressable>
-              {editable ? (
+              {editable && sel === r.product_id ? (
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
                   {([['receive', 'plus', 'เพิ่ม'], ['issue', 'x', 'ลด'], ['adjust', 'pencil', 'ปรับยอด']] as const).map(([m, ic, label]) => (
                     <Pressable key={m} accessibilityRole="button" onPress={() => startAct(r.product_id, m)}
