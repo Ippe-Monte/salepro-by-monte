@@ -1,6 +1,9 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
+  "(สิทธิ์": "(role",
+  "กรอกโค้ดเชิญที่ได้รับจาก admin ด้านล่างเพื่อเข้าร่วม — ไม่ต้องสร้างบริษัทใหม่": "Enter the invitation code you received from the admin below to join — no need to create a new company",
+  "คุณถูกเชิญเข้าบริษัท:": "You have been invited to:",
   "กำลังรีเฟรช…": "Refreshing…",
   "ดึงลงเพื่อรีเฟรช": "Pull down to refresh",
   "ปล่อยเพื่อรีเฟรช": "Release to refresh",
