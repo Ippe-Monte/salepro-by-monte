@@ -1,7 +1,10 @@
 // English translations of every Thai text fragment in the app (keys are the Thai fragments exactly as written in the code).
 // src/i18n/coverage.test.ts fails if a Thai fragment is added to the code without an entry here.
 export const EN: Record<string, string> = {
-  "(เมนูแชร์ใช้ไม่ได้:": "(share menu unavailable:",
+  ") ลองแชร์เป็นข้อความ หรือบันทึกไฟล์ .vcf แล้วส่งต่อจากแอปไฟล์": ") Try sharing as text, or save the .vcf file and send it from your Files app",
+  "บันทึกไฟล์ .vcf": "Save .vcf file",
+  "เมนูแชร์ของเบราว์เซอร์ใช้ไม่ได้ (": "The browser share menu is unavailable (",
+  "แชร์เป็นข้อความ": "Share as text",
   "· ดูอย่างเดียว (แก้ไขได้เฉพาะผู้เปิดงาน เจ้าของ และแอดมิน)": "· view only (only the opener, owner and admin can edit)",
   "· ผู้จัดการคลังสินค้า": "· Warehouse manager",
   "ดูอย่างเดียว — แก้ไขได้เฉพาะผู้เปิดนัด เจ้าของ และแอดมิน": "View only — only the member who opened the visit, owner and admin can edit",
