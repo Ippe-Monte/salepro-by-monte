@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, TextInput, View, type TextInputProps } from 'react-native';
 import { Text } from './Text';
 import { Icon } from './Icon';
@@ -14,14 +15,17 @@ export function Body({ children, tone }: { children: React.ReactNode; tone?: 'mu
   return <Text style={{ color, fontSize: 15, lineHeight: 22 }}>{children}</Text>;
 }
 export function Field(props: TextInputProps & { label: string }) {
-  const { label, ...rest } = props;
+  const { label, onFocus, onBlur, ...rest } = props;
+  const [focus, setFocus] = useState(false);
   return (
     <View style={{ marginBottom: 12 }}>
       <Text style={{ color: colors.muted, marginBottom: 4 }}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={colors.muted}
-        style={{ backgroundColor: colors.input, borderColor: colors.border, borderWidth: 1, borderRadius: 10, color: colors.text, padding: 12, minHeight: 48 }}
+        onFocus={(e) => { setFocus(true); onFocus?.(e); }}
+        onBlur={(e) => { setFocus(false); onBlur?.(e); }}
+        style={{ backgroundColor: colors.input, borderColor: focus ? colors.primary : colors.border, borderWidth: focus ? 2 : 1, borderRadius: 12, color: colors.text, paddingHorizontal: focus ? 11 : 12, paddingVertical: focus ? 11 : 12, minHeight: 48 }}
         {...rest}
       />
     </View>
@@ -31,7 +35,7 @@ export function Button({ title, onPress, busy, variant, icon }: { title: string;
   const bg = variant === 'ghost' ? 'transparent' : variant === 'danger' ? colors.danger : colors.primary;
   return (
     <Pressable accessibilityRole="button" disabled={busy} onPress={onPress}
-      style={{ backgroundColor: bg, borderColor: colors.border, borderWidth: variant === 'ghost' ? 1 : 0, borderRadius: 12, minHeight: 48, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.6 : 1, marginTop: 8 }}>
+      style={({ pressed }) => ({ backgroundColor: bg, borderColor: colors.border, borderWidth: variant === 'ghost' ? 1 : 0, borderRadius: 12, minHeight: 48, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.6 : pressed ? 0.85 : 1, marginTop: 8 })}>
       {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : '#fff'} /> : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.primary : '#fff'} /> : null}
@@ -50,8 +54,8 @@ export function Chips<T extends string>({ value, options, onPick }: { value: T; 
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 8 }}>
       {options.map((o) => (
         <Pressable key={o.v} accessibilityRole="button" onPress={() => onPick(o.v)}
-          style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: value === o.v ? colors.selected : 'transparent' }}>
-          <Text style={{ color: colors.text }}>{o.label}</Text>
+          style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: value === o.v ? colors.primary : colors.border, backgroundColor: value === o.v ? colors.selected : 'transparent' }}>
+          <Text style={{ color: value === o.v ? colors.selectedText : colors.text, fontWeight: value === o.v ? '600' : '400' }}>{o.label}</Text>
         </Pressable>
       ))}
     </View>
@@ -61,6 +65,7 @@ export function Empty({ children }: { children: React.ReactNode }) {
   return <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: colors.muted }}>{children}</Text></View>;
 }
 export function Pill({ text, tone }: { text: string; tone?: 'ok' | 'warn' | 'danger' | 'muted' }) {
-  const bg = tone === 'ok' ? '#064e3b' : tone === 'warn' ? '#78350f' : tone === 'danger' ? '#7f1d1d' : '#1e293b';
-  return <Text style={{ color: '#fff', backgroundColor: bg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, alignSelf: 'flex-start' }}>{text}</Text>;
+  const bg = tone === 'ok' ? colors.pillOkBg : tone === 'warn' ? colors.pillWarnBg : tone === 'danger' ? colors.pillDangerBg : colors.pillMutedBg;
+  const fg = tone === 'ok' ? colors.pillOkFg : tone === 'warn' ? colors.pillWarnFg : tone === 'danger' ? colors.pillDangerFg : colors.pillMutedFg;
+  return <Text style={{ color: fg, backgroundColor: bg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, fontSize: 12, fontWeight: '600', alignSelf: 'flex-start', overflow: 'hidden' }}>{text}</Text>;
 }
