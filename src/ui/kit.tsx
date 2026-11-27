@@ -25,7 +25,7 @@ export function Field(props: TextInputProps & { label: string }) {
         placeholderTextColor={colors.muted}
         onFocus={(e) => { setFocus(true); onFocus?.(e); }}
         onBlur={(e) => { setFocus(false); onBlur?.(e); }}
-        style={{ backgroundColor: colors.input, borderColor: focus ? colors.primary : colors.border, borderWidth: focus ? 2 : 1, borderRadius: 12, color: colors.text, paddingHorizontal: focus ? 11 : 12, paddingVertical: focus ? 11 : 12, minHeight: 48 }}
+        style={{ backgroundColor: colors.input, borderColor: focus ? colors.accent : colors.border, borderWidth: focus ? 2 : 1, borderRadius: 12, color: colors.text, paddingHorizontal: focus ? 11 : 12, paddingVertical: focus ? 11 : 12, minHeight: 48 }}
         {...rest}
       />
     </View>
@@ -38,7 +38,7 @@ export function Button({ title, onPress, busy, variant, icon }: { title: string;
       style={({ pressed }) => ({ backgroundColor: bg, borderColor: colors.border, borderWidth: variant === 'ghost' ? 1 : 0, borderRadius: 12, minHeight: 48, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.6 : pressed ? 0.85 : 1, marginTop: 8 })}>
       {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : variant === 'danger' ? '#fff' : colors.onPrimary} /> : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.primary : variant === 'danger' ? '#fff' : colors.onPrimary} /> : null}
+          {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.accent : variant === 'danger' ? '#fff' : colors.onPrimary} /> : null}
           <Text style={{ color: variant === 'ghost' ? colors.text : variant === 'danger' ? '#fff' : colors.onPrimary, fontWeight: '700' }}>{title}</Text>
         </View>
       )}

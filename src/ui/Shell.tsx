@@ -77,7 +77,7 @@ export function Sidebar({ items, active }: { items: NavItem[]; active: string })
         return (
           <Pressable key={i.name} accessibilityRole="button" onPress={() => router.push((i.name === 'index' ? '/' : `/${i.name}`) as never)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, marginBottom: 2, backgroundColor: on ? colors.selected : 'transparent' }}>
-            <Icon name={i.icon} size={20} color={on ? colors.primary : colors.muted} />
+            <Icon name={i.icon} size={20} color={on ? colors.accent : colors.muted} />
             <Text style={{ color: on ? colors.text : colors.muted, fontWeight: on ? '700' : '500' }}>{i.label}</Text>
           </Pressable>
         );
@@ -108,9 +108,9 @@ export function BottomBar({ items, active }: { items: NavItem[]; active: string 
         <Pressable key={t.key} accessibilityRole="button" accessibilityLabel={t.label} onPress={t.go} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}>
           <View style={{ position: 'absolute', top: -6, width: 28, height: 3, borderRadius: 2, backgroundColor: t.on ? colors.highlight : 'transparent' }} />
           <View style={{ paddingVertical: 4 }}>
-            <Icon name={t.icon} size={24} color={t.on ? colors.primary : colors.muted} strokeWidth={t.on ? 2.2 : 1.8} />
+            <Icon name={t.icon} size={24} color={t.on ? colors.accent : colors.muted} strokeWidth={t.on ? 2.2 : 1.8} />
           </View>
-          <Text numberOfLines={1} style={{ fontSize: 11, color: t.on ? colors.primary : colors.muted, fontWeight: t.on ? '700' : '500' }}>{t.label}</Text>
+          <Text numberOfLines={1} style={{ fontSize: 11, color: t.on ? colors.accent : colors.muted, fontWeight: t.on ? '700' : '500' }}>{t.label}</Text>
         </Pressable>
       ))}
     </View>

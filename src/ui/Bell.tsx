@@ -49,7 +49,8 @@ export function Bell() {
   const unread = total > 0 && sig !== seen;
 
   function show() { setOpen(true); void load(); if (orgId) { writeSeen(orgId, sig); setSeen(sig); } }
-  const color = { danger: colors.danger, warn: '#d97706', info: colors.primary } as const;
+  const color = { danger: colors.danger, warn: colors.cta, info: colors.primary } as const;
+  const onColor = { danger: '#fff', warn: colors.onCta, info: colors.onPrimary } as const;
 
   return (
     <>
@@ -71,7 +72,7 @@ export function Bell() {
                 <Pressable key={x.key} accessibilityRole="button" onPress={() => { setOpen(false); router.push(x.href as never); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
                   <Icon name={x.icon} size={22} color={color[x.tone]} />
                   <Text style={{ color: colors.text, flex: 1 }}>{x.label}</Text>
-                  <View style={{ minWidth: 28, height: 24, borderRadius: 12, paddingHorizontal: 8, backgroundColor: color[x.tone], alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: '800' }}>{x.count}</Text></View>
+                  <View style={{ minWidth: 28, height: 24, borderRadius: 12, paddingHorizontal: 8, backgroundColor: color[x.tone], alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: onColor[x.tone], fontWeight: '800' }}>{x.count}</Text></View>
                 </Pressable>
               ))}
             </Pressable>

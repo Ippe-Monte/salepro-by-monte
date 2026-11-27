@@ -83,7 +83,7 @@ export function JobFiles({ orgId, ticketId, editable }: { orgId: string; ticketI
       {err ? <Body tone="danger">{err}</Body> : null}
       {rows.map((f) => (
         <View key={f.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
-          <Icon name={f.mime === 'application/pdf' ? 'documents' : 'camera'} size={22} color={colors.primary} />
+          <Icon name={f.mime === 'application/pdf' ? 'documents' : 'camera'} size={22} color={colors.accent} />
           <Pressable accessibilityRole="button" onPress={() => void open(f)} style={{ flex: 1 }}>
             <Text numberOfLines={1} style={{ color: colors.accent, fontWeight: '600' }}>{f.file_name}</Text>
             <Text style={{ color: colors.muted, fontSize: 12 }}>{KIND[f.kind]} · {kb(f.byte_size)}</Text>

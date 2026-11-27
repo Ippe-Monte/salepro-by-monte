@@ -49,7 +49,7 @@ export function Icon({ name, size = 22, color, strokeWidth = 1.9 }: { name: Icon
 export function IconChip({ name, size = 44, tone }: { name: IconName | string; size?: number; tone?: string }) {
   return (
     <View style={{ width: size, height: size, borderRadius: size * 0.32, backgroundColor: colors.chip, alignItems: 'center', justifyContent: 'center' }}>
-      <Icon name={name} size={Math.round(size * 0.52)} color={tone ?? colors.primary} />
+      <Icon name={name} size={Math.round(size * 0.52)} color={tone ?? colors.accent} />
     </View>
   );
 }

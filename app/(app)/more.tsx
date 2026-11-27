@@ -36,7 +36,7 @@ export default function More() {
         {rest.length === 0 ? <Body tone="muted">ไม่มีเมนูเพิ่มเติม</Body> : null}
         <View style={{ alignItems: 'center', marginTop: 12 }}>
           <Pressable accessibilityRole="button" onPress={startTour} style={{ width: '100%', maxWidth: 420, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Icon name="book" size={20} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: '600' }}>คู่มือเริ่มต้นใช้งาน</Text></View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Icon name="book" size={20} color={colors.accent} /><Text style={{ color: colors.text, fontWeight: '600' }}>คู่มือเริ่มต้นใช้งาน</Text></View>
           </Pressable>
           <InstallButton />
         </View>
