@@ -3,7 +3,7 @@
     "name": "SalePro by Monte",
     "slug": "salepro-by-monte",
     "scheme": "salepro",
-    "version": "1.30.0",
+    "version": "1.31.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.monte.salepro",
-      "buildNumber": "1030"
+      "buildNumber": "1031"
     },
     "android": {
       "package": "com.monte.salepro",
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#030b2e"
       },
-      "versionCode": 1030
+      "versionCode": 1031
     },
     "web": {
       "bundler": "metro",

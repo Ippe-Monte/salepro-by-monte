@@ -31,10 +31,10 @@ export function StopsMap({ stops, height = 340, onPick, picked }: { stops: Stop[
     for (const s of stops) {
       pts.push([s.lat, s.lng]);
       const icon = L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
-        html: `<div style="width:30px;height:30px;border-radius:15px;background:#0b7f99;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font:800 14px system-ui">${s.n}</div>` });
+        html: `<div style="width:30px;height:30px;border-radius:15px;background:#1976b8;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font:800 14px system-ui">${s.n}</div>` });
       L.marker([s.lat, s.lng], { icon, title: s.label }).addTo(g).bindTooltip(s.label);
     }
-    if (pts.length > 1) L.polyline(pts, { color: '#0b7f99', weight: 3, dashArray: '6 8' }).addTo(g);
+    if (pts.length > 1) L.polyline(pts, { color: '#1976b8', weight: 3, dashArray: '6 8' }).addTo(g);
     if (picked) {
       pts.push([picked.lat, picked.lng]);
       L.circleMarker([picked.lat, picked.lng], { radius: 9, color: '#dc2626', fillColor: '#ef4444', fillOpacity: 0.9 }).addTo(g);

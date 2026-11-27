@@ -1,18 +1,19 @@
 export type Mode = 'light' | 'dark';
 
 const palettes = {
-  // "Soft cyan + amber" theme: blue-grey page, white cards, deep cyan actions (white text on it stays >= 4.5:1), amber highlights
+  // "White, light blue & orange" theme: near-white page, white cards with light-blue borders and tints,
+  // blue actions, orange call-to-action + highlights. Text on blue/orange fills keeps >= 4.5:1.
   light: {
-    bg: '#e6edf6', card: '#ffffff', border: '#d3e0ee', text: '#1b2a3c', muted: '#52627a',
-    primary: '#0b7f99', accent: '#0e7490', danger: '#dc2626', ok: '#047857', selected: '#d4f1f8', selectedText: '#0b6e86', side: '#ffffff', input: '#ffffff', chip: '#e0f4f9',
-    onPrimary: '#ffffff', highlight: '#f6b93b', highlightSoft: '#fdf0cf',
-    pillOkBg: '#d1fae5', pillOkFg: '#065f46', pillWarnBg: '#fdecc0', pillWarnFg: '#8a5300', pillDangerBg: '#fee2e2', pillDangerFg: '#991b1b', pillMutedBg: '#dde6f1', pillMutedFg: '#334155',
+    bg: '#f5f9fd', card: '#ffffff', border: '#d6e6f4', text: '#172b3d', muted: '#52627a',
+    primary: '#1976b8', accent: '#1565a0', danger: '#dc2626', ok: '#047857', selected: '#dff0fb', selectedText: '#14639c', side: '#ffffff', input: '#ffffff', chip: '#e8f4fc',
+    onPrimary: '#ffffff', cta: '#c64609', onCta: '#ffffff', highlight: '#f97316', highlightSoft: '#ffedd5',
+    pillOkBg: '#d1fae5', pillOkFg: '#065f46', pillWarnBg: '#ffedd5', pillWarnFg: '#9a3412', pillDangerBg: '#fee2e2', pillDangerFg: '#991b1b', pillMutedBg: '#e3eef8', pillMutedFg: '#334155',
   },
   dark: {
-    bg: '#0a1822', card: '#10283a', border: '#244860', text: '#eef5fa', muted: '#9db4c6',
-    primary: '#2fc3e0', accent: '#5fd8ee', danger: '#f87171', ok: '#34d399', selected: '#0e5a72', selectedText: '#ffffff', side: '#0d2232', input: '#0a1822', chip: '#12354a',
-    onPrimary: '#06212c', highlight: '#f6b93b', highlightSoft: '#4a3a12',
-    pillOkBg: '#064e3b', pillOkFg: '#a7f3d0', pillWarnBg: '#78350f', pillWarnFg: '#fde68a', pillDangerBg: '#7f1d1d', pillDangerFg: '#fecaca', pillMutedBg: '#1d3a4f', pillMutedFg: '#cbd5e1',
+    bg: '#0b1824', card: '#112a3d', border: '#25465e', text: '#eef5fa', muted: '#9db4c6',
+    primary: '#5bbcf2', accent: '#8fd3f7', danger: '#f87171', ok: '#34d399', selected: '#14506f', selectedText: '#ffffff', side: '#0e2234', input: '#0b1824', chip: '#143650',
+    onPrimary: '#06202f', cta: '#fb923c', onCta: '#2a1000', highlight: '#fb923c', highlightSoft: '#4a2a10',
+    pillOkBg: '#064e3b', pillOkFg: '#a7f3d0', pillWarnBg: '#7c2d12', pillWarnFg: '#fed7aa', pillDangerBg: '#7f1d1d', pillDangerFg: '#fecaca', pillMutedBg: '#1d3a4f', pillMutedFg: '#cbd5e1',
   },
 } as const;
 
@@ -25,7 +26,7 @@ export function applyMode(mode: Mode) {
 
 /** Gradient pairs for the dashboard tiles (same in both modes). */
 export const gradients = {
-  blue: ['#0b7f99', '#3cc3dd'], green: ['#059669', '#34d399'], orange: ['#f59e0b', '#fcd34d'],
+  blue: ['#1976b8', '#5bbcf2'], green: ['#059669', '#34d399'], orange: ['#ea580c', '#fdba74'],
   purple: ['#7c3aed', '#c084fc'], red: ['#dc2626', '#fb7185'], slate: ['#334155', '#64748b'],
 } as const;
 export type GradientName = keyof typeof gradients;
