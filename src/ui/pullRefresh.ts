@@ -1,4 +1,5 @@
 import { getLang } from '@/i18n';
+import { colors } from '@/ui/theme';
 import { translate } from '@/i18n/translate';
 
 const tr = (t: string) => translate(t, getLang());
@@ -9,7 +10,7 @@ export function installPullRefresh(): () => void {
   const THRESHOLD = 90;
   let startY = 0; let pulling = false; let dist = 0;
   const bar = document.createElement('div');
-  Object.assign(bar.style, { position: 'fixed', top: '0', left: '50%', transform: 'translate(-50%,-60px)', zIndex: '9999', padding: '8px 16px', borderRadius: '20px', background: '#2563EB', color: '#fff', fontSize: '14px', fontWeight: '700', pointerEvents: 'none', transition: 'transform .15s' });
+  Object.assign(bar.style, { position: 'fixed', top: '0', left: '50%', transform: 'translate(-50%,-60px)', zIndex: '9999', padding: '8px 16px', borderRadius: '20px', background: colors.primary, color: '#fff', fontSize: '14px', fontWeight: '700', pointerEvents: 'none', transition: 'transform .15s' });
   document.body.appendChild(bar);
   const scrollTopOf = (el: Element | null): number => {
     for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {

@@ -13,7 +13,7 @@ export function SegTabs({ tabs, active }: { tabs: { href: string; label: string 
         return (
           <Pressable key={t.href} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => { if (!on) router.replace(t.href as never); }}
             style={{ flex: 1, minHeight: 42, paddingHorizontal: 2, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.primary : 'transparent' }}>
-            <Text numberOfLines={2} style={{ color: on ? '#fff' : colors.muted, fontWeight: '800', fontSize: tabs.length > 3 ? 12 : 15, textAlign: 'center' }}>{t.label}</Text>
+            <Text numberOfLines={2} style={{ color: on ? colors.onPrimary : colors.muted, fontWeight: '800', fontSize: tabs.length > 3 ? 12 : 15, textAlign: 'center' }}>{t.label}</Text>
           </Pressable>
         );
       })}

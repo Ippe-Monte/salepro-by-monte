@@ -54,9 +54,9 @@ export function CalendarGrid({ value, onChange, marks }: { value: string; onChan
             return (
               <Pressable key={di} accessibilityRole="button" accessibilityLabel={key} onPress={() => onChange(key)} style={{ flex: 1, height: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.primary : 'transparent', borderWidth: key === today && !on ? 1 : 0, borderColor: colors.primary }}>
-                  <Text style={{ color: on ? '#fff' : colors.text, fontWeight: on || key === today ? '800' : '500' }}>{d}</Text>
+                  <Text style={{ color: on ? colors.onPrimary : colors.text, fontWeight: on || key === today ? '800' : '500' }}>{d}</Text>
                 </View>
-                {marks?.has(key) ? <View style={{ position: 'absolute', bottom: 2, width: 5, height: 5, borderRadius: 3, backgroundColor: on ? '#fff' : colors.accent }} /> : null}
+                {marks?.has(key) ? <View style={{ position: 'absolute', bottom: 2, width: 5, height: 5, borderRadius: 3, backgroundColor: on ? colors.onPrimary : colors.accent }} /> : null}
               </Pressable>
             );
           })}
@@ -88,7 +88,7 @@ function Column({ values, selected, onPick, label }: { values: number[]; selecte
     <ScrollView style={{ height: 220, flex: 1 }} contentOffset={{ x: 0, y: Math.max(0, values.indexOf(selected) - 2) * 44 }} accessibilityLabel={label}>
       {values.map((n) => (
         <Pressable key={n} accessibilityRole="button" accessibilityLabel={`${label} ${pad2(n)}`} onPress={() => onPick(n)} style={{ height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: n === selected ? colors.primary : 'transparent' }}>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: n === selected ? '#fff' : colors.text }}>{pad2(n)}</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: n === selected ? colors.onPrimary : colors.text }}>{pad2(n)}</Text>
         </Pressable>
       ))}
     </ScrollView>
@@ -117,7 +117,7 @@ export function TimeField({ label, value, onChange }: { label: string; value: st
             <Column values={mins} selected={mi} onPick={(n) => onChange(`${pad2(h)}:${pad2(n)}`)} label="นาที" />
           </View>
           <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ marginTop: 12, minHeight: 46, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#fff', fontWeight: '800' }}>ตกลง</Text>
+            <Text style={{ color: colors.onPrimary, fontWeight: '800' }}>ตกลง</Text>
           </Pressable>
         </Sheet>
       ) : null}

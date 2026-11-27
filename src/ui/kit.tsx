@@ -36,10 +36,10 @@ export function Button({ title, onPress, busy, variant, icon }: { title: string;
   return (
     <Pressable accessibilityRole="button" disabled={busy} onPress={onPress}
       style={({ pressed }) => ({ backgroundColor: bg, borderColor: colors.border, borderWidth: variant === 'ghost' ? 1 : 0, borderRadius: 12, minHeight: 48, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', opacity: busy ? 0.6 : pressed ? 0.85 : 1, marginTop: 8 })}>
-      {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : '#fff'} /> : (
+      {busy ? <ActivityIndicator color={variant === 'ghost' ? colors.text : variant === 'danger' ? '#fff' : colors.onPrimary} /> : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.primary : '#fff'} /> : null}
-          <Text style={{ color: variant === 'ghost' ? colors.text : '#fff', fontWeight: '700' }}>{title}</Text>
+          {icon ? <Icon name={icon} size={19} color={variant === 'ghost' ? colors.primary : variant === 'danger' ? '#fff' : colors.onPrimary} /> : null}
+          <Text style={{ color: variant === 'ghost' ? colors.text : variant === 'danger' ? '#fff' : colors.onPrimary, fontWeight: '700' }}>{title}</Text>
         </View>
       )}
     </Pressable>

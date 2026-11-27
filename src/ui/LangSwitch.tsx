@@ -8,7 +8,7 @@ export function LangSwitch() {
   const opt = (l: Lang, label: string) => (
     <Pressable key={l} accessibilityRole="button" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'th' ? 'ภาษาไทย' : 'English'} onPress={() => setLang(l)}
       style={{ paddingHorizontal: 11, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: lang === l ? colors.primary : 'transparent' }}>
-      <RNText style={{ fontSize: 12, fontWeight: '800', color: lang === l ? '#fff' : colors.muted }}>{label}</RNText>
+      <RNText style={{ fontSize: 12, fontWeight: '800', color: lang === l ? colors.onPrimary : colors.muted }}>{label}</RNText>
     </Pressable>
   );
   return (

@@ -50,7 +50,7 @@ export function TourHost() {
   const btn = (label: string, onPress: () => void, primary: boolean) => (
     <Pressable accessibilityRole="button" onPress={onPress}
       style={{ flex: primary ? 1.4 : 1, minHeight: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: primary ? colors.primary : 'transparent', borderWidth: primary ? 0 : 1, borderColor: colors.border }}>
-      <Text style={{ color: primary ? '#fff' : colors.text, fontWeight: '700' }}>{label}</Text>
+      <Text style={{ color: primary ? colors.onPrimary : colors.text, fontWeight: '700' }}>{label}</Text>
     </Pressable>
   );
 

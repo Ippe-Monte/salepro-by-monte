@@ -146,8 +146,8 @@ export default function Visits() {
   const tabBtn = (key: 'cal' | 'map', label: string, icon: string) => (
     <Pressable key={key} accessibilityRole="tab" accessibilityState={{ selected: tab === key }} onPress={() => setTab(key)}
       style={{ flex: 1, minHeight: 40, borderRadius: 10, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === key ? colors.primary : 'transparent' }}>
-      <Icon name={icon} size={18} color={tab === key ? '#fff' : colors.muted} />
-      <Text style={{ color: tab === key ? '#fff' : colors.muted, fontWeight: '800' }}>{label}</Text>
+      <Icon name={icon} size={18} color={tab === key ? colors.onPrimary : colors.muted} />
+      <Text style={{ color: tab === key ? colors.onPrimary : colors.muted, fontWeight: '800' }}>{label}</Text>
     </Pressable>
   );
 
@@ -272,7 +272,7 @@ export default function Visits() {
                     <View key={v.id}>
                       {legKm[i] != null ? <Text style={{ color: colors.muted, fontSize: 12, marginLeft: 36, marginVertical: 2 }}>↓ {formatKm(legKm[i] as number)}</Text> : null}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: places[i] ? colors.primary : colors.muted, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: '800' }}>{i + 1}</Text></View>
+                        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: places[i] ? colors.primary : colors.muted, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: places[i] ? colors.onPrimary : '#fff', fontWeight: '800' }}>{i + 1}</Text></View>
                         <View style={{ flexShrink: 1 }}>
                           <Text style={{ color: colors.text, fontWeight: '600' }}>{hhmm(new Date(v.starts_at))} · {custName(v.customer_id)}</Text>
                           <Text style={{ color: colors.muted, fontSize: 12 }}>{v.title}{places[i] ? '' : ' · ยังไม่มีพิกัด'}</Text>

@@ -9,8 +9,8 @@ export function AddToggle({ open, onToggle, label }: { open: boolean; onToggle: 
   return (
     <Pressable accessibilityRole="button" onPress={onToggle}
       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderRadius: 12, backgroundColor: open ? 'transparent' : colors.primary, borderWidth: open ? 1 : 0, borderColor: colors.border, marginBottom: 12 }}>
-      <Icon name={open ? 'x' : 'plus'} size={20} color={open ? colors.text : '#fff'} />
-      <Text style={{ color: open ? colors.text : '#fff', fontWeight: '700' }}>{open ? 'ปิดฟอร์ม' : label}</Text>
+      <Icon name={open ? 'x' : 'plus'} size={20} color={open ? colors.text : colors.onPrimary} />
+      <Text style={{ color: open ? colors.text : colors.onPrimary, fontWeight: '700' }}>{open ? 'ปิดฟอร์ม' : label}</Text>
     </Pressable>
   );
 }
@@ -23,8 +23,8 @@ export function TitleAdd({ title, show, open, onToggle, label = 'เพิ่ม
       {show ? (
         <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onToggle}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, height: 34, borderRadius: 17, backgroundColor: open ? 'transparent' : colors.primary, borderWidth: open ? 1 : 0, borderColor: colors.border }}>
-          <Icon name={open ? 'x' : 'plus'} size={16} color={open ? colors.text : '#fff'} />
-          <Text style={{ color: open ? colors.text : '#fff', fontWeight: '700', fontSize: 14 }}>{open ? 'ปิด' : label}</Text>
+          <Icon name={open ? 'x' : 'plus'} size={16} color={open ? colors.text : colors.onPrimary} />
+          <Text style={{ color: open ? colors.text : colors.onPrimary, fontWeight: '700', fontSize: 14 }}>{open ? 'ปิด' : label}</Text>
         </Pressable>
       ) : null}
     </View>

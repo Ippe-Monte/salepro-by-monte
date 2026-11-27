@@ -38,6 +38,6 @@ export function Avatar({ size, onPress }: { size: number; onPress?: () => void }
   const initial = (profile?.display_name || profile?.email || '?').trim().charAt(0).toUpperCase();
   const inner = uri
     ? <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} accessibilityLabel="Profile photo" />
-    : <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: '800', fontSize: size * 0.42 }}>{initial}</Text></View>;
+    : <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.onPrimary, fontWeight: '800', fontSize: size * 0.42 }}>{initial}</Text></View>;
   return onPress ? <Pressable accessibilityRole="button" accessibilityLabel="บัญชีของฉัน" onPress={onPress}>{inner}</Pressable> : inner;
 }

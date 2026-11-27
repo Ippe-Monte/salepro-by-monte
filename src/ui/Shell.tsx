@@ -106,6 +106,7 @@ export function BottomBar({ items, active }: { items: NavItem[]; active: string 
     <View style={{ flexDirection: 'row', backgroundColor: colors.card, borderTopColor: colors.border, borderTopWidth: 1, paddingBottom: insets.bottom, paddingTop: 6 }}>
       {tabs.map((t) => (
         <Pressable key={t.key} accessibilityRole="button" accessibilityLabel={t.label} onPress={t.go} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}>
+          <View style={{ position: 'absolute', top: -6, width: 28, height: 3, borderRadius: 2, backgroundColor: t.on ? colors.highlight : 'transparent' }} />
           <View style={{ paddingVertical: 4 }}>
             <Icon name={t.icon} size={24} color={t.on ? colors.primary : colors.muted} strokeWidth={t.on ? 2.2 : 1.8} />
           </View>
