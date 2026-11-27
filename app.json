@@ -3,7 +3,7 @@
     "name": "SalePro by Monte",
     "slug": "salepro-by-monte",
     "scheme": "salepro",
-    "version": "1.32.0",
+    "version": "1.33.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,20 +11,20 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#030b2e"
+      "backgroundColor": "#199fe6"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.monte.salepro",
-      "buildNumber": "1032"
+      "buildNumber": "1033"
     },
     "android": {
       "package": "com.monte.salepro",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#030b2e"
+        "backgroundColor": "#199fe6"
       },
-      "versionCode": 1032
+      "versionCode": 1033
     },
     "web": {
       "bundler": "metro",
@@ -32,8 +32,8 @@
       "favicon": "./assets/favicon.png",
       "name": "SALEPRO by MONTE",
       "shortName": "SALEPRO",
-      "themeColor": "#030b2e",
-      "backgroundColor": "#030b2e",
+      "themeColor": "#199fe6",
+      "backgroundColor": "#199fe6",
       "lang": "th"
     },
     "plugins": [

@@ -30,3 +30,22 @@ export const gradients = {
   purple: ['#7c3aed', '#c084fc'], red: ['#dc2626', '#fb7185'], slate: ['#334155', '#64748b'],
 } as const;
 export type GradientName = keyof typeof gradients;
+
+// Soft page texture (web only): faint dot grid + a teal glow top-right and an orange glow bottom-left.
+// Kept very light so text and cards stay the focus. Native ignores it.
+export function bgPattern(): Record<string, unknown> {
+  if (typeof document === 'undefined') return {};
+  const dark = colors.bg === palettes.dark.bg;
+  const dot = dark ? 'rgba(126,232,240,.10)' : 'rgba(11,111,126,.14)';
+  const teal = dark ? 'rgba(45,212,224,.14)' : 'rgba(20,184,201,.16)';
+  const orange = dark ? 'rgba(255,138,61,.10)' : 'rgba(255,122,26,.10)';
+  return {
+    backgroundImage: [
+      `radial-gradient(520px 360px at 100% 0%, ${teal}, transparent 72%)`,
+      `radial-gradient(480px 340px at 0% 100%, ${orange}, transparent 72%)`,
+      `radial-gradient(${dot} 1.2px, transparent 1.7px)`,
+    ].join(','),
+    backgroundSize: 'auto, auto, 22px 22px',
+    backgroundRepeat: 'no-repeat, no-repeat, repeat',
+  };
+}

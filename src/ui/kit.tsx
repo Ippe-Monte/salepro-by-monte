@@ -5,7 +5,7 @@ import { Icon } from './Icon';
 import { colors } from './theme';
 
 export function Screen({ children }: { children: React.ReactNode }) {
-  return <View style={{ flex: 1, backgroundColor: colors.bg, padding: 20 }}>{children}</View>;
+  return <View style={{ flex: 1, padding: 20 }}>{children}</View>;
 }
 export function Title({ children }: { children: React.ReactNode }) {
   return <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 12 }}>{children}</Text>;

@@ -8,8 +8,8 @@
   "scope": "__BASE__/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#030b2e",
-  "theme_color": "#030b2e",
+  "background_color": "#1688e0",
+  "theme_color": "#1688e0",
   "categories": ["business", "productivity"],
   "icons": [
     { "src": "__BASE__/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
